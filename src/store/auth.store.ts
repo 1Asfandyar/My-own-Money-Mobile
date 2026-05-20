@@ -185,4 +185,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     await saveSession(token, user);
     set({ user, hasCompletedOnboarding: true });
   },
+
+  updateProfile: async (payload) => {
+    const token = get().token;
+
+    if (!token) {
+      throw new ApiError(401, 'You are not signed in.');
+    }
+
+    const user = await updateMe(token, payload);
+
+    await saveSession(token, user);
+    set({
+      user,
+      hasCompletedOnboarding: getHasCompletedOnboarding(user),
+    });
+
+    return user;
+  },
 }));

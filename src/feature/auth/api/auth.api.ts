@@ -72,13 +72,22 @@ export const getMe = async (token: string) => {
 };
 
 export const updateMe = async (token: string, payload: UpdateMePayload) => {
-  const result = await apiRequest<{ success: true; user: AuthUser }>('/api/v0/me', {
+  const result = await apiRequest<{ success: true; user?: AuthUser }>('/api/v0/me', {
     method: 'PATCH',
     token,
     body: payload,
   });
 
-  return getValidatedUser(result.data);
+  if (
+    typeof result.data === 'object' &&
+    result.data !== null &&
+    'user' in result.data &&
+    result.data.user
+  ) {
+    return getValidatedUser(result.data);
+  }
+
+  return getMe(token);
 };
 
 export const logout = async (token: string) => {

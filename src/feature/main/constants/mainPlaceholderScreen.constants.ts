@@ -5,7 +5,7 @@ export const mainPlaceholderScreens = {
   },
   profile: {
     description: 'Your account details and preferences will live here.',
-    title: 'Profile',
+    title: 'You',
   },
   reports: {
     description: 'Spending insights and summaries will live here.',

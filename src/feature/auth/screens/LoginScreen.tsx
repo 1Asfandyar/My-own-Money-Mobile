@@ -10,8 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const LoginScreen = () => {
   const {
     form,
+    isPasswordVisible,
     isKeyboardVisible,
     openRegister,
+    togglePasswordVisibility,
   } = useLoginScreen()
   const {
     values,
@@ -52,7 +54,9 @@ const LoginScreen = () => {
           value={values.password}
           onChangeText={(value) => updateField('password', value)}
           onBlur={() => validateField('password')}
-          secureTextEntry
+          secureTextEntry={!isPasswordVisible}
+          rightIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+          onRightIconPress={togglePasswordVisibility}
           autoComplete='password'
           textContentType='password'
           returnKeyType='done'
