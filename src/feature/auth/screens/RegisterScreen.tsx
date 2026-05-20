@@ -14,6 +14,8 @@ const RegisterScreen = () => {
     form,
     isKeyboardVisible,
     openLogin,
+    passwordVisibility,
+    togglePasswordVisibility,
   } = useRegisterScreen()
   const {
     values,
@@ -77,7 +79,9 @@ const RegisterScreen = () => {
           value={values.password}
           onChangeText={(value) => updateField('password', value)}
           onBlur={() => validateField('password')}
-          secureTextEntry
+          secureTextEntry={!passwordVisibility.password}
+          rightIcon={passwordVisibility.password ? 'eye-off-outline' : 'eye-outline'}
+          onRightIconPress={() => togglePasswordVisibility('password')}
           autoComplete='new-password'
           textContentType='newPassword'
           returnKeyType='next'
@@ -90,7 +94,9 @@ const RegisterScreen = () => {
           value={values.password_confirmation}
           onChangeText={(value) => updateField('password_confirmation', value)}
           onBlur={() => validateField('password_confirmation')}
-          secureTextEntry
+          secureTextEntry={!passwordVisibility.password_confirmation}
+          rightIcon={passwordVisibility.password_confirmation ? 'eye-off-outline' : 'eye-outline'}
+          onRightIconPress={() => togglePasswordVisibility('password_confirmation')}
           autoComplete='new-password'
           textContentType='newPassword'
           returnKeyType='done'

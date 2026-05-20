@@ -63,13 +63,16 @@ const SplitParticipantRow = ({
             keyboardType="decimal-pad"
             placeholder="0"
             placeholderTextColor={themeColors.gray400}
-            className={`${typography.primaryControlSize} min-w-0 flex-1 text-right text-gray-900`}
+            className={`${typography.primaryControlSize} min-w-0 flex-1 text-left text-gray-900`}
             style={{ fontFamily: fontFamilies.semiBold }}
           />
           {inputSuffix ? (
-            <ThemedText className="ml-1 text-xs text-gray-500">
-              {inputSuffix}
-            </ThemedText>
+            <>
+              <View className="mx-2 h-5 w-px bg-gray-300" />
+              <ThemedText className="text-xs text-gray-500">
+                {inputSuffix}
+              </ThemedText>
+            </>
           ) : null}
         </View>
       )}

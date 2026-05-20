@@ -1,13 +1,14 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FloatingBubbleTabBarItem from '@/feature/main/components/FloatingBubbleTabBarItem';
 import { mainTabBarItems } from '@/feature/main/constants/mainTabBar.constants';
 import { themeColors } from '@/theme/utilities';
-
-type NavigationRoute = BottomTabBarProps['state']['routes'][number];
+import { NavigationRoute } from '../types/mainTabBar.types';
 
 const BAR_HEIGHT = 74;
+const BAR_BOTTOM_OFFSET = 44;
 
 const getMainTabItem = (routeName: string) =>
   mainTabBarItems.find((item) => item.routeName === routeName);
@@ -17,27 +18,12 @@ const getOrderedMainRoutes = (routes: NavigationRoute[]) =>
     .map((item) => routes.find((route) => route.name === item.routeName))
     .filter((route): route is NavigationRoute => Boolean(route));
 
-const getCenteredMainRoutes = (
-  routes: NavigationRoute[],
-  activeRouteKey: string,
-) => {
-  const activeRouteIndex = routes.findIndex((route) => route.key === activeRouteKey);
-
-  if (activeRouteIndex === -1 || routes.length < mainTabBarItems.length) {
-    return routes;
-  }
-
-  return [-2, -1, 0, 1, 2].map((offset) => {
-    const routeIndex = (activeRouteIndex + offset + routes.length) % routes.length;
-
-    return routes[routeIndex];
-  });
-};
-
 const FloatingBubbleTabBar = ({ navigation, state }: BottomTabBarProps) => {
+  const insets = useSafeAreaInsets();
   const activeRoute = state.routes[state.index];
   const orderedRoutes = getOrderedMainRoutes(state.routes);
-  const centeredRoutes = getCenteredMainRoutes(orderedRoutes, activeRoute.key);
+  const tabSlotWidth =
+    `${100 / Math.max(orderedRoutes.length, 1)}%` as `${number}%`;
 
   const handleTabPress = (route: NavigationRoute, isFocused: boolean) => {
     const event = navigation.emit({
@@ -52,9 +38,15 @@ const FloatingBubbleTabBar = ({ navigation, state }: BottomTabBarProps) => {
   };
 
   return (
-    <View pointerEvents="box-none" style={styles.wrapper}>
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.wrapper,
+        { bottom: Math.max(insets.bottom, BAR_BOTTOM_OFFSET) },
+      ]}
+    >
       <View accessibilityRole="tablist" style={styles.container}>
-        {centeredRoutes.map((route) => {
+        {orderedRoutes.map((route) => {
           const item = getMainTabItem(route.name);
 
           if (!item) {
@@ -69,6 +61,7 @@ const FloatingBubbleTabBar = ({ navigation, state }: BottomTabBarProps) => {
               isFocused={isFocused}
               item={item}
               onPress={() => handleTabPress(route, isFocused)}
+              slotWidth={tabSlotWidth}
             />
           );
         })}
@@ -80,23 +73,26 @@ const FloatingBubbleTabBar = ({ navigation, state }: BottomTabBarProps) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: themeColors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderColor: 'rgba(43, 168, 140, 0.12)',
+    borderWidth: 1,
     borderRadius: BAR_HEIGHT / 2,
-    elevation: 12,
+    elevation: 16,
     flexDirection: 'row',
     height: BAR_HEIGHT,
-    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
     shadowColor: themeColors.black,
-    shadowOffset: { height: 8, width: 0 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
+    shadowOffset: { height: 10, width: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 22,
     width: '100%',
   },
   wrapper: {
-    bottom: 18,
-    left: 20,
+    left: 12,
     position: 'absolute',
-    right: 20,
+    right: 12,
+    zIndex: 30,
   },
 });
 

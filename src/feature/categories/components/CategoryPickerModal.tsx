@@ -2,9 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useMemo } from 'react';
 import {
   FlatList,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   TextInput,
   TouchableOpacity,
   View,
@@ -82,67 +80,62 @@ const CategoryPickerModal = ({
           onPress={closeModal}
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        <SafeAreaView
+          edges={['bottom']}
+          className="rounded-t-[28px] bg-white"
+          style={{ height: '78%' }}
         >
-          <SafeAreaView
-            edges={['bottom']}
-            className="rounded-t-[28px] bg-white"
-            style={{ height: '78%' }}
-          >
-            <View className="px-5 pt-5">
-              <View className="mb-4 flex-row items-center justify-between">
-                <ThemedText className="text-xl text-gray-900" weight="bold">
-                  Categories
-                </ThemedText>
+          <View className="px-5 pt-5">
+            <View className="mb-4 flex-row items-center justify-between">
+              <ThemedText className="text-xl text-gray-900" weight="bold">
+                Categories
+              </ThemedText>
 
-                <TouchableOpacity
-                  activeOpacity={0.75}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close category picker"
-                  onPress={closeModal}
-                  className="h-10 w-10 items-center justify-center rounded-full bg-gray-100"
-                >
-                  <Ionicons name="close" size={22} color={themeColors.gray700} />
-                </TouchableOpacity>
-              </View>
-
-              <View className="mb-3 flex-row items-center rounded-xl border border-gray-100 bg-gray-50 px-3 py-3">
-                <Ionicons name="search" size={18} color={themeColors.gray500} />
-                <TextInput
-                  autoFocus
-                  value={query}
-                  onChangeText={onQueryChange}
-                  placeholder="Search categories"
-                  placeholderTextColor={themeColors.gray400}
-                  className={`${typography.primaryControlSize} ml-2 flex-1 text-gray-800`}
-                  style={{ fontFamily: fontFamilies.regular }}
-                />
-              </View>
+              <TouchableOpacity
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Close category picker"
+                onPress={closeModal}
+                className="h-10 w-10 items-center justify-center rounded-full bg-gray-100"
+              >
+                <Ionicons name="close" size={22} color={themeColors.gray700} />
+              </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={filteredOptions}
-              initialNumToRender={10}
-              keyExtractor={keyExtractor}
-              keyboardShouldPersistTaps="handled"
-              ListEmptyComponent={
-                <View className="items-center px-3 py-8">
-                  <ThemedText className="text-sm text-gray-500">
-                    No categories found
-                  </ThemedText>
-                </View>
-              }
-              maxToRenderPerBatch={10}
-              renderItem={renderItem}
-              showsVerticalScrollIndicator={filteredOptions.length > 6}
-              contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 20 }}
-              style={categoryPickerModalStyles.optionList}
-              windowSize={6}
-            />
-          </SafeAreaView>
-        </KeyboardAvoidingView>
+            <View className="mb-3 flex-row items-center rounded-xl border border-gray-100 bg-gray-50 px-3 py-3">
+              <Ionicons name="search" size={18} color={themeColors.gray500} />
+              <TextInput
+                autoFocus
+                value={query}
+                onChangeText={onQueryChange}
+                placeholder="Search categories"
+                placeholderTextColor={themeColors.gray400}
+                className={`${typography.primaryControlSize} ml-2 flex-1 text-gray-800`}
+                style={{ fontFamily: fontFamilies.regular }}
+              />
+            </View>
+          </View>
+
+          <FlatList
+            data={filteredOptions}
+            initialNumToRender={10}
+            keyExtractor={keyExtractor}
+            keyboardShouldPersistTaps="handled"
+            ListEmptyComponent={
+              <View className="items-center px-3 py-8">
+                <ThemedText className="text-sm text-gray-500">
+                  No categories found
+                </ThemedText>
+              </View>
+            }
+            maxToRenderPerBatch={10}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={filteredOptions.length > 6}
+            contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 20 }}
+            style={categoryPickerModalStyles.optionList}
+            windowSize={6}
+          />
+        </SafeAreaView>
       </View>
     </Modal>
   );

@@ -87,8 +87,8 @@ const SharedExpenseSplitSheet = ({
       />
 
       <View
-        className="rounded-t-[28px] bg-white shadow-lg"
-        style={{ height: '50%' }}
+        className="overflow-hidden rounded-t-[28px] bg-white"
+        style={sharedExpenseSplitSheetStyles.sheet}
       >
         <View className="px-5 pt-5">
           <View className="mb-4 flex-row items-center justify-between">
