@@ -18,11 +18,17 @@ const TransactionList = ({
   ListEmptyComponent = null,
   ListHeaderComponent = null,
   onRefresh,
+  onSelectTransaction,
   transactions,
 }: TransactionListProps) => {
   const renderItem = useCallback<ListRenderItem<TransactionListItem>>(
-    ({ item }) => <TransactionRow transaction={item} />,
-    [],
+    ({ item }) => (
+      <TransactionRow
+        onPress={onSelectTransaction}
+        transaction={item}
+      />
+    ),
+    [onSelectTransaction],
   );
 
   return (

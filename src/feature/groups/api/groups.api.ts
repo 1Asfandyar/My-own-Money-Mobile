@@ -5,7 +5,6 @@ import type {
   CreateGroupResponse,
   GetGroupResponse,
   Group,
-  GroupKind,
   GroupUser,
   ListGroupsResponse,
   RemoveGroupMemberResponse,
@@ -39,12 +38,10 @@ const getGroupFromResponse = (
 ): Group | null =>
   isGroup(data) ? data : data.group ?? null;
 
-export const listGroups = async (token: string, kind: GroupKind) => {
-  const query = new URLSearchParams({ kind });
-  const result = await apiRequest<ListGroupsResponse>(
-    `/api/v0/groups?${query.toString()}`,
-    { token },
-  );
+export const listGroups = async (token: string) => {
+  const result = await apiRequest<ListGroupsResponse>('/api/v0/groups', {
+    token,
+  });
 
   return getGroupsFromResponse(result.data);
 };

@@ -1,4 +1,5 @@
 import { apiRequest } from '@/services/api';
+import type { TransactionsByCategoryDashboard } from '@/feature/categories/types/categoryDashboard.types';
 import type { Category } from '@/feature/categories/types/category.types';
 
 export const listCategories = async (token: string) => {
@@ -8,4 +9,29 @@ export const listCategories = async (token: string) => {
   );
 
   return result.data.categories;
+};
+
+export const getCategoriesSummary = async (
+  token: string,
+  accountId: number,
+) => {
+  const query = new URLSearchParams({
+    account_id: String(accountId),
+  });
+  const result = await apiRequest<
+    { success: true } & Pick<TransactionsByCategoryDashboard, 'categories'>
+  >(`/api/v0/categories/summary?${query.toString()}`, { token });
+  const categories = result.data.categories ?? [];
+
+  return {
+    total_amount_cents: categories.reduce(
+      (total, item) => total + item.amount_cents,
+      0,
+    ),
+    total_absolute_amount_cents: categories.reduce(
+      (total, item) => total + Math.abs(item.amount_cents),
+      0,
+    ),
+    categories,
+  };
 };

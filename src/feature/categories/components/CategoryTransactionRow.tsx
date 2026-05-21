@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { memo } from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 import type { CategoryTransactionRowProps } from '@/feature/categories/types/categoryDashboard.types';
 import {
@@ -11,18 +11,26 @@ import {
   getSignedTransactionAmount,
 } from '@/feature/categories/utils/categoryTransactions.utils';
 import ThemedText from '@/theme/components/ThemedText';
+import { themeColors } from '@/theme/utilities';
 
 const CategoryTransactionRow = ({
   categoryName,
   currencies,
   displayCurrencyId,
+  onPress,
   transaction,
 }: CategoryTransactionRowProps) => {
   const signedAmount = getSignedTransactionAmount(transaction);
   const transactionColor = getCategoryTypeColor(transaction.transaction_type);
 
   return (
-    <View className="mt-3 flex-row items-center rounded-2xl border border-gray-100 px-4 py-3">
+    <TouchableOpacity
+      activeOpacity={0.78}
+      accessibilityRole="button"
+      accessibilityLabel={`Edit ${transaction.title || categoryName}`}
+      className="mt-3 flex-row items-center rounded-2xl border border-gray-100 px-4 py-3"
+      onPress={() => onPress?.(transaction)}
+    >
       <View
         className="h-10 w-10 items-center justify-center rounded-full"
         style={{ backgroundColor: getCategorySoftColor(transactionColor) }}
@@ -56,20 +64,28 @@ const CategoryTransactionRow = ({
         ) : null}
       </View>
 
-      <ThemedText
-        adjustsFontSizeToFit
-        className="ml-3 text-sm"
-        numberOfLines={1}
-        style={{ color: transactionColor, maxWidth: 96 }}
-        weight="bold"
-      >
-        {formatSignedCents(
-          signedAmount,
-          transaction.currency_id ?? displayCurrencyId,
-          currencies,
-        )}
-      </ThemedText>
-    </View>
+      <View className="ml-3 flex-row items-center">
+        <ThemedText
+          adjustsFontSizeToFit
+          className="text-sm"
+          numberOfLines={1}
+          style={{ color: transactionColor, maxWidth: 84 }}
+          weight="bold"
+        >
+          {formatSignedCents(
+            signedAmount,
+            transaction.currency_id ?? displayCurrencyId,
+            currencies,
+          )}
+        </ThemedText>
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={themeColors.gray400}
+          style={{ marginLeft: 4 }}
+        />
+      </View>
+    </TouchableOpacity>
   );
 };
 

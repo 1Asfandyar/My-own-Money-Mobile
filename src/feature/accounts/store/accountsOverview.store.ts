@@ -12,15 +12,16 @@ const initialAccountsOverviewState: AccountsOverviewStoreState = {
   categoryDashboardError: null,
   currencies: fallbackCurrencies,
   error: null,
+  friendshipDashboardError: null,
+  friendshipLedgers: [],
   isAccountPickerVisible: false,
   isCategoryDashboardLoading: false,
-  isSharedExpensesDashboardLoading: false,
+  isFriendshipDashboardLoading: false,
   isLoading: true,
   selectedAccountId: null,
   selectedCategoryId: null,
   selectedExpenseTab: 'personal',
-  sharedExpensesDashboard: null,
-  sharedExpensesDashboardError: null,
+  selectedFriendshipId: null,
 };
 
 export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => ({
@@ -34,16 +35,17 @@ export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => (
     set({ categoryDashboardError }),
   setCurrencies: (currencies) => set({ currencies }),
   setError: (error) => set({ error }),
+  setFriendshipDashboardError: (friendshipDashboardError) =>
+    set({ friendshipDashboardError }),
+  setFriendshipLedgers: (friendshipLedgers) => set({ friendshipLedgers }),
   setIsCategoryDashboardLoading: (isCategoryDashboardLoading) =>
     set({ isCategoryDashboardLoading }),
-  setIsSharedExpensesDashboardLoading: (isSharedExpensesDashboardLoading) =>
-    set({ isSharedExpensesDashboardLoading }),
+  setIsFriendshipDashboardLoading: (isFriendshipDashboardLoading) =>
+    set({ isFriendshipDashboardLoading }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setSelectedAccountId: (selectedAccountId) => set({ selectedAccountId }),
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
   setSelectedExpenseTab: (selectedExpenseTab) => set({ selectedExpenseTab }),
-  setSharedExpensesDashboard: (sharedExpensesDashboard) =>
-    set({ sharedExpensesDashboard }),
-  setSharedExpensesDashboardError: (sharedExpensesDashboardError) =>
-    set({ sharedExpensesDashboardError }),
+  setSelectedFriendshipId: (selectedFriendshipId) =>
+    set({ selectedFriendshipId }),
 }));

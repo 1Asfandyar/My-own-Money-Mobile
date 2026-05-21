@@ -30,6 +30,7 @@ export type TransactionPayload = {
 };
 
 export type Transaction = Omit<TransactionPayload, 'note'> & {
+  category?: Category | null;
   id: number;
   note?: string | null;
   split_amount_cents?: number | null;
@@ -40,13 +41,12 @@ export type Transaction = Omit<TransactionPayload, 'note'> & {
   updated_at?: string;
 };
 
-export type ListAccountTransactionsParams = TransactionDateFilters & {
+export type ListAccountTransactionsParams = Partial<TransactionDateFilters> & {
   search?: string;
   type?: TransactionFilterType;
 };
 
 export type TransactionsStoreState = {
-  categories: Category[];
   error: string | null;
   isAccountContextLoading: boolean;
   isLoading: boolean;
@@ -55,7 +55,6 @@ export type TransactionsStoreState = {
 
 export type TransactionsStoreActions = {
   resetTransactions: () => void;
-  setCategories: (categories: Category[]) => void;
   setError: (error: string | null) => void;
   setIsAccountContextLoading: (isLoading: boolean) => void;
   setIsLoading: (isLoading: boolean) => void;
@@ -74,6 +73,7 @@ export type TransactionListItem = {
   id: number;
   note?: string;
   softColor: string;
+  sourceTransaction: Transaction;
   title: string;
   typeLabel: string;
 };
@@ -110,6 +110,7 @@ export type TransactionsViewModel = {
   onRefresh: () => void;
   onSearchQueryChange: (query: string) => void;
   onSelectAccount: (accountId: number) => void;
+  onSelectTransaction: (transaction: Transaction) => void;
   searchQuery: string;
   selectedAccount?: Account;
   summaryMetrics: TransactionsSummaryMetric[];
@@ -148,9 +149,11 @@ export type TransactionListProps = {
   ListEmptyComponent?: ReactElement | null;
   ListHeaderComponent?: ReactElement | null;
   onRefresh?: () => void;
+  onSelectTransaction?: (transaction: Transaction) => void;
   transactions: TransactionListItem[];
 };
 
 export type TransactionRowProps = {
+  onPress?: (transaction: Transaction) => void;
   transaction: TransactionListItem;
 };

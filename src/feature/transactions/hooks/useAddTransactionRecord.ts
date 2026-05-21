@@ -1,14 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useFormik } from 'formik';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   addTransactionRecordContent,
   addTransactionRecordInitialValues,
 } from '@/feature/transactions/constants/addTransactionRecord.constants';
 import { sharedExpenseSplitMethodLabels } from '@/feature/transactions/constants/sharedExpenseSplit.constants';
-import type { Group } from '@/feature/groups/types/group.types';
-import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
 import { useAddTransactionRecordStore } from '@/feature/transactions/store/addTransactionRecord.store';
 import useAddTransactionRecordOptions from '@/feature/transactions/hooks/useAddTransactionRecordOptions';
 import useSaveAddTransactionRecord from '@/feature/transactions/hooks/useSaveAddTransactionRecord';
@@ -42,7 +40,15 @@ const useAddTransactionRecord = (
   recordKind: AddTransactionRecordKind,
   onSaved: () => void,
 ): Omit<AddTransactionRecordViewModel, 'cancel'> => {
-  const params = useLocalSearchParams<{ accountId?: string }>();
+  const params = useLocalSearchParams<{
+    accountId?: string;
+    amountCents?: string;
+    categoryId?: string;
+    note?: string;
+    transactionDate?: string;
+    transactionId?: string;
+    transactionType?: TransactionType;
+  }>();
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const accountDropdownQuery = useAddTransactionRecordStore(
@@ -96,6 +102,17 @@ const useAddTransactionRecord = (
   );
   const content = addTransactionRecordContent[recordKind];
   const isSharedRecord = recordKind === 'shared';
+  const routeTransactionId = Number(params.transactionId);
+  const editingTransactionId = Number.isFinite(routeTransactionId)
+    ? routeTransactionId
+    : null;
+  const routeTransactionType =
+    params.transactionType === 'income' || params.transactionType === 'expense'
+      ? params.transactionType
+      : null;
+  const hasAppliedRouteCategoryRef = useRef(false);
+  const hasAppliedRouteRecordFieldsRef = useRef(false);
+  const hasAppliedRouteTransactionTypeRef = useRef(false);
   const [friendPickerQuery, setFriendPickerQuery] = useState('');
   const [isSplitSheetVisible, setIsSplitSheetVisible] = useState(false);
   const [splitValuesError, setSplitValuesError] = useState('');
@@ -104,9 +121,12 @@ const useAddTransactionRecord = (
     () => accounts.filter((account) => !account.is_archived),
     [accounts],
   );
-  const { isSavingRecord, saveRecord } = useSaveAddTransactionRecord({
+  const { deleteRecord, isDeletingRecord, isSavingRecord, saveRecord } =
+    useSaveAddTransactionRecord({
     activeAccounts,
     categories,
+    editingTransactionDate: params.transactionDate,
+    editingTransactionId,
     isSharedRecord,
     onSaved,
     setFormError,
@@ -168,10 +188,10 @@ const useAddTransactionRecord = (
     selectedUserIds: values.sharedUserIds,
     token,
   });
-  const { loadFriendsGroup, toggleSharedUser: toggleSharedFriendUser } =
+  const { loadFriends, toggleSharedUser: toggleSharedFriendUser } =
     sharedFriends;
-  const { sharedGroups } = useAddTransactionRecordOptions({
-    loadFriendsGroup,
+  useAddTransactionRecordOptions({
+    loadFriends,
     recordKind,
     resetAddTransactionRecord,
     setAccounts,
@@ -183,7 +203,6 @@ const useAddTransactionRecord = (
   const { selectedSharedFriends, splitParticipantIds, splitParticipants } =
     useSharedExpenseParticipants({
       friends: sharedFriends.friends,
-      groups: sharedGroups,
       selectedUserIds: values.sharedUserIds,
       user,
     });
@@ -200,6 +219,58 @@ const useAddTransactionRecord = (
       );
     }
   }, [activeAccounts, params.accountId, setFormFieldValue, values.accountId]);
+
+  useEffect(() => {
+    if (
+      hasAppliedRouteTransactionTypeRef.current ||
+      !routeTransactionType ||
+      values.transactionType === routeTransactionType
+    ) {
+      if (routeTransactionType) {
+        hasAppliedRouteTransactionTypeRef.current = true;
+      }
+      return;
+    }
+
+    hasAppliedRouteTransactionTypeRef.current = true;
+    setFormFieldValue('transactionType', routeTransactionType);
+    setFieldError('categoryId', undefined);
+  }, [
+    routeTransactionType,
+    setFieldError,
+    setFormFieldValue,
+    values.transactionType,
+  ]);
+
+  useEffect(() => {
+    if (hasAppliedRouteRecordFieldsRef.current) {
+      return;
+    }
+
+    hasAppliedRouteRecordFieldsRef.current = true;
+
+    if (params.amountCents) {
+      const amountCents = Number(params.amountCents);
+      const amount = Math.abs(amountCents) / 100;
+
+      if (Number.isFinite(amount) && amount > 0) {
+        setFormFieldValue(
+          'amount',
+          Number.isInteger(amount)
+            ? String(amount)
+            : amount.toFixed(2).replace(/\.?0+$/, ''),
+        );
+      }
+    }
+
+    if (params.note) {
+      setFormFieldValue('note', params.note);
+    }
+  }, [
+    params.amountCents,
+    params.note,
+    setFormFieldValue,
+  ]);
 
   const filteredCategories = useMemo(
     () =>
@@ -219,6 +290,33 @@ const useAddTransactionRecord = (
       setFormFieldValue('categoryId', '');
     }
   }, [filteredCategories, setFormFieldValue, values.categoryId]);
+
+  useEffect(() => {
+    if (
+      hasAppliedRouteCategoryRef.current ||
+      values.categoryId ||
+      !params.categoryId
+    ) {
+      return;
+    }
+
+    const routeCategoryId = Number(params.categoryId);
+    const routeCategory = filteredCategories.find(
+      (category) => category.id === routeCategoryId,
+    );
+
+    if (routeCategory) {
+      hasAppliedRouteCategoryRef.current = true;
+      setFormFieldValue('categoryId', String(routeCategory.id));
+      setFieldError('categoryId', undefined);
+    }
+  }, [
+    filteredCategories,
+    params.categoryId,
+    setFieldError,
+    setFormFieldValue,
+    values.categoryId,
+  ]);
 
   const accountOptions = useMemo(
     () => getAddTransactionAccountOptions(activeAccounts),
@@ -406,29 +504,6 @@ const useAddTransactionRecord = (
     [toggleSharedFriendUser],
   );
 
-  const toggleSharedGroup = useCallback(
-    (group: Group) => {
-      const groupUserIds = getGroupUsers(group, user?.id).map(
-        (member) => member.id,
-      );
-
-      if (groupUserIds.length === 0) {
-        return;
-      }
-
-      const isGroupSelected = groupUserIds.every((userId) =>
-        values.sharedUserIds.includes(userId),
-      );
-      const nextSharedUserIds = isGroupSelected
-        ? values.sharedUserIds.filter((userId) => !groupUserIds.includes(userId))
-        : Array.from(new Set([...values.sharedUserIds, ...groupUserIds]));
-
-      updateSharedUserIds(nextSharedUserIds);
-      setFriendPickerQuery('');
-    },
-    [updateSharedUserIds, user?.id, values.sharedUserIds],
-  );
-
   return {
     accountDropdownQuery,
     accountOptions,
@@ -440,16 +515,18 @@ const useAddTransactionRecord = (
     closeDropdown,
     content,
     currentUserId: user?.id,
+    deleteRecord,
     fieldErrors,
     friendEmailQuery: sharedFriends.friendEmailQuery,
     friendSearchError: sharedFriends.friendSearchError,
     friendSearchResults: sharedFriends.friendSearchResults,
     friends: sharedFriends.friends,
-    friendsGroupId: sharedFriends.friendsGroupId,
     formError,
     isAddFriendModalVisible: sharedFriends.isAddFriendModalVisible,
     isAddingFriend: sharedFriends.isAddingFriend,
     isCategoryPickerVisible,
+    isDeleting: isDeletingRecord,
+    isEditing: Boolean(editingTransactionId),
     isLoadingOptions,
     isSaving: isSavingRecord || isSubmitting,
     isSearchingFriend: sharedFriends.isSearchingFriend,
@@ -457,6 +534,7 @@ const useAddTransactionRecord = (
     isSplitSheetVisible,
     isSubmitDisabled:
       isLoadingOptions ||
+      isDeletingRecord ||
       isSavingRecord ||
       isSubmitting ||
       sharedFriends.isAddingFriend ||
@@ -480,12 +558,10 @@ const useAddTransactionRecord = (
     setAccountDropdownQuery,
     setCategoryPickerQuery,
     setFriendEmailQuery: sharedFriends.setFriendEmailQuery,
-    sharedGroups,
     splitMethodLabel,
     splitParticipants,
     friendPickerQuery,
     submit,
-    toggleSharedGroup,
     toggleSharedUser,
     totalAmountCents,
     updateField,

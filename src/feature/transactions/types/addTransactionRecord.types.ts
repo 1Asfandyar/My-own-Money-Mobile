@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import type { Category } from '@/feature/categories/types/category.types';
-import type { Group, GroupUser } from '@/feature/groups/types/group.types';
+import type { GroupUser } from '@/feature/groups/types/group.types';
 import type {
   SharedExpenseSplitMethod,
   SharedExpenseSplitValueMap,
@@ -110,15 +110,11 @@ export type CategoryPickerModalProps = {
 };
 
 export type SharedExpenseParticipantsProps = {
-  currentUserId?: number | null;
   error?: string;
   friends: GroupUser[];
-  friendsGroupId: number | null;
-  groups: Group[];
   query: string;
   onAddFriendPress: () => void;
   onQueryChange: (query: string) => void;
-  onToggleGroup: (group: Group) => void;
   onToggleFriend: (id: number) => void;
   selectedFriends: GroupUser[];
   selectedUserIds: number[];
@@ -201,7 +197,6 @@ export type AddTransactionRecordState = {
   friendSearchError: string;
   friendSearchResults: GroupUser[];
   friends: GroupUser[];
-  friendsGroup: Group | null;
   formError: string;
   isAddFriendModalVisible: boolean;
   isAddingFriend: boolean;
@@ -227,7 +222,6 @@ export type AddTransactionRecordActions = {
   setFriendSearchError: (error: string) => void;
   setFriendSearchResults: (users: GroupUser[]) => void;
   setFriends: (friends: GroupUser[]) => void;
-  setFriendsGroup: (group: Group | null) => void;
   setFormError: (formError: string) => void;
   setIsAddingFriend: (isAddingFriend: boolean) => void;
   setIsLoadingOptions: (isLoadingOptions: boolean) => void;
@@ -257,12 +251,14 @@ export type AddTransactionRecordViewModel = {
   friendSearchError: string;
   friendSearchResults: GroupUser[];
   friends: GroupUser[];
-  friendsGroupId: number | null;
   formError: string;
   currentUserId?: number | null;
+  deleteRecord: () => void;
   isAddFriendModalVisible: boolean;
   isAddingFriend: boolean;
   isCategoryPickerVisible: boolean;
+  isDeleting: boolean;
+  isEditing: boolean;
   isLoadingOptions: boolean;
   isSaving: boolean;
   isSearchingFriend: boolean;
@@ -289,11 +285,9 @@ export type AddTransactionRecordViewModel = {
   setFriendEmailQuery: (query: string) => void;
   splitMethodLabel: string;
   splitParticipants: GroupUser[];
-  sharedGroups: Group[];
   friendPickerQuery: string;
   openSplitSheet: () => void;
   submit: () => void;
-  toggleSharedGroup: (group: Group) => void;
   toggleSharedUser: (id: number) => void;
   totalAmountCents: number;
   updateSplitMethod: (method: SharedExpenseSplitMethod) => void;

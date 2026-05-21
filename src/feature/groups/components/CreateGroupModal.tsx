@@ -81,7 +81,7 @@ const CreateGroupModal = ({
                     Create group
                   </ThemedText>
                   <ThemedText className="mt-1 text-sm text-gray-500">
-                    Choose friends for a custom shared group.
+                    Choose friends for a shared group.
                   </ThemedText>
                 </View>
 
@@ -118,7 +118,7 @@ const CreateGroupModal = ({
                     color={themeColors.primary}
                   />
                   <ThemedText className="mt-3 text-center text-sm text-gray-500">
-                    Add friends first, then create a custom group with them.
+                    Add friends first, then create a group with them.
                   </ThemedText>
                 </View>
               }

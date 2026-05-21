@@ -1,5 +1,3 @@
-export type GroupKind = 'friends' | 'custom';
-
 export type GroupUser = {
   avatar_url?: string | null;
   email?: string | null;
@@ -18,7 +16,6 @@ export type GroupMember = GroupUser & {
 
 export type Group = {
   id: number;
-  kind?: GroupKind | string | null;
   members?: GroupMember[];
   name?: string | null;
 };
@@ -45,7 +42,6 @@ export type RemoveGroupMemberResponse = {
 };
 
 export type CreateGroupPayload = {
-  kind: 'custom';
   name: string;
   user_ids: number[];
 };

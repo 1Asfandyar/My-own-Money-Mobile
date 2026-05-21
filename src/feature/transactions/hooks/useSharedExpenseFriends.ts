@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 
+import { searchUsersByEmail } from '@/feature/groups/api/groups.api';
 import {
-  addGroupMembers,
-  listGroups,
-  searchUsersByEmail,
-} from '@/feature/groups/api/groups.api';
-import type { Group } from '@/feature/groups/types/group.types';
-import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
+  createFriendships,
+  listFriendships,
+} from '@/feature/friendships/api/friendships.api';
+import { friendshipUserToGroupUser } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import { useAddTransactionRecordStore } from '@/feature/transactions/store/addTransactionRecord.store';
 import { ApiError } from '@/services/api';
 
@@ -36,9 +35,6 @@ const useSharedExpenseFriends = ({
     (state) => state.friendSearchResults,
   );
   const friends = useAddTransactionRecordStore((state) => state.friends);
-  const friendsGroup = useAddTransactionRecordStore(
-    (state) => state.friendsGroup,
-  );
   const isAddFriendModalVisible = useAddTransactionRecordStore(
     (state) => state.isAddFriendModalVisible,
   );
@@ -61,9 +57,6 @@ const useSharedExpenseFriends = ({
     (state) => state.setFriendSearchResults,
   );
   const setFriends = useAddTransactionRecordStore((state) => state.setFriends);
-  const setFriendsGroup = useAddTransactionRecordStore(
-    (state) => state.setFriendsGroup,
-  );
   const setIsAddingFriend = useAddTransactionRecordStore(
     (state) => state.setIsAddingFriend,
   );
@@ -71,24 +64,21 @@ const useSharedExpenseFriends = ({
     (state) => state.setIsSearchingFriend,
   );
 
-  const applyFriendsGroup = useCallback(
-    (groups: Group[]) => {
-      const nextFriendsGroup = groups[0] ?? null;
-
-      setFriendsGroup(nextFriendsGroup);
-      setFriends(getGroupUsers(nextFriendsGroup, currentUserId));
-    },
-    [currentUserId, setFriends, setFriendsGroup],
-  );
-
-  const loadFriendsGroup = useCallback(async () => {
+  const loadFriends = useCallback(async () => {
     if (!token) {
       return;
     }
 
-    const groups = await listGroups(token, 'friends');
-    applyFriendsGroup(groups);
-  }, [applyFriendsGroup, token]);
+    const friendships = await listFriendships(token);
+    const nextFriends = friendships
+      .map((friendship) => friendshipUserToGroupUser(friendship.friend))
+      .filter((friend) => friend.id !== currentUserId)
+      .sort((first, second) =>
+        (first.full_name ?? '').localeCompare(second.full_name ?? ''),
+      );
+
+    setFriends(nextFriends);
+  }, [currentUserId, setFriends, token]);
 
   const toggleSharedUser = useCallback(
     (userId: number) => {
@@ -155,22 +145,21 @@ const useSharedExpenseFriends = ({
         return;
       }
 
-      if (!friendsGroup?.id) {
-        setFriendSearchError('Your friends group is not available yet.');
-        return;
-      }
-
       setIsAddingFriend(true);
       setFriendSearchError('');
 
       try {
-        await addGroupMembers(token, friendsGroup.id, [friendUserId]);
+        await createFriendships(token, [friendUserId]);
+        await loadFriends();
 
-        if (!selectedUserIds.includes(friendUserId)) {
+        const isAcceptedFriend = friends.some(
+          (friend) => friend.id === friendUserId,
+        );
+
+        if (isAcceptedFriend && !selectedUserIds.includes(friendUserId)) {
           onSelectionChange([...selectedUserIds, friendUserId]);
         }
 
-        await loadFriendsGroup();
         closeAddFriendModal();
       } catch (error) {
         setFriendSearchError(
@@ -184,8 +173,8 @@ const useSharedExpenseFriends = ({
     },
     [
       closeAddFriendModal,
-      friendsGroup?.id,
-      loadFriendsGroup,
+      friends,
+      loadFriends,
       onSelectionChange,
       selectedUserIds,
       setFriendSearchError,
@@ -201,11 +190,10 @@ const useSharedExpenseFriends = ({
     friendSearchError,
     friendSearchResults,
     friends,
-    friendsGroupId: friendsGroup?.id ?? null,
     isAddFriendModalVisible,
     isAddingFriend,
     isSearchingFriend,
-    loadFriendsGroup,
+    loadFriends,
     openAddFriendModal,
     searchFriendByEmail,
     setFriendEmailQuery,

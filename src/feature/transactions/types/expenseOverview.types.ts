@@ -4,10 +4,9 @@ import type { ReactNode } from 'react';
 export type ExpenseOverviewTab = 'personal' | 'shared';
 
 export type ExpenseOverviewTabConfig = {
-  label: string;
-  title: string;
-  value: ExpenseOverviewTab;
   iconName: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: ExpenseOverviewTab;
 };
 
 export type ExpenseOverviewTabsProps = {

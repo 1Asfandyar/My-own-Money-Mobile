@@ -2,8 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { FormikErrors } from 'formik';
 
 import type { Category } from '@/feature/categories/types/category.types';
-import type { Group, GroupUser } from '@/feature/groups/types/group.types';
-import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
+import type { GroupUser } from '@/feature/groups/types/group.types';
 import type {
   AddTransactionRecordDropdownOption,
   AddTransactionRecordFieldErrors,
@@ -115,30 +114,6 @@ export const getCurrentUserParticipant = (
     profile_image_url: user.profile_image_url,
     profile_photo_url: user.profile_photo_url,
   };
-};
-
-export const getSharedUsersById = ({
-  currentUserId,
-  friends,
-  groups,
-}: {
-  currentUserId?: number;
-  friends: GroupUser[];
-  groups: Group[];
-}) => {
-  const usersById = new Map<number, GroupUser>();
-
-  friends.forEach((friend) => {
-    usersById.set(friend.id, friend);
-  });
-
-  groups.forEach((group) => {
-    getGroupUsers(group, currentUserId).forEach((member) => {
-      usersById.set(member.id, member);
-    });
-  });
-
-  return usersById;
 };
 
 export const getSelectedSharedFriends = (

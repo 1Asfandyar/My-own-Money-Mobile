@@ -2,11 +2,9 @@ import type {
   TransactionCategoryBreakdown,
   TransactionsByCategoryDashboard,
 } from '@/feature/categories/types/categoryDashboard.types';
+import type { FriendshipLedger } from '@/feature/friendships/types/friendship.types';
 import type { ExpenseOverviewTab } from '@/feature/transactions/types/expenseOverview.types';
-import type {
-  SharedExpenseFriendTransactions,
-  SharedExpensesDashboard,
-} from '@/feature/transactions/types/sharedExpense.types';
+import type { Transaction } from '@/feature/transactions/types/transaction.types';
 import type { Account } from '@/types/account.types';
 import type { Currency } from '@/types/currency.types';
 
@@ -58,27 +56,31 @@ export type AccountsOverviewViewModel = {
   categoryTotals: AccountsOverviewCategoryTotals;
   closeAccountPicker: () => void;
   closeDashboardCategory: () => void;
+  closeFriendshipLedger: () => void;
   currencies: Currency[];
   displayCurrency: Currency;
+  editDashboardCategoryTransaction: (transaction: Transaction) => void;
   error: string | null;
+  friendshipDashboardError: string | null;
+  friendshipLedgers: FriendshipLedger[];
   isAccountPickerVisible: boolean;
   isCategoryDashboardLoading: boolean;
+  isFriendshipDashboardLoading: boolean;
   isLoading: boolean;
-  isSharedExpensesDashboardLoading: boolean;
   openAccountPicker: () => void;
   refreshAccounts: () => void;
   refreshCategoryDashboard: () => void;
+  refreshFriendshipDashboard: () => void;
   refreshOverview: () => void;
-  refreshSharedExpensesDashboard: () => void;
+  addDashboardCategoryRecord: (categoryId: number) => void;
   selectedAccount?: Account;
   selectedCategoryBreakdown?: TransactionCategoryBreakdown;
   selectedExpenseTab: ExpenseOverviewTab;
+  selectedFriendshipLedger?: FriendshipLedger;
   selectAccount: (accountId: number) => void;
   selectDashboardCategory: (categoryId: number) => void;
+  selectFriendshipLedger: (friendshipId: number) => void;
   setSelectedExpenseTab: (tab: ExpenseOverviewTab) => void;
-  sharedExpenseFriends: SharedExpenseFriendTransactions[];
-  sharedExpensesDashboard: SharedExpensesDashboard | null;
-  sharedExpensesDashboardError: string | null;
   userFirstName?: string;
 };
 
@@ -91,16 +93,17 @@ export type AccountsOverviewStoreState = {
   currencies: Currency[];
   isAccountPickerVisible: boolean;
   isCategoryDashboardLoading: boolean;
-  isSharedExpensesDashboardLoading: boolean;
+  isFriendshipDashboardLoading: boolean;
   isLoading: boolean;
   categoryDashboard: TransactionsByCategoryDashboard | null;
   categoryDashboardError: string | null;
   error: string | null;
-  sharedExpensesDashboard: SharedExpensesDashboard | null;
-  sharedExpensesDashboardError: string | null;
+  friendshipDashboardError: string | null;
+  friendshipLedgers: FriendshipLedger[];
   selectedAccountId: number | null;
   selectedCategoryId: number | null;
   selectedExpenseTab: ExpenseOverviewTab;
+  selectedFriendshipId: number | null;
 };
 
 export type AccountsOverviewStoreActions = {
@@ -114,16 +117,15 @@ export type AccountsOverviewStoreActions = {
   setCategoryDashboardError: (error: string | null) => void;
   setCurrencies: (currencies: Currency[]) => void;
   setError: (error: string | null) => void;
+  setFriendshipDashboardError: (error: string | null) => void;
+  setFriendshipLedgers: (ledgers: FriendshipLedger[]) => void;
   setIsCategoryDashboardLoading: (isLoading: boolean) => void;
-  setIsSharedExpensesDashboardLoading: (isLoading: boolean) => void;
+  setIsFriendshipDashboardLoading: (isLoading: boolean) => void;
   setIsLoading: (isLoading: boolean) => void;
   setSelectedAccountId: (accountId: number | null) => void;
   setSelectedCategoryId: (categoryId: number | null) => void;
   setSelectedExpenseTab: (tab: ExpenseOverviewTab) => void;
-  setSharedExpensesDashboard: (
-    dashboard: SharedExpensesDashboard | null,
-  ) => void;
-  setSharedExpensesDashboardError: (error: string | null) => void;
+  setSelectedFriendshipId: (friendshipId: number | null) => void;
 };
 
 export type AccountsOverviewStore = AccountsOverviewStoreState &

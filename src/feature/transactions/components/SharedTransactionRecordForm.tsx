@@ -9,17 +9,13 @@ const SharedTransactionRecordForm = ({ form }: SharedTransactionRecordFormProps)
   return (
     <View>
       <SharedExpenseParticipants
-        currentUserId={form.currentUserId}
         error={form.fieldErrors.sharedUserIds}
         friends={form.friends}
-        friendsGroupId={form.friendsGroupId}
-        groups={form.sharedGroups}
         query={form.friendPickerQuery}
         selectedFriends={form.selectedSharedFriends}
         selectedUserIds={form.selectedSharedUserIds}
         onAddFriendPress={form.openAddFriendModal}
         onQueryChange={form.setFriendPickerQuery}
-        onToggleGroup={form.toggleSharedGroup}
         onToggleFriend={form.toggleSharedUser}
       />
 

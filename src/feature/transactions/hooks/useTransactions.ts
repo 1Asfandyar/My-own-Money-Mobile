@@ -5,8 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ROUTES } from '@/config/routes';
 import { listAccounts } from '@/feature/accounts/api/accounts.api';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
-import { listCategories } from '@/feature/categories/api/categories.api';
-import type { Category } from '@/feature/categories/types/category.types';
 import { listCurrencies } from '@/feature/currencies/api/currencies.api';
 import {
   CATEGORY_COLOR_FALLBACK,
@@ -28,6 +26,7 @@ import {
   getSignedTransactionAmountCents,
   getTransactionAmountCents,
 } from '@/feature/transactions/utils/transactionAmount.utils';
+import { getTransactionEditRouteParams } from '@/feature/transactions/utils/transactionRouteParams.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import type { Currency } from '@/types/currency.types';
@@ -39,16 +38,6 @@ import {
 
 const getSoftColor = (color: string) =>
   /^#[0-9a-f]{6}$/i.test(color) ? `${color}1A` : '#F3F4F6';
-
-const getTransactionTimestamp = (transaction: Transaction) => {
-  const date = new Date(transaction.transaction_date);
-
-  if (!Number.isNaN(date.getTime())) {
-    return date.getTime();
-  }
-
-  return transaction.id;
-};
 
 const formatTransactionDate = (value: string) => {
   const date = new Date(value);
@@ -74,10 +63,9 @@ const formatSignedCents = (
 
 const getTransactionIcon = (
   transaction: Transaction,
-  category?: Category,
 ): keyof typeof Ionicons.glyphMap => {
-  if (category?.icon && category.icon in Ionicons.glyphMap) {
-    return category.icon as keyof typeof Ionicons.glyphMap;
+  if (transaction.category?.icon && transaction.category.icon in Ionicons.glyphMap) {
+    return transaction.category.icon as keyof typeof Ionicons.glyphMap;
   }
 
   return CATEGORY_ICON_FALLBACK[transaction.transaction_type];
@@ -85,13 +73,14 @@ const getTransactionIcon = (
 
 const getTransactionListItem = (
   transaction: Transaction,
-  category: Category | undefined,
   displayCurrency: Currency,
   currencies: Currency[],
 ): TransactionListItem => {
   const color =
-    category?.color ?? CATEGORY_COLOR_FALLBACK[transaction.transaction_type];
-  const categoryLabel = category?.name ?? `Category #${transaction.category_id}`;
+    transaction.category?.color ??
+    CATEGORY_COLOR_FALLBACK[transaction.transaction_type];
+  const categoryLabel =
+    transaction.category?.name ?? `Category #${transaction.category_id}`;
   const typeLabel = CATEGORY_TYPE_LABELS[transaction.transaction_type];
 
   return {
@@ -103,10 +92,11 @@ const getTransactionListItem = (
     categoryLabel,
     color,
     dateLabel: formatTransactionDate(transaction.transaction_date),
-    iconName: getTransactionIcon(transaction, category),
+    iconName: getTransactionIcon(transaction),
     id: transaction.id,
     note: transaction.note?.trim() || undefined,
     softColor: getSoftColor(color),
+    sourceTransaction: transaction,
     title: transaction.title || categoryLabel || typeLabel,
     typeLabel,
   };
@@ -185,13 +175,11 @@ export const useTransactions = (): TransactionsViewModel => {
   const setSelectedAccountId = useAccountsOverviewStore(
     (state) => state.setSelectedAccountId,
   );
-  const categories = useTransactionsStore((state) => state.categories);
   const error = useTransactionsStore((state) => state.error);
   const isAccountContextLoading = useTransactionsStore(
     (state) => state.isAccountContextLoading,
   );
   const isLoading = useTransactionsStore((state) => state.isLoading);
-  const setCategories = useTransactionsStore((state) => state.setCategories);
   const setError = useTransactionsStore((state) => state.setError);
   const setIsAccountContextLoading = useTransactionsStore(
     (state) => state.setIsAccountContextLoading,
@@ -221,33 +209,20 @@ export const useTransactions = (): TransactionsViewModel => {
     displayCurrency.id,
     currencies,
   );
-  const sortedTransactions = useMemo(
-    () =>
-      [...transactions].sort(
-        (first, second) =>
-          getTransactionTimestamp(second) - getTransactionTimestamp(first),
-      ),
-    [transactions],
-  );
-  const categoryById = useMemo(
-    () => new Map(categories.map((category) => [category.id, category])),
-    [categories],
-  );
   const transactionItems = useMemo(
     () =>
-      sortedTransactions.map((transaction) =>
+      transactions.map((transaction) =>
         getTransactionListItem(
           transaction,
-          categoryById.get(transaction.category_id),
           displayCurrency,
           currencies,
         ),
       ),
-    [categoryById, currencies, displayCurrency, sortedTransactions],
+    [currencies, displayCurrency, transactions],
   );
   const summaryMetrics = useMemo(
-    () => getSummaryMetrics(sortedTransactions, displayCurrency, currencies),
-    [currencies, displayCurrency, sortedTransactions],
+    () => getSummaryMetrics(transactions, displayCurrency, currencies),
+    [currencies, displayCurrency, transactions],
   );
   const hasActiveSearch = searchQuery.trim().length > 0;
   const hasActiveDateFilter = Boolean(dateFilters.fromDate || dateFilters.toDate);
@@ -288,6 +263,16 @@ export const useTransactions = (): TransactionsViewModel => {
       setIsTransactionAccountPickerVisible(false);
     },
     [setSelectedAccountId],
+  );
+
+  const selectTransaction = useCallback(
+    (transaction: Transaction) => {
+      router.push({
+        pathname: ROUTES.ADD_PERSONAL_RECORD,
+        params: getTransactionEditRouteParams(transaction),
+      });
+    },
+    [router],
   );
 
   const redirectToLogin = useCallback(async () => {
@@ -357,24 +342,21 @@ export const useTransactions = (): TransactionsViewModel => {
     setError(null);
 
     try {
-      const shouldLoadCategories = categories.length === 0;
-      const [nextTransactions, nextCategories] = await Promise.all([
-        listAccountTransactions(token, selectedAccount.id, {
+      const nextTransactions = await listAccountTransactions(
+        token,
+        selectedAccount.id,
+        {
           fromDate: dateFilters.fromDate,
           search: debouncedSearchQuery,
           toDate: dateFilters.toDate,
-        }),
-        shouldLoadCategories ? listCategories(token) : Promise.resolve(null),
-      ]);
+        },
+      );
 
       if (transactionRequestIdRef.current !== requestId) {
         return;
       }
 
       setTransactions(nextTransactions);
-      if (nextCategories) {
-        setCategories(nextCategories);
-      }
       setHasLoadedTransactions(true);
     } catch (requestError) {
       if (transactionRequestIdRef.current !== requestId) {
@@ -397,13 +379,11 @@ export const useTransactions = (): TransactionsViewModel => {
       }
     }
   }, [
-    categories.length,
     dateFilters.fromDate,
     dateFilters.toDate,
     debouncedSearchQuery,
     redirectToLogin,
     selectedAccount?.id,
-    setCategories,
     setError,
     setIsLoading,
     setTransactions,
@@ -473,6 +453,7 @@ export const useTransactions = (): TransactionsViewModel => {
     onRefresh: refresh,
     onSearchQueryChange: updateSearchQuery,
     onSelectAccount: selectAccount,
+    onSelectTransaction: selectTransaction,
     searchQuery,
     selectedAccount,
     summaryMetrics,
