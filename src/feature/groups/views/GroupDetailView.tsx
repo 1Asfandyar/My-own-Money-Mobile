@@ -12,7 +12,7 @@ import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
 const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
-  const groupName = detail.group?.name?.trim() || 'Custom group';
+  const groupName = detail.group?.name?.trim() || 'Group';
 
   return (
     <View className="flex-1 bg-white">

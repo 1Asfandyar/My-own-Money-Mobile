@@ -1,13 +1,8 @@
-import type { TransactionsByCategoryDashboard } from '@/feature/categories/types/categoryDashboard.types';
 import type {
   ListAccountTransactionsParams,
   Transaction,
   TransactionPayload,
 } from '@/feature/transactions/types/transaction.types';
-import type {
-  SharedExpensesDashboard,
-  SharedExpensesResponse,
-} from '@/feature/transactions/types/sharedExpense.types';
 import { apiRequest } from '@/services/api';
 
 export const createTransaction = async (
@@ -26,53 +21,58 @@ export const createTransaction = async (
   return result.data.transaction;
 };
 
-export const listTransactionsByCategory = async (
+export const updateTransaction = async (
   token: string,
-  accountId: number,
+  transactionId: number,
+  payload: TransactionPayload,
 ) => {
-  const query = new URLSearchParams({
-    account_id: String(accountId),
-    type: 'personal',
-  });
-  const result = await apiRequest<
-    { success: true } & TransactionsByCategoryDashboard
-  >(`/api/v0/transactions?${query.toString()}`, { token });
+  const result = await apiRequest<{ success: true; transaction: Transaction }>(
+    `/api/v0/transactions/${transactionId}`,
+    {
+      method: 'PATCH',
+      token,
+      body: payload,
+    },
+  );
 
-  return {
-    total_amount_cents: result.data.total_amount_cents ?? 0,
-    total_absolute_amount_cents: result.data.total_absolute_amount_cents ?? 0,
-    categories: result.data.categories ?? [],
-  };
+  return result.data.transaction;
 };
 
-export const listSharedExpenseTransactions = async (
+export const deleteTransaction = async (
   token: string,
-  accountId: number,
-): Promise<SharedExpensesDashboard> => {
-  const query = new URLSearchParams({
-    account_id: String(accountId),
-    type: 'shared',
-  });
-  const result = await apiRequest<SharedExpensesResponse>(
-    `/api/v0/transactions?${query.toString()}`,
+  transactionId: number,
+) => {
+  await apiRequest<{ success: true }>(
+    `/api/v0/transactions/${transactionId}`,
+    {
+      method: 'DELETE',
+      token,
+    },
+  );
+};
+
+export const getTransaction = async (token: string, transactionId: number) => {
+  const result = await apiRequest<{ success: true; transaction: Transaction }>(
+    `/api/v0/transactions/${transactionId}`,
     { token },
   );
 
-  return {
-    friends: result.data.friends ?? [],
-  };
+  return result.data.transaction;
 };
 
 export const listAccountTransactions = async (
   token: string,
   accountId: number,
-  params: ListAccountTransactionsParams = { fromDate: '', toDate: '' },
+  params: ListAccountTransactionsParams = {},
 ) => {
   const queryParams = new URLSearchParams({
     account_id: String(accountId),
-    type: params.type ?? 'none',
   });
   const trimmedSearch = params.search?.trim();
+
+  if (params.type) {
+    queryParams.set('type', params.type);
+  }
 
   if (trimmedSearch) {
     queryParams.set('search', trimmedSearch);

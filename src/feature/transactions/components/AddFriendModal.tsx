@@ -80,7 +80,7 @@ const AddFriendModal = ({
                     Add friend
                   </ThemedText>
                   <ThemedText className="mt-1 text-sm text-gray-500">
-                    Search by email to add someone to your friends group.
+                    Search by email to send a friend request.
                   </ThemedText>
                 </View>
 

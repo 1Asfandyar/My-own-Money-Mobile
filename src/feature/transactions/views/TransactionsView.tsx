@@ -90,6 +90,7 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => {
         ListEmptyComponent={emptyState}
         ListHeaderComponent={listHeader}
         onRefresh={transactions.onRefresh}
+        onSelectTransaction={transactions.onSelectTransaction}
         transactions={shouldShowActivity ? transactions.transactions : []}
       />
 

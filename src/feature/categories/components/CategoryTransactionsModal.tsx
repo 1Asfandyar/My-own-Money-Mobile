@@ -22,7 +22,9 @@ const CategoryTransactionsModal = ({
   currencies,
   displayCurrency,
   isVisible,
+  onAddRecord,
   onClose,
+  onEditTransaction,
 }: CategoryTransactionsModalProps) => {
   if (!categoryBreakdown) {
     return null;
@@ -35,11 +37,13 @@ const CategoryTransactionsModal = ({
     category.category_type === 'expense'
       ? -Math.abs(categoryBreakdown.amount_cents)
       : Math.abs(categoryBreakdown.amount_cents);
+  const addRecordLabel = isIncome ? 'Add income' : 'Add expense';
   const renderTransaction: ListRenderItem<Transaction> = ({ item }) => (
     <CategoryTransactionRow
       categoryName={category.name}
       currencies={currencies}
       displayCurrencyId={displayCurrency.id}
+      onPress={onEditTransaction}
       transaction={item}
     />
   );
@@ -79,9 +83,39 @@ const CategoryTransactionsModal = ({
                   {isIncome ? 'Income' : 'Expense'}
                 </ThemedText>
               </View>
-              <ThemedText className="text-xl text-gray-900" weight="bold">
-                {category.name}
-              </ThemedText>
+              <View className="flex-row items-center">
+                <ThemedText
+                  className="min-w-0 flex-1 text-xl text-gray-900"
+                  numberOfLines={1}
+                  weight="bold"
+                >
+                  {category.name}
+                </ThemedText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${addRecordLabel} in ${category.name}`}
+                  onPress={() => onAddRecord(category.id, category.category_type)}
+                  className="ml-3 flex-row items-center rounded-md px-3 py-2"
+                  style={{ backgroundColor: color }}
+                >
+                  <Ionicons
+                    name={
+                      isIncome
+                        ? 'trending-up-outline'
+                        : 'trending-down-outline'
+                    }
+                    size={15}
+                    color={themeColors.white}
+                  />
+                  <ThemedText
+                    className="ml-1 text-xs text-white"
+                    numberOfLines={1}
+                    weight="semiBold"
+                  >
+                    {addRecordLabel}
+                  </ThemedText>
+                </Pressable>
+              </View>
               <ThemedText className="mt-1 text-sm text-gray-500">
                 {formatCategoryPercentage(categoryBreakdown.percentage)} of account
                 balance

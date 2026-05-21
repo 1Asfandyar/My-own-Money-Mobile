@@ -1,14 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { memo } from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 import { transactionListStyles } from '@/feature/transactions/components/TransactionList.styles';
 import type { TransactionRowProps } from '@/feature/transactions/types/transaction.types';
 import ThemedText from '@/theme/components/ThemedText';
+import { themeColors } from '@/theme/utilities';
 
-const TransactionRow = ({ transaction }: TransactionRowProps) => (
-  <View
+const TransactionRow = ({ onPress, transaction }: TransactionRowProps) => (
+  <TouchableOpacity
+    activeOpacity={0.78}
+    accessibilityRole="button"
+    accessibilityLabel={`Edit ${transaction.title}`}
     className="mt-3 flex-row items-center rounded-2xl border border-gray-100 bg-white px-4 py-3"
+    onPress={() => onPress?.(transaction.sourceTransaction)}
     style={transactionListStyles.row}
   >
     <View
@@ -55,16 +60,24 @@ const TransactionRow = ({ transaction }: TransactionRowProps) => (
       ) : null}
     </View>
 
-    <ThemedText
-      adjustsFontSizeToFit
-      className="ml-3 text-sm"
-      numberOfLines={1}
-      style={{ color: transaction.color, maxWidth: 104 }}
-      weight="bold"
-    >
-      {transaction.amountLabel}
-    </ThemedText>
-  </View>
+    <View className="ml-3 flex-row items-center">
+      <ThemedText
+        adjustsFontSizeToFit
+        className="text-sm"
+        numberOfLines={1}
+        style={{ color: transaction.color, maxWidth: 92 }}
+        weight="bold"
+      >
+        {transaction.amountLabel}
+      </ThemedText>
+      <Ionicons
+        name="chevron-forward"
+        size={18}
+        color={themeColors.gray400}
+        style={{ marginLeft: 4 }}
+      />
+    </View>
+  </TouchableOpacity>
 );
 
 export default memo(TransactionRow);

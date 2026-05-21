@@ -1,24 +1,21 @@
 import { useMemo } from 'react';
 
-import type { Group, GroupUser } from '@/feature/groups/types/group.types';
+import type { GroupUser } from '@/feature/groups/types/group.types';
 import {
   getCurrentUserParticipant,
   getSelectedSharedFriends,
-  getSharedUsersById,
   getSplitParticipants,
 } from '@/feature/transactions/utils/addTransactionRecord.utils';
 import type { AuthUser } from '@/types/auth.types';
 
 type UseSharedExpenseParticipantsParams = {
   friends: GroupUser[];
-  groups: Group[];
   selectedUserIds: number[];
   user: AuthUser | null;
 };
 
 const useSharedExpenseParticipants = ({
   friends,
-  groups,
   selectedUserIds,
   user,
 }: UseSharedExpenseParticipantsParams) => {
@@ -27,13 +24,8 @@ const useSharedExpenseParticipants = ({
     [user],
   );
   const sharedUsersById = useMemo(
-    () =>
-      getSharedUsersById({
-        currentUserId: user?.id,
-        friends,
-        groups,
-      }),
-    [friends, groups, user?.id],
+    () => new Map(friends.map((friend) => [friend.id, friend])),
+    [friends],
   );
   const selectedSharedFriends = useMemo(
     () => getSelectedSharedFriends(selectedUserIds, sharedUsersById),

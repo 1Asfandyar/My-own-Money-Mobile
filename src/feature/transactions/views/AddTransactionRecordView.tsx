@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,16 +21,38 @@ import type { AddTransactionRecordViewProps } from '@/feature/transactions/types
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
+const destructiveColor = '#DC2626';
+
 const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
   const existingFriendIds = useMemo(
     () => form.friends.map((friend) => friend.id),
     [form.friends],
   );
   const headerTitle = form.isSharedRecord
-    ? 'Add an expense'
+    ? form.isEditing
+      ? 'Edit expense'
+      : 'Add an expense'
     : form.values.transactionType === 'income'
-      ? 'Add income'
-      : 'Add expense';
+      ? form.isEditing
+        ? 'Edit income'
+        : 'Add income'
+      : form.isEditing
+        ? 'Edit expense'
+        : 'Add expense';
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete transaction?',
+      'This record will be permanently removed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          onPress: form.deleteRecord,
+          style: 'destructive',
+        },
+      ],
+    );
+  };
 
   const header = (
     <View className="flex-row items-center justify-between px-5 pb-3 pt-2">
@@ -43,31 +66,59 @@ const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
         <Ionicons name="close" size={33} color={themeColors.gray900} />
       </TouchableOpacity>
 
-      <ThemedText className="text-2xl text-gray-900" weight="semiBold">
+      <ThemedText
+        className="min-w-0 flex-1 text-center text-2xl text-gray-900"
+        numberOfLines={1}
+        weight="semiBold"
+      >
         {headerTitle}
       </ThemedText>
 
-      <TouchableOpacity
-        activeOpacity={0.76}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: form.isSubmitDisabled }}
-        disabled={form.isSubmitDisabled}
-        onPress={form.submit}
-        className="min-w-14 items-end py-2"
-      >
-        {form.isSaving ? (
-          <ActivityIndicator color={themeColors.primary} />
-        ) : (
-          <ThemedText
-            className={`text-lg ${
-              form.isSubmitDisabled ? 'text-gray-300' : 'text-primary'
-            }`}
-            weight="bold"
+      <View className="min-w-28 flex-row items-center justify-end">
+        {form.isEditing ? (
+          <TouchableOpacity
+            activeOpacity={0.76}
+            accessibilityRole="button"
+            accessibilityLabel="Delete transaction"
+            accessibilityState={{ disabled: form.isDeleting || form.isSaving }}
+            disabled={form.isDeleting || form.isSaving}
+            onPress={confirmDelete}
+            className="mr-2 h-11 w-11 items-center justify-center rounded-full"
           >
-            Save
-          </ThemedText>
-        )}
-      </TouchableOpacity>
+            {form.isDeleting ? (
+              <ActivityIndicator color={destructiveColor} />
+            ) : (
+              <Ionicons
+                name="trash-outline"
+                size={22}
+                color={destructiveColor}
+              />
+            )}
+          </TouchableOpacity>
+        ) : null}
+
+        <TouchableOpacity
+          activeOpacity={0.76}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: form.isSubmitDisabled }}
+          disabled={form.isSubmitDisabled}
+          onPress={form.submit}
+          className="min-w-14 items-end py-2"
+        >
+          {form.isSaving ? (
+            <ActivityIndicator color={themeColors.primary} />
+          ) : (
+            <ThemedText
+              className={`text-lg ${
+                form.isSubmitDisabled ? 'text-gray-300' : 'text-primary'
+              }`}
+              weight="bold"
+            >
+              Save
+            </ThemedText>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 

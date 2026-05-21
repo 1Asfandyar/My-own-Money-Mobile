@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { loadAddTransactionRecordOptions } from '@/feature/transactions/api/addTransactionRecord.api';
 import type { Category } from '@/feature/categories/types/category.types';
-import type { Group } from '@/feature/groups/types/group.types';
 import type { AddTransactionRecordKind } from '@/feature/transactions/types/addTransactionRecord.types';
 import type { Account } from '@/types/account.types';
 
 type UseAddTransactionRecordOptionsParams = {
-  loadFriendsGroup: () => Promise<unknown>;
+  loadFriends: () => Promise<unknown>;
   recordKind: AddTransactionRecordKind;
   resetAddTransactionRecord: () => void;
   setAccounts: (accounts: Account[]) => void;
@@ -18,7 +17,7 @@ type UseAddTransactionRecordOptionsParams = {
 };
 
 const useAddTransactionRecordOptions = ({
-  loadFriendsGroup,
+  loadFriends,
   recordKind,
   resetAddTransactionRecord,
   setAccounts,
@@ -28,7 +27,6 @@ const useAddTransactionRecordOptions = ({
   token,
 }: UseAddTransactionRecordOptionsParams) => {
   const isSharedRecord = recordKind === 'shared';
-  const [sharedGroups, setSharedGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     resetAddTransactionRecord();
@@ -47,13 +45,12 @@ const useAddTransactionRecordOptions = ({
 
     try {
       const [options] = await Promise.all([
-        loadAddTransactionRecordOptions(token, recordKind),
-        isSharedRecord ? loadFriendsGroup() : Promise.resolve(),
+        loadAddTransactionRecordOptions(token),
+        isSharedRecord ? loadFriends() : Promise.resolve(),
       ]);
 
       setAccounts(options.accounts);
       setCategories(options.categories);
-      setSharedGroups(options.sharedGroups);
     } catch (error) {
       setFormError(
         error instanceof Error
@@ -65,8 +62,7 @@ const useAddTransactionRecordOptions = ({
     }
   }, [
     isSharedRecord,
-    loadFriendsGroup,
-    recordKind,
+    loadFriends,
     setAccounts,
     setCategories,
     setFormError,
@@ -77,8 +73,6 @@ const useAddTransactionRecordOptions = ({
   useEffect(() => {
     void loadOptions();
   }, [loadOptions]);
-
-  return { sharedGroups };
 };
 
 export default useAddTransactionRecordOptions;

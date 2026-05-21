@@ -19,7 +19,7 @@ const GroupCard = ({ group, onPress }: GroupCardProps) => {
     <TouchableOpacity
       activeOpacity={0.78}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${group.name?.trim() || 'custom group'}`}
+      accessibilityLabel={`Open ${group.name?.trim() || 'group'}`}
       onPress={onPress}
       className="mb-3 rounded-xl border border-gray-200 bg-white px-4 py-4"
     >
@@ -34,7 +34,7 @@ const GroupCard = ({ group, onPress }: GroupCardProps) => {
             weight="semiBold"
             numberOfLines={1}
           >
-            {group.name?.trim() || 'Custom group'}
+            {group.name?.trim() || 'Group'}
           </ThemedText>
           <ThemedText className="mt-0.5 text-xs text-gray-500">
             {members.length} {members.length === 1 ? 'member' : 'members'}

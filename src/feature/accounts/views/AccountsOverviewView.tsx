@@ -7,9 +7,9 @@ import SelectedAccountBalanceCard from '@/feature/accounts/components/SelectedAc
 import type { AccountsOverviewViewProps } from '@/feature/accounts/types/accountsOverview.types';
 import CategoryTransactionsModal from '@/feature/categories/components/CategoryTransactionsModal';
 import PersonalCategoryDashboard from '@/feature/categories/components/PersonalCategoryDashboard';
+import SharedFriendshipDashboard from '@/feature/friendships/components/SharedFriendshipDashboard';
 import AddTransactionFab from '@/feature/transactions/components/AddTransactionFab';
 import ExpenseOverviewTabs from '@/feature/transactions/components/ExpenseOverviewTabs';
-import SharedExpenseDashboard from '@/feature/transactions/components/SharedExpenseDashboard';
 
 const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
   const hasAccounts = dashboard.activeAccounts.length > 0;
@@ -63,14 +63,14 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
                 totalIncomeCents={dashboard.categoryTotals.totalIncomeCents}
               />
             ) : (
-              <SharedExpenseDashboard
+              <SharedFriendshipDashboard
                 currencies={dashboard.currencies}
                 displayCurrency={dashboard.displayCurrency}
-                error={dashboard.sharedExpensesDashboardError}
-                friends={dashboard.sharedExpenseFriends}
-                isLoading={dashboard.isSharedExpensesDashboardLoading}
-                onRetry={dashboard.refreshSharedExpensesDashboard}
-                selectedAccount={dashboard.selectedAccount}
+                error={dashboard.friendshipDashboardError}
+                isLoading={dashboard.isFriendshipDashboardLoading}
+                ledgers={dashboard.friendshipLedgers}
+                onSelectFriendship={dashboard.selectFriendship}
+                onRetry={dashboard.refreshFriendshipDashboard}
               />
             )}
           </ExpenseOverviewTabs>
@@ -93,8 +93,11 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
         currencies={dashboard.currencies}
         displayCurrency={dashboard.displayCurrency}
         isVisible={Boolean(dashboard.selectedCategoryBreakdown)}
+        onAddRecord={dashboard.addDashboardCategoryRecord}
         onClose={dashboard.closeDashboardCategory}
+        onEditTransaction={dashboard.editDashboardCategoryTransaction}
       />
+
     </View>
   );
 };

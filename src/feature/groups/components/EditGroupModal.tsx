@@ -118,7 +118,7 @@ const EditGroupModal = ({
                     color={themeColors.primary}
                   />
                   <ThemedText className="mt-3 text-center text-sm text-gray-500">
-                    Add friends first, then update this custom group.
+                    Add friends first, then update this group.
                   </ThemedText>
                 </View>
               }

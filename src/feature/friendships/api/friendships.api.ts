@@ -1,0 +1,74 @@
+import { apiRequest } from '@/services/api';
+import type {
+  Friendship,
+  FriendshipDetail,
+  FriendshipLedger,
+  ListFriendshipsParams,
+} from '@/feature/friendships/types/friendship.types';
+
+type FriendshipLedgerResponse = FriendshipLedger & {
+  balance?: FriendshipLedger['balance_summary'];
+};
+
+type FriendshipDetailResponse = FriendshipDetail & {
+  balance?: FriendshipDetail['balance_summary'];
+};
+
+const normalizeFriendshipLedger = (
+  friendship: FriendshipLedgerResponse,
+): FriendshipLedger => ({
+  ...friendship,
+  balance_summary:
+    friendship.balance_summary ??
+    friendship.balance ?? { amount_cents: 0, type: 'settled_up' },
+});
+
+export const listFriendships = async (
+  token: string,
+  params: ListFriendshipsParams = {},
+) => {
+  const query = new URLSearchParams();
+
+  if (params.filter) {
+    query.set('filter', params.filter);
+  }
+
+  if (params.status) {
+    query.set('status', params.status);
+  }
+
+  const endpoint = query.toString()
+    ? `/api/v0/friendships?${query.toString()}`
+    : '/api/v0/friendships';
+  const result = await apiRequest<{
+    success: true;
+    friendships: FriendshipLedgerResponse[];
+  }>(endpoint, { token });
+
+  return (result.data.friendships ?? []).map(normalizeFriendshipLedger);
+};
+
+export const getFriendship = async (token: string, friendshipId: number) => {
+  const result = await apiRequest<{
+    success: true;
+    friendship: FriendshipDetailResponse;
+  }>(`/api/v0/friendships/${friendshipId}`, { token });
+
+  return normalizeFriendshipLedger(result.data.friendship) as FriendshipDetail;
+};
+
+export const createFriendships = async (
+  token: string,
+  userIds: number[],
+) => {
+  const result = await apiRequest<{
+    success: true;
+    friendships: Friendship[];
+  }>('/api/v0/friendships', {
+    method: 'POST',
+    token,
+    body: { user_ids: userIds },
+  });
+
+  return result.data.friendships ?? [];
+};

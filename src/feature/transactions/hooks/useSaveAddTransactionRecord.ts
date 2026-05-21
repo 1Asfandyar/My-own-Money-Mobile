@@ -1,7 +1,11 @@
 import type { FormikHelpers } from 'formik';
 import { useCallback, useRef, useState } from 'react';
 
-import { createTransaction } from '@/feature/transactions/api/transactions.api';
+import {
+  createTransaction,
+  deleteTransaction,
+  updateTransaction,
+} from '@/feature/transactions/api/transactions.api';
 import type { Category } from '@/feature/categories/types/category.types';
 import type { AddTransactionRecordFormValues } from '@/feature/transactions/types/addTransactionRecord.types';
 import {
@@ -19,6 +23,8 @@ import type { AuthUser } from '@/types/auth.types';
 type UseSaveAddTransactionRecordParams = {
   activeAccounts: Account[];
   categories: Category[];
+  editingTransactionDate?: string | null;
+  editingTransactionId?: number | null;
   isSharedRecord: boolean;
   onSaved: () => void;
   setFormError: (error: string) => void;
@@ -30,6 +36,8 @@ type UseSaveAddTransactionRecordParams = {
 const useSaveAddTransactionRecord = ({
   activeAccounts,
   categories,
+  editingTransactionDate,
+  editingTransactionId,
   isSharedRecord,
   onSaved,
   setFormError,
@@ -38,7 +46,9 @@ const useSaveAddTransactionRecord = ({
   user,
 }: UseSaveAddTransactionRecordParams) => {
   const [isSavingRecord, setIsSavingRecord] = useState(false);
+  const [isDeletingRecord, setIsDeletingRecord] = useState(false);
   const isSavingRecordRef = useRef(false);
+  const isDeletingRecordRef = useRef(false);
 
   const lockSave = useCallback(() => {
     if (isSavingRecordRef.current) {
@@ -53,6 +63,21 @@ const useSaveAddTransactionRecord = ({
   const unlockSave = useCallback(() => {
     isSavingRecordRef.current = false;
     setIsSavingRecord(false);
+  }, []);
+
+  const lockDelete = useCallback(() => {
+    if (isDeletingRecordRef.current) {
+      return false;
+    }
+
+    isDeletingRecordRef.current = true;
+    setIsDeletingRecord(true);
+    return true;
+  }, []);
+
+  const unlockDelete = useCallback(() => {
+    isDeletingRecordRef.current = false;
+    setIsDeletingRecord(false);
   }, []);
 
   const saveRecord = useCallback(
@@ -125,7 +150,15 @@ const useSaveAddTransactionRecord = ({
           userCurrencyId: user?.currency_id,
         });
 
-        await createTransaction(token, payload);
+        if (editingTransactionDate) {
+          payload.transaction_date = editingTransactionDate;
+        }
+
+        if (editingTransactionId) {
+          await updateTransaction(token, editingTransactionId, payload);
+        } else {
+          await createTransaction(token, payload);
+        }
         onSaved();
       } catch (error) {
         unlockSave();
@@ -152,6 +185,8 @@ const useSaveAddTransactionRecord = ({
     [
       activeAccounts,
       categories,
+      editingTransactionDate,
+      editingTransactionId,
       isSharedRecord,
       lockSave,
       onSaved,
@@ -163,7 +198,44 @@ const useSaveAddTransactionRecord = ({
     ],
   );
 
+  const deleteRecord = useCallback(async () => {
+    if (!editingTransactionId || !lockDelete()) {
+      return;
+    }
+
+    if (!token) {
+      setFormError('Please sign in again to delete this record.');
+      unlockDelete();
+      return;
+    }
+
+    setFormError('');
+
+    try {
+      await deleteTransaction(token, editingTransactionId);
+      onSaved();
+    } catch (error) {
+      unlockDelete();
+
+      if (error instanceof ApiError) {
+        setFormError(error.fieldErrors.base || error.message);
+        return;
+      }
+
+      setFormError('Could not delete this record. Please try again.');
+    }
+  }, [
+    editingTransactionId,
+    lockDelete,
+    onSaved,
+    setFormError,
+    token,
+    unlockDelete,
+  ]);
+
   return {
+    deleteRecord,
+    isDeletingRecord,
     isSavingRecord,
     saveRecord,
   };

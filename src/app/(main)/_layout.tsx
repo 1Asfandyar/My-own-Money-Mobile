@@ -22,7 +22,10 @@ export default function MainLayout() {
 
   const shouldHideHeader =
     pathname.endsWith('/add-personal-record') ||
-    pathname.endsWith('/add-shared-record');
+    pathname.endsWith('/add-shared-record') ||
+    pathname.endsWith('/record-payment') ||
+    pathname.includes('/friendship/') ||
+    pathname.includes('/shared-transaction/');
 
   return (
     <View className="flex-1 bg-white">

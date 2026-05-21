@@ -17,7 +17,7 @@ const keyExtractor = (group: Group) => String(group.id);
 
 const GroupsView = ({ groups }: GroupsViewProps) => {
   const router = useRouter();
-  const hasGroups = groups.customGroups.length > 0;
+  const hasGroups = groups.groups.length > 0;
   const hasFriends = groups.friends.length > 0;
   const openGroup = useCallback(
     (groupId: number) => {
@@ -41,7 +41,7 @@ const GroupsView = ({ groups }: GroupsViewProps) => {
               Groups
             </ThemedText>
             <ThemedText className="mt-1 text-sm leading-5 text-gray-500">
-              Custom groups for shared expenses with your friends.
+              Groups for shared expenses with your friends.
             </ThemedText>
           </View>
 
@@ -91,12 +91,12 @@ const GroupsView = ({ groups }: GroupsViewProps) => {
           />
         </View>
         <ThemedText className="mt-4 text-lg text-gray-900" weight="semiBold">
-          No custom groups yet
+          No groups yet
         </ThemedText>
         <ThemedText className="mt-2 text-center text-sm leading-5 text-gray-500">
           {hasFriends
             ? 'Create a group from friends you already have.'
-            : 'Add friends first, then create custom groups from them.'}
+            : 'Add friends first, then create groups from them.'}
         </ThemedText>
 
         <ThemedButton
@@ -126,7 +126,7 @@ const GroupsView = ({ groups }: GroupsViewProps) => {
   return (
     <View className="flex-1 bg-white">
       <FlatList
-        data={groups.isLoading ? [] : groups.customGroups}
+        data={groups.isLoading ? [] : groups.groups}
         className="flex-1"
         contentContainerStyle={{
           paddingBottom: 120,

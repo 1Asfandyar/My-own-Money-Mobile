@@ -3,9 +3,9 @@ import type { Group, GroupUser } from '@/feature/groups/types/group.types';
 export type GroupsViewModel = {
   createError: string;
   createGroupName: string;
-  customGroups: Group[];
   error: string;
   friends: GroupUser[];
+  groups: Group[];
   isCreateDisabled: boolean;
   isCreateModalVisible: boolean;
   isCreating: boolean;

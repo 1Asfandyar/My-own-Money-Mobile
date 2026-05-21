@@ -54,13 +54,16 @@ export type CategoryTransactionsModalProps = {
   currencies: Currency[];
   displayCurrency: Currency;
   isVisible: boolean;
+  onAddRecord: (categoryId: number, transactionType: TransactionType) => void;
   onClose: () => void;
+  onEditTransaction: (transaction: Transaction) => void;
 };
 
 export type CategoryTransactionRowProps = {
   categoryName: string;
   currencies: Currency[];
   displayCurrencyId: number;
+  onPress?: (transaction: Transaction) => void;
   transaction: Transaction;
 };
 

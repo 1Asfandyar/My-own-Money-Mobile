@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ROUTES } from '@/config/routes';
+import { listFriendships } from '@/feature/friendships/api/friendships.api';
+import { friendshipUserToGroupUser } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import {
   addGroupMembers,
   getGroup,
-  listGroups,
   removeGroupMember,
   updateGroup,
 } from '@/feature/groups/api/groups.api';
@@ -83,9 +84,9 @@ const useGroupDetail = (
     setError('');
 
     try {
-      const [nextGroup, friendGroups] = await Promise.all([
+      const [nextGroup, friendships] = await Promise.all([
         getGroup(token, groupId),
-        listGroups(token, 'friends'),
+        listFriendships(token),
       ]);
 
       if (!nextGroup) {
@@ -95,7 +96,11 @@ const useGroupDetail = (
       }
 
       setGroup(nextGroup);
-      setFriends(getGroupUsers(friendGroups[0], user?.id));
+      setFriends(
+        friendships
+          .map((friendship) => friendshipUserToGroupUser(friendship.friend))
+          .filter((friend) => friend.id !== user?.id),
+      );
     } catch (nextError) {
       if (nextError instanceof ApiError && nextError.status === 401) {
         await redirectToLogin();

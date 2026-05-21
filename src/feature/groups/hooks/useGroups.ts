@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ROUTES } from '@/config/routes';
+import { listFriendships } from '@/feature/friendships/api/friendships.api';
+import { friendshipUserToGroupUser } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import { createGroup, listGroups } from '@/feature/groups/api/groups.api';
 import type { Group, GroupUser } from '@/feature/groups/types/group.types';
 import type { GroupsViewModel } from '@/feature/groups/types/groupsScreen.types';
-import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -14,7 +15,7 @@ const useGroups = (): GroupsViewModel => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
-  const [customGroups, setCustomGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [friends, setFriends] = useState<GroupUser[]>([]);
   const [createError, setCreateError] = useState('');
   const [createGroupName, setCreateGroupName] = useState('');
@@ -47,13 +48,17 @@ const useGroups = (): GroupsViewModel => {
     setError('');
 
     try {
-      const [nextCustomGroups, nextFriendGroups] = await Promise.all([
-        listGroups(token, 'custom'),
-        listGroups(token, 'friends'),
+      const [nextGroups, friendships] = await Promise.all([
+        listGroups(token),
+        listFriendships(token),
       ]);
 
-      setCustomGroups(nextCustomGroups);
-      setFriends(getGroupUsers(nextFriendGroups[0], user?.id));
+      setGroups(nextGroups);
+      setFriends(
+        friendships
+          .map((friendship) => friendshipUserToGroupUser(friendship.friend))
+          .filter((friend) => friend.id !== user?.id),
+      );
     } catch (nextError) {
       if (nextError instanceof ApiError && nextError.status === 401) {
         await redirectToLogin();
@@ -118,7 +123,6 @@ const useGroups = (): GroupsViewModel => {
 
     try {
       await createGroup(token, {
-        kind: 'custom',
         name: trimmedName,
         user_ids: selectedFriendIds,
       });
@@ -151,9 +155,9 @@ const useGroups = (): GroupsViewModel => {
   return {
     createError,
     createGroupName,
-    customGroups,
     error,
     friends,
+    groups,
     isCreateDisabled,
     isCreateModalVisible,
     isCreating,
