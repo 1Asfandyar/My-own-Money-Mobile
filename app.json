@@ -16,6 +16,7 @@
     },
     "ios": { "supportsTablet": true },
     "android": {
+      "package": "com.myownmoney.app",
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/icons/myownmoney_light.png",
         "backgroundColor": "#1E5A52"
