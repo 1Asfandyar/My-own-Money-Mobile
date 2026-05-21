@@ -1,5 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
 import type {
@@ -10,8 +15,6 @@ import type {
 import {
   friendshipUserToGroupUser,
   getFriendshipBalanceColor,
-  getFriendshipBalanceLabel,
-  getFriendshipBalanceSoftColor,
   getFriendshipUserLabel,
 } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import ThemedButton from '@/theme/components/ThemedButton';
@@ -49,7 +52,6 @@ const SharedFriendshipRow = ({
 }: SharedFriendshipRowProps) => {
   const balance = ledger.balance_summary;
   const color = getFriendshipBalanceColor(balance.type);
-  const softColor = getFriendshipBalanceSoftColor(balance.type);
   const amountLabel = formatCents(
     Math.abs(balance.amount_cents),
     displayCurrency.id,
@@ -58,9 +60,9 @@ const SharedFriendshipRow = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.82}
+      activeOpacity={0.78}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${getFriendshipUserLabel(ledger.friend)} ledger`}
+      accessibilityLabel={`Open ${getFriendshipUserLabel(ledger.friend)} balance`}
       className="mt-2 flex-row items-center rounded-2xl border border-gray-100 bg-white p-3"
       onPress={() => onPress(ledger.id)}
     >
@@ -75,36 +77,29 @@ const SharedFriendshipRow = ({
           {getFriendshipUserLabel(ledger.friend)}
         </ThemedText>
         {ledger.friend.email ? (
-          <ThemedText className="mt-1 text-xs text-gray-500" numberOfLines={1}>
+          <ThemedText className="mt-0.5 text-xs text-gray-500" numberOfLines={1}>
             {ledger.friend.email}
           </ThemedText>
         ) : null}
-        <View
-          className="mt-2 self-start rounded-full px-2 py-1"
-          style={{ backgroundColor: softColor }}
-        >
-          <ThemedText className="text-xs" style={{ color }} weight="semiBold">
-            {getFriendshipBalanceLabel(balance.type)}
-          </ThemedText>
-        </View>
       </View>
 
-      <View className="ml-3 flex-row items-center">
+      <View className="ml-3 items-end">
+        <ThemedText className="text-xs text-gray-500">
+          {balance.type === 'you_owe'
+            ? 'you owe'
+            : balance.type === 'owes_you'
+              ? 'owes you'
+              : 'settled'}
+        </ThemedText>
         <ThemedText
           adjustsFontSizeToFit
-          className="text-base"
+          className="mt-1 text-base"
           numberOfLines={1}
           style={{ color, maxWidth: 98 }}
           weight="bold"
         >
           {amountLabel}
         </ThemedText>
-        <Ionicons
-          name="chevron-forward"
-          size={19}
-          color={themeColors.gray400}
-          style={{ marginLeft: 4 }}
-        />
       </View>
     </TouchableOpacity>
   );
@@ -116,8 +111,8 @@ const SharedFriendshipDashboard = ({
   error,
   isLoading,
   ledgers,
-  onRetry,
   onSelectFriendship,
+  onRetry,
 }: SharedFriendshipDashboardProps) => {
   if (isLoading) {
     return (

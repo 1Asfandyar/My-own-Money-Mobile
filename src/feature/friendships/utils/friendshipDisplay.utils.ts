@@ -1,6 +1,5 @@
 import type { GroupUser } from '@/feature/groups/types/group.types';
 import type {
-  FriendshipActivityImpactType,
   FriendshipBalanceType,
   FriendshipUser,
 } from '@/feature/friendships/types/friendship.types';
@@ -32,41 +31,15 @@ export const getFriendshipBalanceSoftColor = (type: FriendshipBalanceType) => {
   return themeColors.gray100;
 };
 
-export const getFriendshipActivityImpactLabel = (
-  type: FriendshipActivityImpactType,
-) => {
-  if (type === 'you_lent') return 'You lent';
-  if (type === 'you_borrowed') return 'You borrowed';
-
-  return 'No balance impact';
-};
-
-export const getFriendshipActivityImpactColor = (
-  type: FriendshipActivityImpactType,
-) => {
-  if (type === 'you_lent') return themeColors.primary;
-  if (type === 'you_borrowed') return debtColor;
-
-  return themeColors.gray500;
-};
-
-export const getFriendshipDateLabel = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return 'No date';
-
-  return date.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
 export const friendshipUserToGroupUser = (
   user: FriendshipUser,
 ): GroupUser => ({
+  avatar_url: user.avatar_url,
   email: user.email,
   full_name: getFriendshipUserLabel(user),
   id: user.id,
   mobile_number: user.mobile_number,
+  photo_url: user.photo_url,
+  profile_image_url: user.profile_image_url,
+  profile_photo_url: user.profile_photo_url,
 });

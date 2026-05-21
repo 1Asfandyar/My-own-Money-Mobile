@@ -21,7 +21,6 @@ const initialAccountsOverviewState: AccountsOverviewStoreState = {
   selectedAccountId: null,
   selectedCategoryId: null,
   selectedExpenseTab: 'personal',
-  selectedFriendshipId: null,
 };
 
 export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => ({
@@ -46,6 +45,4 @@ export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => (
   setSelectedAccountId: (selectedAccountId) => set({ selectedAccountId }),
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
   setSelectedExpenseTab: (selectedExpenseTab) => set({ selectedExpenseTab }),
-  setSelectedFriendshipId: (selectedFriendshipId) =>
-    set({ selectedFriendshipId }),
 }));

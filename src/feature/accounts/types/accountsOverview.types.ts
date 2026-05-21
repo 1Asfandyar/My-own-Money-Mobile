@@ -56,7 +56,6 @@ export type AccountsOverviewViewModel = {
   categoryTotals: AccountsOverviewCategoryTotals;
   closeAccountPicker: () => void;
   closeDashboardCategory: () => void;
-  closeFriendshipLedger: () => void;
   currencies: Currency[];
   displayCurrency: Currency;
   editDashboardCategoryTransaction: (transaction: Transaction) => void;
@@ -76,10 +75,9 @@ export type AccountsOverviewViewModel = {
   selectedAccount?: Account;
   selectedCategoryBreakdown?: TransactionCategoryBreakdown;
   selectedExpenseTab: ExpenseOverviewTab;
-  selectedFriendshipLedger?: FriendshipLedger;
   selectAccount: (accountId: number) => void;
   selectDashboardCategory: (categoryId: number) => void;
-  selectFriendshipLedger: (friendshipId: number) => void;
+  selectFriendship: (friendshipId: number) => void;
   setSelectedExpenseTab: (tab: ExpenseOverviewTab) => void;
   userFirstName?: string;
 };
@@ -103,7 +101,6 @@ export type AccountsOverviewStoreState = {
   selectedAccountId: number | null;
   selectedCategoryId: number | null;
   selectedExpenseTab: ExpenseOverviewTab;
-  selectedFriendshipId: number | null;
 };
 
 export type AccountsOverviewStoreActions = {
@@ -125,7 +122,6 @@ export type AccountsOverviewStoreActions = {
   setSelectedAccountId: (accountId: number | null) => void;
   setSelectedCategoryId: (categoryId: number | null) => void;
   setSelectedExpenseTab: (tab: ExpenseOverviewTab) => void;
-  setSelectedFriendshipId: (friendshipId: number | null) => void;
 };
 
 export type AccountsOverviewStore = AccountsOverviewStoreState &

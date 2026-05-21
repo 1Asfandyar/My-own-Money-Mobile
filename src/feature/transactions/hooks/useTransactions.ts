@@ -26,7 +26,11 @@ import {
   getSignedTransactionAmountCents,
   getTransactionAmountCents,
 } from '@/feature/transactions/utils/transactionAmount.utils';
-import { getTransactionEditRouteParams } from '@/feature/transactions/utils/transactionRouteParams.utils';
+import {
+  getSharedTransactionDetailRouteParams,
+  getTransactionEditRouteParams,
+  isSharedTransaction,
+} from '@/feature/transactions/utils/transactionRouteParams.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import type { Currency } from '@/types/currency.types';
@@ -188,6 +192,9 @@ export const useTransactions = (): TransactionsViewModel => {
   const setTransactions = useTransactionsStore(
     (state) => state.setTransactions,
   );
+  const setSelectedTransaction = useTransactionsStore(
+    (state) => state.setSelectedTransaction,
+  );
   const transactions = useTransactionsStore((state) => state.transactions);
 
   const activeAccounts = useMemo(
@@ -267,12 +274,22 @@ export const useTransactions = (): TransactionsViewModel => {
 
   const selectTransaction = useCallback(
     (transaction: Transaction) => {
+      setSelectedTransaction(transaction);
+
+      if (isSharedTransaction(transaction)) {
+        router.push({
+          pathname: ROUTES.SHARED_TRANSACTION_DETAIL,
+          params: getSharedTransactionDetailRouteParams(transaction),
+        });
+        return;
+      }
+
       router.push({
         pathname: ROUTES.ADD_PERSONAL_RECORD,
         params: getTransactionEditRouteParams(transaction),
       });
     },
-    [router],
+    [router, setSelectedTransaction],
   );
 
   const redirectToLogin = useCallback(async () => {

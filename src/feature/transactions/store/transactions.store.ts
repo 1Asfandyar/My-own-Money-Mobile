@@ -9,6 +9,7 @@ const initialTransactionsState: TransactionsStoreState = {
   error: null,
   isAccountContextLoading: false,
   isLoading: false,
+  selectedTransaction: null,
   transactions: [],
 };
 
@@ -19,5 +20,6 @@ export const useTransactionsStore = create<TransactionsStore>((set) => ({
   setIsAccountContextLoading: (isAccountContextLoading) =>
     set({ isAccountContextLoading }),
   setIsLoading: (isLoading) => set({ isLoading }),
+  setSelectedTransaction: (selectedTransaction) => set({ selectedTransaction }),
   setTransactions: (transactions) => set({ transactions }),
 }));

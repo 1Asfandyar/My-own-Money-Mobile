@@ -51,6 +51,15 @@ export const deleteTransaction = async (
   );
 };
 
+export const getTransaction = async (token: string, transactionId: number) => {
+  const result = await apiRequest<{ success: true; transaction: Transaction }>(
+    `/api/v0/transactions/${transactionId}`,
+    { token },
+  );
+
+  return result.data.transaction;
+};
+
 export const listAccountTransactions = async (
   token: string,
   accountId: number,

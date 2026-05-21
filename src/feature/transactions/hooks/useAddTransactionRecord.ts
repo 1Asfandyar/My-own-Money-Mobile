@@ -18,7 +18,10 @@ import type {
   AddTransactionRecordTextField,
   AddTransactionRecordViewModel,
 } from '@/feature/transactions/types/addTransactionRecord.types';
-import type { SharedExpenseSplitMethod } from '@/feature/transactions/types/sharedExpenseSplit.types';
+import type {
+  SharedExpenseSplitMethod,
+  SharedExpenseUserSharePayload,
+} from '@/feature/transactions/types/sharedExpenseSplit.types';
 import type { TransactionType } from '@/feature/transactions/types/transaction.types';
 import {
   getAddTransactionAccountOptions,
@@ -48,6 +51,9 @@ const useAddTransactionRecord = (
     transactionDate?: string;
     transactionId?: string;
     transactionType?: TransactionType;
+    sharedUserIds?: string;
+    splitMethod?: SharedExpenseSplitMethod;
+    userShares?: string;
   }>();
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
@@ -112,6 +118,7 @@ const useAddTransactionRecord = (
       : null;
   const hasAppliedRouteCategoryRef = useRef(false);
   const hasAppliedRouteRecordFieldsRef = useRef(false);
+  const hasAppliedRouteSharedFieldsRef = useRef(false);
   const hasAppliedRouteTransactionTypeRef = useRef(false);
   const [friendPickerQuery, setFriendPickerQuery] = useState('');
   const [isSplitSheetVisible, setIsSplitSheetVisible] = useState(false);
@@ -270,6 +277,88 @@ const useAddTransactionRecord = (
     params.amountCents,
     params.note,
     setFormFieldValue,
+  ]);
+
+  useEffect(() => {
+    if (
+      hasAppliedRouteSharedFieldsRef.current ||
+      !isSharedRecord ||
+      !user?.id
+    ) {
+      return;
+    }
+
+    hasAppliedRouteSharedFieldsRef.current = true;
+
+    const routeSharedUserIds = (() => {
+      if (!params.sharedUserIds) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(params.sharedUserIds) as unknown;
+
+        return Array.isArray(parsed)
+          ? parsed
+              .map((userId) => Number(userId))
+              .filter(
+                (userId) => Number.isFinite(userId) && userId !== user.id,
+              )
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    const routeUserShares = (() => {
+      if (!params.userShares) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(params.userShares) as unknown;
+
+        return Array.isArray(parsed)
+          ? (parsed as SharedExpenseUserSharePayload[])
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    const routeSplitValues = Object.fromEntries(
+      routeUserShares.map((share) => {
+        if (params.splitMethod === 'exact') {
+          return [
+            String(share.user_id),
+            String((share.amount_cents ?? 0) / 100),
+          ];
+        }
+
+        if (params.splitMethod === 'percentage') {
+          return [String(share.user_id), String(share.percentage ?? '')];
+        }
+
+        return [String(share.user_id), String(share.shares ?? '')];
+      }),
+    );
+
+    void setValues(
+      (currentValues) => ({
+        ...currentValues,
+        sharedUserIds: routeSharedUserIds,
+        splitMethod: params.splitMethod ?? currentValues.splitMethod,
+        splitValues: routeSplitValues,
+      }),
+      false,
+    ).catch(() => undefined);
+  }, [
+    isSharedRecord,
+    params.sharedUserIds,
+    params.splitMethod,
+    params.userShares,
+    setValues,
+    user?.id,
   ]);
 
   const filteredCategories = useMemo(

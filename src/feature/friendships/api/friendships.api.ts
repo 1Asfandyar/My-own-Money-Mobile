@@ -1,9 +1,27 @@
 import { apiRequest } from '@/services/api';
 import type {
   Friendship,
+  FriendshipDetail,
   FriendshipLedger,
   ListFriendshipsParams,
 } from '@/feature/friendships/types/friendship.types';
+
+type FriendshipLedgerResponse = FriendshipLedger & {
+  balance?: FriendshipLedger['balance_summary'];
+};
+
+type FriendshipDetailResponse = FriendshipDetail & {
+  balance?: FriendshipDetail['balance_summary'];
+};
+
+const normalizeFriendshipLedger = (
+  friendship: FriendshipLedgerResponse,
+): FriendshipLedger => ({
+  ...friendship,
+  balance_summary:
+    friendship.balance_summary ??
+    friendship.balance ?? { amount_cents: 0, type: 'settled_up' },
+});
 
 export const listFriendships = async (
   token: string,
@@ -24,22 +42,19 @@ export const listFriendships = async (
     : '/api/v0/friendships';
   const result = await apiRequest<{
     success: true;
-    friendships: Friendship[];
+    friendships: FriendshipLedgerResponse[];
   }>(endpoint, { token });
 
-  return result.data.friendships ?? [];
+  return (result.data.friendships ?? []).map(normalizeFriendshipLedger);
 };
 
-export const getFriendshipLedger = async (
-  token: string,
-  friendshipId: number,
-) => {
+export const getFriendship = async (token: string, friendshipId: number) => {
   const result = await apiRequest<{
     success: true;
-    friendship: FriendshipLedger;
+    friendship: FriendshipDetailResponse;
   }>(`/api/v0/friendships/${friendshipId}`, { token });
 
-  return result.data.friendship;
+  return normalizeFriendshipLedger(result.data.friendship) as FriendshipDetail;
 };
 
 export const createFriendships = async (

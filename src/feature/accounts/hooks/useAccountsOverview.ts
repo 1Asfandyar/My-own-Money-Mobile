@@ -8,12 +8,14 @@ import type { AccountsOverviewViewModel } from '@/feature/accounts/types/account
 import { getCategoriesSummary } from '@/feature/categories/api/categories.api';
 import type { TransactionCategoryBreakdown } from '@/feature/categories/types/categoryDashboard.types';
 import { listCurrencies } from '@/feature/currencies/api/currencies.api';
-import {
-  getFriendshipLedger,
-  listFriendships,
-} from '@/feature/friendships/api/friendships.api';
+import { listFriendships } from '@/feature/friendships/api/friendships.api';
 import type { Transaction } from '@/feature/transactions/types/transaction.types';
-import { getTransactionEditRouteParams } from '@/feature/transactions/utils/transactionRouteParams.utils';
+import {
+  getSharedTransactionDetailRouteParams,
+  getTransactionEditRouteParams,
+  isSharedTransaction,
+} from '@/feature/transactions/utils/transactionRouteParams.utils';
+import { useTransactionsStore } from '@/feature/transactions/store/transactions.store';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
@@ -86,9 +88,6 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const selectedExpenseTab = useAccountsOverviewStore(
     (state) => state.selectedExpenseTab,
   );
-  const selectedFriendshipId = useAccountsOverviewStore(
-    (state) => state.selectedFriendshipId,
-  );
   const setAccounts = useAccountsOverviewStore((state) => state.setAccounts);
   const setCategoryDashboard = useAccountsOverviewStore(
     (state) => state.setCategoryDashboard,
@@ -120,8 +119,8 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const setSelectedExpenseTab = useAccountsOverviewStore(
     (state) => state.setSelectedExpenseTab,
   );
-  const setSelectedFriendshipId = useAccountsOverviewStore(
-    (state) => state.setSelectedFriendshipId,
+  const setSelectedTransaction = useTransactionsStore(
+    (state) => state.setSelectedTransaction,
   );
 
   const activeAccounts = useMemo(
@@ -157,11 +156,6 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
       ),
     [categoryBreakdowns, selectedCategoryId],
   );
-  const selectedFriendshipLedger = useMemo(
-    () => friendshipLedgers.find((ledger) => ledger.id === selectedFriendshipId),
-    [friendshipLedgers, selectedFriendshipId],
-  );
-
   const redirectToLogin = useCallback(async () => {
     await clearSession();
     router.replace(ROUTES.AUTH_LOGIN);
@@ -296,12 +290,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     setFriendshipDashboardError(null);
 
     try {
-      const friendships = await listFriendships(token);
-      const ledgers = await Promise.all(
-        friendships.map((friendship) =>
-          getFriendshipLedger(token, friendship.id),
-        ),
-      );
+      const ledgers = await listFriendships(token);
 
       if (friendshipDashboardRequestIdRef.current !== requestId) {
         return;
@@ -372,29 +361,13 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   useEffect(() => {
     setSelectedCategoryId(null);
-    setSelectedFriendshipId(null);
-  }, [
-    selectedAccount?.id,
-    selectedExpenseTab,
-    setSelectedCategoryId,
-    setSelectedFriendshipId,
-  ]);
+  }, [selectedAccount?.id, selectedExpenseTab, setSelectedCategoryId]);
 
   useEffect(() => {
     if (selectedCategoryId && !selectedCategoryBreakdown) {
       setSelectedCategoryId(null);
     }
   }, [selectedCategoryBreakdown, selectedCategoryId, setSelectedCategoryId]);
-
-  useEffect(() => {
-    if (selectedFriendshipId && !selectedFriendshipLedger) {
-      setSelectedFriendshipId(null);
-    }
-  }, [
-    selectedFriendshipId,
-    selectedFriendshipLedger,
-    setSelectedFriendshipId,
-  ]);
 
   const openAccountPicker = useCallback(() => {
     if (activeAccounts.length > 0) {
@@ -411,17 +384,19 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     setSelectedCategoryId(categoryId);
   }, [setSelectedCategoryId]);
 
+  const selectFriendship = useCallback(
+    (friendshipId: number) => {
+      router.push({
+        pathname: ROUTES.FRIENDSHIP_DETAIL,
+        params: { friendshipId },
+      });
+    },
+    [router],
+  );
+
   const closeDashboardCategory = useCallback(() => {
     setSelectedCategoryId(null);
   }, [setSelectedCategoryId]);
-
-  const selectFriendshipLedger = useCallback((friendshipId: number) => {
-    setSelectedFriendshipId(friendshipId);
-  }, [setSelectedFriendshipId]);
-
-  const closeFriendshipLedger = useCallback(() => {
-    setSelectedFriendshipId(null);
-  }, [setSelectedFriendshipId]);
 
   const addDashboardCategoryRecord = useCallback((categoryId: number) => {
     const categoryBreakdown = categoryBreakdowns.find(
@@ -446,12 +421,22 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const editDashboardCategoryTransaction = useCallback(
     (transaction: Transaction) => {
       setSelectedCategoryId(null);
+      setSelectedTransaction(transaction);
+
+      if (isSharedTransaction(transaction)) {
+        router.push({
+          pathname: ROUTES.SHARED_TRANSACTION_DETAIL,
+          params: getSharedTransactionDetailRouteParams(transaction),
+        });
+        return;
+      }
+
       router.push({
         pathname: ROUTES.ADD_PERSONAL_RECORD,
         params: getTransactionEditRouteParams(transaction),
       });
     },
-    [router, setSelectedCategoryId],
+    [router, setSelectedCategoryId, setSelectedTransaction],
   );
 
   return {
@@ -463,7 +448,6 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     categoryTotals,
     closeAccountPicker: closeStoredAccountPicker,
     closeDashboardCategory,
-    closeFriendshipLedger,
     currencies,
     displayCurrency,
     editDashboardCategoryTransaction,
@@ -482,10 +466,9 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     selectedAccount,
     selectedCategoryBreakdown,
     selectedExpenseTab,
-    selectedFriendshipLedger,
     selectAccount,
     selectDashboardCategory,
-    selectFriendshipLedger,
+    selectFriendship,
     setSelectedExpenseTab,
     userFirstName,
   };
