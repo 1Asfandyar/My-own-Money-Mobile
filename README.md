@@ -1,50 +1,85 @@
-# Welcome to your Expo app 👋
+# My Own Money
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A personal finance mobile app built with React Native and Expo.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- [Node.js](https://nodejs.org/) (LTS)
+- [Yarn](https://yarnpkg.com/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- [EAS CLI](https://docs.expo.dev/eas/) for production builds: `npm install -g eas-cli`
+- [Android Studio](https://developer.android.com/studio) for Android development
+- [Xcode](https://developer.apple.com/xcode/) for iOS development (macOS only)
+
+## Setup
+
+1. Clone the repository
 
    ```bash
-   npm install
+   git clone <repo-url>
+   cd my-own-money
    ```
 
-2. Start the app
+2. Install dependencies
 
    ```bash
-   npx expo start
+   yarn
    ```
 
-In the output, you'll find options to open the app in a
+3. Configure environment variables
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   cp .env.example .env
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   Then open `.env` and fill in the required values.
 
-## Get a fresh project
+## Development
 
-When you're ready, run:
+Start the development server:
 
 ```bash
-npm run reset-project
+yarn start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Run on a specific platform:
 
-## Learn more
+```bash
+yarn android   # Android emulator
+yarn ios       # iOS simulator
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Production Builds
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Production builds use [EAS Build](https://docs.expo.dev/build/introduction/). Make sure you are logged in:
 
-## Join the community
+```bash
+eas login
+```
 
-Join our community of developers creating universal apps.
+### Android
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+eas build --platform android --profile production
+```
+
+### iOS
+
+```bash
+eas build --platform ios --profile production
+```
+
+### Both platforms
+
+```bash
+eas build --platform all --profile production
+```
+
+## Other Commands
+
+| Command | Description |
+|---|---|
+| `yarn typecheck` | Run TypeScript type checking |
+| `yarn lint` | Run ESLint |
+| `yarn format` | Format code with Prettier |
+| `yarn test` | Run tests |
