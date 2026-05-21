@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import AccountPickerModal from '@/feature/accounts/components/AccountPickerModal';
 import SearchTransaction from '@/feature/transactions/components/SearchTransaction';
@@ -11,26 +11,14 @@ import type { TransactionsViewProps } from '@/feature/transactions/types/transac
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
-const TransactionsView = ({ transactions }: TransactionsViewProps) => (
-  <>
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerStyle={{
-        paddingBottom: 144,
-        paddingHorizontal: 16,
-        paddingTop: 16,
-      }}
-      refreshControl={
-        <RefreshControl
-          colors={[themeColors.primary]}
-          refreshing={transactions.isLoading}
-          tintColor={themeColors.primary}
-          onRefresh={transactions.onRefresh}
-        />
-      }
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
+const TransactionsView = ({ transactions }: TransactionsViewProps) => {
+  const shouldShowActivity =
+    transactions.hasAccount &&
+    !transactions.error &&
+    (!transactions.isLoading || transactions.hasLoadedTransactions);
+
+  const listHeader = (
+    <>
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
           <ThemedText className="text-2xl text-gray-900" weight="bold">
@@ -56,9 +44,7 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => (
         onRetry={transactions.onRefresh}
       />
 
-      {transactions.hasAccount &&
-      !transactions.error &&
-      (!transactions.isLoading || transactions.hasLoadedTransactions) ? (
+      {shouldShowActivity ? (
         <>
           <TransactionsSummary metrics={transactions.summaryMetrics} />
 
@@ -76,41 +62,47 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => (
               onSearchQueryChange={transactions.onSearchQueryChange}
               searchQuery={transactions.searchQuery}
             />
-
-            {transactions.hasTransactions ? (
-              <TransactionList transactions={transactions.transactions} />
-            ) : (
-              <View className="mt-3 items-center rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-7">
-                <Ionicons
-                  name={
-                    transactions.hasActiveFilters
-                      ? 'search-outline'
-                      : 'receipt-outline'
-                  }
-                  size={28}
-                  color={themeColors.gray400}
-                />
-                <ThemedText className="mt-3 text-center text-sm leading-5 text-gray-500">
-                  {transactions.hasActiveFilters
-                    ? 'No transactions matched your filters.'
-                    : 'No transactions found for this account yet.'}
-                </ThemedText>
-              </View>
-            )}
           </View>
         </>
       ) : null}
-    </ScrollView>
+    </>
+  );
 
-    <AccountPickerModal
-      accounts={transactions.activeAccounts}
-      currencies={transactions.currencies}
-      isVisible={transactions.isAccountPickerVisible}
-      selectedAccount={transactions.selectedAccount}
-      onClose={transactions.onCloseAccountPicker}
-      onSelectAccount={transactions.onSelectAccount}
-    />
-  </>
-);
+  const emptyState = shouldShowActivity ? (
+    <View className="mt-3 items-center rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-7">
+      <Ionicons
+        name={transactions.hasActiveFilters ? 'search-outline' : 'receipt-outline'}
+        size={28}
+        color={themeColors.gray400}
+      />
+      <ThemedText className="mt-3 text-center text-sm leading-5 text-gray-500">
+        {transactions.hasActiveFilters
+          ? 'No transactions matched your filters.'
+          : 'No transactions found for this account yet.'}
+      </ThemedText>
+    </View>
+  ) : null;
+
+  return (
+    <>
+      <TransactionList
+        isRefreshing={transactions.isLoading}
+        ListEmptyComponent={emptyState}
+        ListHeaderComponent={listHeader}
+        onRefresh={transactions.onRefresh}
+        transactions={shouldShowActivity ? transactions.transactions : []}
+      />
+
+      <AccountPickerModal
+        accounts={transactions.activeAccounts}
+        currencies={transactions.currencies}
+        isVisible={transactions.isAccountPickerVisible}
+        selectedAccount={transactions.selectedAccount}
+        onClose={transactions.onCloseAccountPicker}
+        onSelectAccount={transactions.onSelectAccount}
+      />
+    </>
+  );
+};
 
 export default TransactionsView;

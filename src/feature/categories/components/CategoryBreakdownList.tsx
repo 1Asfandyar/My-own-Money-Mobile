@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 
 import CategoryProgressIcon from '@/feature/categories/components/CategoryProgressIcon';
+import { categoryBreakdownListStyles } from '@/feature/categories/components/CategoryBreakdownList.styles';
+import { CATEGORY_DASHBOARD_VISIBLE_ITEM_COUNT } from '@/feature/categories/constants/categoryDashboard.constants';
 import type {
   CategoryBreakdownListProps,
   CategoryBreakdownRowProps,
@@ -19,7 +21,7 @@ const CategoryBreakdownRow = ({
     accessibilityLabel={item.accessibilityLabel}
     onPress={() => onPress(item.id)}
     className="mt-2 flex-row items-center rounded-2xl border border-gray-100 bg-white p-3"
-    style={styles.categoryCard}
+    style={categoryBreakdownListStyles.categoryCard}
   >
     <CategoryProgressIcon
       activeSegmentCount={item.activeSegmentCount}
@@ -74,7 +76,7 @@ const CategoryBreakdownRow = ({
         name="chevron-forward"
         size={19}
         color={themeColors.gray400}
-        style={styles.categoryChevron}
+        style={categoryBreakdownListStyles.categoryChevron}
       />
     </View>
   </TouchableOpacity>
@@ -84,7 +86,13 @@ const CategoryBreakdownList = ({
   items,
   onSelectCategory,
 }: CategoryBreakdownListProps) => (
-  <View>
+  <ScrollView
+    nestedScrollEnabled
+    showsVerticalScrollIndicator={
+      items.length > CATEGORY_DASHBOARD_VISIBLE_ITEM_COUNT
+    }
+    style={categoryBreakdownListStyles.scrollContainer}
+  >
     {items.map((item) => (
       <CategoryBreakdownRow
         key={item.id}
@@ -92,19 +100,7 @@ const CategoryBreakdownList = ({
         onPress={onSelectCategory}
       />
     ))}
-  </View>
+  </ScrollView>
 );
-
-const styles = StyleSheet.create({
-  categoryCard: {
-    shadowColor: themeColors.black,
-    shadowOffset: { height: 8, width: 0 },
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
-  },
-  categoryChevron: {
-    marginTop: 18,
-  },
-});
 
 export default CategoryBreakdownList;

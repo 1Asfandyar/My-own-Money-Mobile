@@ -10,6 +10,9 @@ export const addTransactionRecordInitialValues: AddTransactionRecordFormValues =
   amount: '',
   categoryId: '',
   note: '',
+  splitMethod: 'equal',
+  splitValues: {},
+  sharedUserIds: [],
   transactionType: 'expense',
 };
 
@@ -38,8 +41,8 @@ export const addTransactionRecordContent: Record<
   },
   shared: {
     iconName: 'people-outline',
-    submitLabel: 'Save shared record',
-    subtitle: 'Track an expense that belongs to a group or shared balance.',
-    title: 'Add shared record',
+    submitLabel: 'Save shared expense',
+    subtitle: 'Split an expense with friends and keep everyone included.',
+    title: 'Add shared expense',
   },
 };

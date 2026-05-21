@@ -1,4 +1,5 @@
-import { Image, View } from 'react-native';
+import { Image } from 'expo-image';
+import { View } from 'react-native';
 
 import ThemedText from '@/theme/components/ThemedText';
 
@@ -12,9 +13,8 @@ const WelcomeStep = () => {
     <View className={onboardingStyles.welcomeContainer}>
       <Image
         source={require('../../../../assets/illustrations/onboarding-1.png')}
-        className={onboardingStyles.fullWidthImage}
-        resizeMode="contain"
-        style={onboardingLayout.welcomeIllustration}
+        contentFit="contain"
+        style={[onboardingLayout.welcomeIllustration, { width: '100%' }]}
       />
 
       <View className={onboardingStyles.welcomeCopy}>

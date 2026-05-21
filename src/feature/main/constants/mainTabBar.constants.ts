@@ -1,34 +1,39 @@
-import { MainTabBarItem } from '@/feature/main/types/mainTabBar.types';
+import type { MainTabBarItem } from '@/feature/main/types/mainTabBar.types';
 
 export const mainTabBarItems: MainTabBarItem[] = [
   {
-    routeName: 'home',
-    title: 'Home',
-    accessibilityLabel: 'Open home',
-    iconName: 'home-outline',
-  },
-  {
-    routeName: 'transactions',
-    title: 'Transactions',
-    accessibilityLabel: 'Open transactions',
-    iconName: 'swap-vertical-outline',
+    routeName: 'reports',
+    title: 'Reports',
+    accessibilityLabel: 'Open reports',
+    iconName: 'grid-outline',
+    activeIconName: 'grid',
   },
   {
     routeName: 'groups',
     title: 'Groups',
     accessibilityLabel: 'Open groups',
     iconName: 'people-outline',
+    activeIconName: 'people',
   },
   {
-    routeName: 'reports',
-    title: 'Reports',
-    accessibilityLabel: 'Open reports',
-    iconName: 'bar-chart-outline',
+    routeName: 'home',
+    title: 'Home',
+    accessibilityLabel: 'Open home',
+    iconName: 'home-outline',
+    activeIconName: 'home',
+  },
+  {
+    routeName: 'transactions',
+    title: 'Transactions',
+    accessibilityLabel: 'Open transactions',
+    iconName: 'receipt-outline',
+    activeIconName: 'receipt',
   },
   {
     routeName: 'profile',
-    title: 'Profile',
-    accessibilityLabel: 'Open profile',
+    title: 'You',
+    accessibilityLabel: 'Open your profile',
     iconName: 'person-outline',
+    activeIconName: 'person',
   },
 ];

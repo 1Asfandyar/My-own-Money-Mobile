@@ -14,10 +14,13 @@ const initialAccountsOverviewState: AccountsOverviewStoreState = {
   error: null,
   isAccountPickerVisible: false,
   isCategoryDashboardLoading: false,
+  isSharedExpensesDashboardLoading: false,
   isLoading: true,
   selectedAccountId: null,
   selectedCategoryId: null,
   selectedExpenseTab: 'personal',
+  sharedExpensesDashboard: null,
+  sharedExpensesDashboardError: null,
 };
 
 export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => ({
@@ -33,8 +36,14 @@ export const useAccountsOverviewStore = create<AccountsOverviewStore>((set) => (
   setError: (error) => set({ error }),
   setIsCategoryDashboardLoading: (isCategoryDashboardLoading) =>
     set({ isCategoryDashboardLoading }),
+  setIsSharedExpensesDashboardLoading: (isSharedExpensesDashboardLoading) =>
+    set({ isSharedExpensesDashboardLoading }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setSelectedAccountId: (selectedAccountId) => set({ selectedAccountId }),
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
   setSelectedExpenseTab: (selectedExpenseTab) => set({ selectedExpenseTab }),
+  setSharedExpensesDashboard: (sharedExpensesDashboard) =>
+    set({ sharedExpensesDashboard }),
+  setSharedExpensesDashboardError: (sharedExpensesDashboardError) =>
+    set({ sharedExpensesDashboardError }),
 }));

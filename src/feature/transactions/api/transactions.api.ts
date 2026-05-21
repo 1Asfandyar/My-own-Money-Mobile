@@ -1,10 +1,14 @@
-import { apiRequest } from '@/services/api';
+import type { TransactionsByCategoryDashboard } from '@/feature/categories/types/categoryDashboard.types';
 import type {
   ListAccountTransactionsParams,
   Transaction,
   TransactionPayload,
 } from '@/feature/transactions/types/transaction.types';
-import type { TransactionsByCategoryDashboard } from '@/feature/categories/types/categoryDashboard.types';
+import type {
+  SharedExpensesDashboard,
+  SharedExpensesResponse,
+} from '@/feature/transactions/types/sharedExpense.types';
+import { apiRequest } from '@/services/api';
 
 export const createTransaction = async (
   token: string,
@@ -26,17 +30,36 @@ export const listTransactionsByCategory = async (
   token: string,
   accountId: number,
 ) => {
-  const query = `account_id=${encodeURIComponent(
-    String(accountId),
-  )}&by_category=true`;
+  const query = new URLSearchParams({
+    account_id: String(accountId),
+    type: 'personal',
+  });
   const result = await apiRequest<
     { success: true } & TransactionsByCategoryDashboard
-  >(`/api/v0/transactions?${query}`, { token });
+  >(`/api/v0/transactions?${query.toString()}`, { token });
 
   return {
     total_amount_cents: result.data.total_amount_cents ?? 0,
     total_absolute_amount_cents: result.data.total_absolute_amount_cents ?? 0,
     categories: result.data.categories ?? [],
+  };
+};
+
+export const listSharedExpenseTransactions = async (
+  token: string,
+  accountId: number,
+): Promise<SharedExpensesDashboard> => {
+  const query = new URLSearchParams({
+    account_id: String(accountId),
+    type: 'shared',
+  });
+  const result = await apiRequest<SharedExpensesResponse>(
+    `/api/v0/transactions?${query.toString()}`,
+    { token },
+  );
+
+  return {
+    friends: result.data.friends ?? [],
   };
 };
 
@@ -47,6 +70,7 @@ export const listAccountTransactions = async (
 ) => {
   const queryParams = new URLSearchParams({
     account_id: String(accountId),
+    type: params.type ?? 'none',
   });
   const trimmedSearch = params.search?.trim();
 

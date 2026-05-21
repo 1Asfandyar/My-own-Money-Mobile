@@ -1,5 +1,10 @@
-import MainPlaceholderScreen from '@/feature/main/screens/MainPlaceholderScreen';
+import { useProfileSettings } from '@/feature/profile/hooks/useProfileSettings';
+import ProfileView from '@/feature/profile/views/ProfileView';
 
-const ProfileScreen = () => <MainPlaceholderScreen screenKey="profile" />;
+const ProfileScreen = () => {
+  const profile = useProfileSettings();
+
+  return <ProfileView profile={profile} />;
+};
 
 export default ProfileScreen;

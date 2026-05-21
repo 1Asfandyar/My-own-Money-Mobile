@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { ROUTES } from '@/config/routes';
 import { listAccounts } from '@/feature/accounts/api/accounts.api';
@@ -7,7 +7,10 @@ import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverv
 import type { AccountsOverviewViewModel } from '@/feature/accounts/types/accountsOverview.types';
 import type { TransactionCategoryBreakdown } from '@/feature/categories/types/categoryDashboard.types';
 import { listCurrencies } from '@/feature/currencies/api/currencies.api';
-import { listTransactionsByCategory } from '@/feature/transactions/api/transactions.api';
+import {
+  listSharedExpenseTransactions,
+  listTransactionsByCategory,
+} from '@/feature/transactions/api/transactions.api';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
@@ -34,34 +37,83 @@ const getDashboardTotals = (categories: TransactionCategoryBreakdown[]) =>
 
 export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const router = useRouter();
+  const accountsRequestIdRef = useRef(0);
+  const categoryDashboardRequestIdRef = useRef(0);
+  const sharedDashboardRequestIdRef = useRef(0);
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
-  const {
-    accounts,
-    categoryDashboard,
-    categoryDashboardError,
-    closeAccountPicker: closeStoredAccountPicker,
-    currencies,
-    error,
-    isAccountPickerVisible,
-    isCategoryDashboardLoading,
-    isLoading,
-    openAccountPicker: openStoredAccountPicker,
-    selectedAccountId,
-    selectedCategoryId,
-    selectedExpenseTab,
-    setAccounts,
-    setCategoryDashboard,
-    setCategoryDashboardError,
-    setCurrencies,
-    setError,
-    setIsCategoryDashboardLoading,
-    setIsLoading,
-    setSelectedAccountId,
-    setSelectedCategoryId,
-    setSelectedExpenseTab,
-  } = useAccountsOverviewStore();
+  const accounts = useAccountsOverviewStore((state) => state.accounts);
+  const categoryDashboard = useAccountsOverviewStore(
+    (state) => state.categoryDashboard,
+  );
+  const categoryDashboardError = useAccountsOverviewStore(
+    (state) => state.categoryDashboardError,
+  );
+  const closeStoredAccountPicker = useAccountsOverviewStore(
+    (state) => state.closeAccountPicker,
+  );
+  const currencies = useAccountsOverviewStore((state) => state.currencies);
+  const error = useAccountsOverviewStore((state) => state.error);
+  const isAccountPickerVisible = useAccountsOverviewStore(
+    (state) => state.isAccountPickerVisible,
+  );
+  const isCategoryDashboardLoading = useAccountsOverviewStore(
+    (state) => state.isCategoryDashboardLoading,
+  );
+  const isSharedExpensesDashboardLoading = useAccountsOverviewStore(
+    (state) => state.isSharedExpensesDashboardLoading,
+  );
+  const isLoading = useAccountsOverviewStore((state) => state.isLoading);
+  const openStoredAccountPicker = useAccountsOverviewStore(
+    (state) => state.openAccountPicker,
+  );
+  const selectedAccountId = useAccountsOverviewStore(
+    (state) => state.selectedAccountId,
+  );
+  const selectedCategoryId = useAccountsOverviewStore(
+    (state) => state.selectedCategoryId,
+  );
+  const selectedExpenseTab = useAccountsOverviewStore(
+    (state) => state.selectedExpenseTab,
+  );
+  const sharedExpensesDashboard = useAccountsOverviewStore(
+    (state) => state.sharedExpensesDashboard,
+  );
+  const sharedExpensesDashboardError = useAccountsOverviewStore(
+    (state) => state.sharedExpensesDashboardError,
+  );
+  const setAccounts = useAccountsOverviewStore((state) => state.setAccounts);
+  const setCategoryDashboard = useAccountsOverviewStore(
+    (state) => state.setCategoryDashboard,
+  );
+  const setCategoryDashboardError = useAccountsOverviewStore(
+    (state) => state.setCategoryDashboardError,
+  );
+  const setCurrencies = useAccountsOverviewStore((state) => state.setCurrencies);
+  const setError = useAccountsOverviewStore((state) => state.setError);
+  const setIsCategoryDashboardLoading = useAccountsOverviewStore(
+    (state) => state.setIsCategoryDashboardLoading,
+  );
+  const setIsSharedExpensesDashboardLoading = useAccountsOverviewStore(
+    (state) => state.setIsSharedExpensesDashboardLoading,
+  );
+  const setIsLoading = useAccountsOverviewStore((state) => state.setIsLoading);
+  const setSelectedAccountId = useAccountsOverviewStore(
+    (state) => state.setSelectedAccountId,
+  );
+  const setSelectedCategoryId = useAccountsOverviewStore(
+    (state) => state.setSelectedCategoryId,
+  );
+  const setSelectedExpenseTab = useAccountsOverviewStore(
+    (state) => state.setSelectedExpenseTab,
+  );
+  const setSharedExpensesDashboard = useAccountsOverviewStore(
+    (state) => state.setSharedExpensesDashboard,
+  );
+  const setSharedExpensesDashboardError = useAccountsOverviewStore(
+    (state) => state.setSharedExpensesDashboardError,
+  );
 
   const activeAccounts = useMemo(
     () => accounts.filter((account) => !account.is_archived),
@@ -89,6 +141,10 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     () => getDashboardTotals(categoryBreakdowns),
     [categoryBreakdowns],
   );
+  const sharedExpenseFriends = useMemo(
+    () => sharedExpensesDashboard?.friends ?? [],
+    [sharedExpensesDashboard],
+  );
   const selectedCategoryBreakdown = useMemo(
     () =>
       categoryBreakdowns.find(
@@ -104,10 +160,13 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   const refreshAccounts = useCallback(async () => {
     if (!token) {
+      accountsRequestIdRef.current += 1;
       setIsLoading(false);
       return;
     }
 
+    const requestId = accountsRequestIdRef.current + 1;
+    accountsRequestIdRef.current = requestId;
     setIsLoading(true);
     setError(null);
 
@@ -123,9 +182,17 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
         }),
       ]);
 
+      if (accountsRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setAccounts(nextAccounts);
       setCurrencies(nextCurrencies.length > 0 ? nextCurrencies : fallbackCurrencies);
     } catch (requestError) {
+      if (accountsRequestIdRef.current !== requestId) {
+        return;
+      }
+
       if (requestError instanceof ApiError && requestError.status === 401) {
         await redirectToLogin();
         return;
@@ -137,7 +204,9 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
           : 'Could not load accounts.',
       );
     } finally {
-      setIsLoading(false);
+      if (accountsRequestIdRef.current === requestId) {
+        setIsLoading(false);
+      }
     }
   }, [
     redirectToLogin,
@@ -150,12 +219,15 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   const refreshCategoryDashboard = useCallback(async () => {
     if (!token || !selectedAccount?.id || selectedExpenseTab !== 'personal') {
+      categoryDashboardRequestIdRef.current += 1;
       setCategoryDashboard(null);
       setCategoryDashboardError(null);
       setIsCategoryDashboardLoading(false);
       return;
     }
 
+    const requestId = categoryDashboardRequestIdRef.current + 1;
+    categoryDashboardRequestIdRef.current = requestId;
     setIsCategoryDashboardLoading(true);
     setCategoryDashboardError(null);
 
@@ -165,8 +237,16 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
         selectedAccount.id,
       );
 
+      if (categoryDashboardRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setCategoryDashboard(nextDashboard);
     } catch (requestError) {
+      if (categoryDashboardRequestIdRef.current !== requestId) {
+        return;
+      }
+
       if (requestError instanceof ApiError && requestError.status === 401) {
         await redirectToLogin();
         return;
@@ -178,7 +258,9 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
           : 'Could not load category dashboard.',
       );
     } finally {
-      setIsCategoryDashboardLoading(false);
+      if (categoryDashboardRequestIdRef.current === requestId) {
+        setIsCategoryDashboardLoading(false);
+      }
     }
   }, [
     redirectToLogin,
@@ -190,10 +272,75 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     token,
   ]);
 
+  const refreshSharedExpensesDashboard = useCallback(async () => {
+    if (!token || !selectedAccount?.id || selectedExpenseTab !== 'shared') {
+      sharedDashboardRequestIdRef.current += 1;
+      setSharedExpensesDashboard(null);
+      setSharedExpensesDashboardError(null);
+      setIsSharedExpensesDashboardLoading(false);
+      return;
+    }
+
+    const requestId = sharedDashboardRequestIdRef.current + 1;
+    sharedDashboardRequestIdRef.current = requestId;
+    setIsSharedExpensesDashboardLoading(true);
+    setSharedExpensesDashboardError(null);
+
+    try {
+      const nextDashboard = await listSharedExpenseTransactions(
+        token,
+        selectedAccount.id,
+      );
+
+      if (sharedDashboardRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setSharedExpensesDashboard(nextDashboard);
+    } catch (requestError) {
+      if (sharedDashboardRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        await redirectToLogin();
+        return;
+      }
+
+      setSharedExpensesDashboardError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Could not load shared expenses.',
+      );
+    } finally {
+      if (sharedDashboardRequestIdRef.current === requestId) {
+        setIsSharedExpensesDashboardLoading(false);
+      }
+    }
+  }, [
+    redirectToLogin,
+    selectedAccount?.id,
+    selectedExpenseTab,
+    setIsSharedExpensesDashboardLoading,
+    setSharedExpensesDashboard,
+    setSharedExpensesDashboardError,
+    token,
+  ]);
+
   const refreshOverview = useCallback(() => {
     void refreshAccounts();
+    if (selectedExpenseTab === 'shared') {
+      void refreshSharedExpensesDashboard();
+      return;
+    }
+
     void refreshCategoryDashboard();
-  }, [refreshAccounts, refreshCategoryDashboard]);
+  }, [
+    refreshAccounts,
+    refreshCategoryDashboard,
+    refreshSharedExpensesDashboard,
+    selectedExpenseTab,
+  ]);
 
   useEffect(() => {
     void refreshAccounts();
@@ -202,6 +349,10 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   useEffect(() => {
     void refreshCategoryDashboard();
   }, [refreshCategoryDashboard]);
+
+  useEffect(() => {
+    void refreshSharedExpensesDashboard();
+  }, [refreshSharedExpensesDashboard]);
 
   useEffect(() => {
     if (activeAccounts.length === 0) {
@@ -260,17 +411,22 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     error,
     isCategoryDashboardLoading,
     isAccountPickerVisible,
+    isSharedExpensesDashboardLoading,
     isLoading,
     openAccountPicker,
     refreshAccounts,
     refreshCategoryDashboard,
     refreshOverview,
+    refreshSharedExpensesDashboard,
     selectedAccount,
     selectedCategoryBreakdown,
     selectedExpenseTab,
     selectAccount,
     selectDashboardCategory,
     setSelectedExpenseTab,
+    sharedExpenseFriends,
+    sharedExpensesDashboard,
+    sharedExpensesDashboardError,
     userFirstName,
   };
 };

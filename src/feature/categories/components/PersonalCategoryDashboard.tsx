@@ -6,7 +6,6 @@ import {
   CategoryDashboardErrorState,
   CategoryDashboardLoadingState,
 } from '@/feature/categories/components/CategoryDashboardState';
-import CategoryDashboardSummary from '@/feature/categories/components/CategoryDashboardSummary';
 import { usePersonalCategoryDashboard } from '@/feature/categories/hooks/usePersonalCategoryDashboard';
 import type { PersonalCategoryDashboardProps } from '@/feature/categories/types/categoryDashboard.types';
 

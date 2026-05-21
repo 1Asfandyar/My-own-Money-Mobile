@@ -1,18 +1,17 @@
-import '../../global.css';
-import * as SplashScreen from 'expo-splash-screen';
-import { Stack } from 'expo-router';
+import AppSplashScreen from '@/feature/splash/components/AppSplashScreen';
+import { useAuthStore } from '@/store/auth.store';
+import { appFonts } from '@/theme/fonts';
+import { themeColors } from '@/theme/utilities';
 import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-
-import AppSplashScreen from '@/feature/splash/components/AppSplashScreen';
-import { appFonts } from '@/theme/fonts';
-import { useAuthStore } from '@/store/auth.store';
-import { themeColors } from '@/theme/utilities';
+import '../../global.css';
 
 export { ErrorBoundary } from 'expo-router';
 
-void SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(appFonts);
@@ -26,7 +25,14 @@ export default function RootLayout() {
   }, [restoreSession]);
 
   useEffect(() => {
-    SplashScreen.hideAsync().catch(() => undefined);
+    const hideNativeSplash = async () => {
+      try {
+        await SplashScreen.hideAsync();
+      } catch {
+        // Expo can report that the native splash was already dismissed.
+      }
+    };
+    void hideNativeSplash();
   }, []);
 
   const handleSplashAnimationFinish = useCallback(() => {

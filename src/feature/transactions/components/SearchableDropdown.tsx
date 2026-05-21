@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { searchableDropdownStyles } from '@/feature/transactions/components/SearchableDropdown.styles';
+import SearchableDropdownOptionRow from '@/feature/transactions/components/SearchableDropdownOptionRow';
 import type { SearchableDropdownProps } from '@/feature/transactions/types/addTransactionRecord.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { fontFamilies } from '@/theme/fonts';
@@ -46,6 +48,13 @@ const SearchableDropdown = ({
       onBlur?.();
     }
   };
+  const selectOption = useCallback(
+    (id: number) => {
+      onSelect(id);
+      onClose();
+    },
+    [onClose, onSelect],
+  );
 
   return (
     <View className={`relative mb-5 ${isOpen ? 'z-40' : 'z-10'}`}>
@@ -138,50 +147,16 @@ const SearchableDropdown = ({
             nestedScrollEnabled
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={filteredOptions.length > 4}
-            className="max-h-56"
+            style={searchableDropdownStyles.optionList}
           >
-            {filteredOptions.map((option) => {
-              const isSelected = option.id === selectedId;
-
-              return (
-                <TouchableOpacity
-                  key={option.id}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    onSelect(option.id);
-                    closeDropdown(false);
-                  }}
-                  className={`mb-1 flex-row items-center rounded-xl px-3 py-3 ${
-                    isSelected ? 'bg-primary/10' : 'bg-white'
-                  }`}
-                >
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-gray-100">
-                    <Ionicons
-                      name={option.iconName ?? 'ellipse-outline'}
-                      size={18}
-                      color={option.iconColor ?? themeColors.gray700}
-                    />
-                  </View>
-                  <View className="ml-3 flex-1">
-                    <ThemedText className="text-sm text-gray-900" numberOfLines={1}>
-                      {option.label}
-                    </ThemedText>
-                    {option.supportingLabel ? (
-                      <ThemedText className="mt-0.5 text-xs text-gray-500" numberOfLines={1}>
-                        {option.supportingLabel}
-                      </ThemedText>
-                    ) : null}
-                  </View>
-                  {isSelected ? (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color={themeColors.primary}
-                    />
-                  ) : null}
-                </TouchableOpacity>
-              );
-            })}
+            {filteredOptions.map((option) => (
+              <SearchableDropdownOptionRow
+                key={option.id}
+                isSelected={option.id === selectedId}
+                onSelect={selectOption}
+                option={option}
+              />
+            ))}
 
             {filteredOptions.length === 0 ? (
               <View className="items-center px-3 py-6">

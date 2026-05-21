@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -120,7 +121,7 @@ const AppSplashScreen = ({
       <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
         <Image
           source={require('../../../assets/logo/myownmoney_logo.png')}
-          resizeMode="contain"
+          contentFit="contain"
           style={styles.logo}
         />
       </Animated.View>

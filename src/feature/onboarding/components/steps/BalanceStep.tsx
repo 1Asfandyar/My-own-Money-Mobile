@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image, View } from 'react-native';
+import { Image } from 'expo-image';
+import { View } from 'react-native';
 
 import ThemedInput from '@/theme/components/ThemedInput';
 import ThemedText from '@/theme/components/ThemedText';
@@ -22,9 +23,8 @@ const BalanceStep = ({
     <View className={onboardingStyles.stepContainer}>
       <Image
         source={require('../../../../assets/illustrations/onboarding-4.png')}
-        className={onboardingStyles.fullWidthImage}
-        resizeMode="contain"
-        style={onboardingLayout.balanceIllustration}
+        contentFit="contain"
+        style={[onboardingLayout.balanceIllustration, { width: '100%' }]}
       />
 
       <View className={onboardingStyles.balanceCopy}>

@@ -8,7 +8,9 @@ import { useAddTransactionFabStore } from '@/feature/transactions/store/addTrans
 const useAddTransactionFab = (selectedAccountId?: number) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { closeMenu, isExpanded, toggleMenu } = useAddTransactionFabStore();
+  const closeMenu = useAddTransactionFabStore((state) => state.closeMenu);
+  const isExpanded = useAddTransactionFabStore((state) => state.isExpanded);
+  const toggleMenu = useAddTransactionFabStore((state) => state.toggleMenu);
   const bottomOffset = Math.max(insets.bottom, 12) + 104;
 
   const handleAddPersonalPress = useCallback(() => {

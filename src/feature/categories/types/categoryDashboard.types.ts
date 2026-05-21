@@ -57,6 +57,13 @@ export type CategoryTransactionsModalProps = {
   onClose: () => void;
 };
 
+export type CategoryTransactionRowProps = {
+  categoryName: string;
+  currencies: Currency[];
+  displayCurrencyId: number;
+  transaction: Transaction;
+};
+
 export type CategoryDashboardErrorStateProps = {
   error: string;
   onRetry: () => void;

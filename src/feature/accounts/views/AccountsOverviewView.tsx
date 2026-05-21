@@ -9,7 +9,7 @@ import CategoryTransactionsModal from '@/feature/categories/components/CategoryT
 import PersonalCategoryDashboard from '@/feature/categories/components/PersonalCategoryDashboard';
 import AddTransactionFab from '@/feature/transactions/components/AddTransactionFab';
 import ExpenseOverviewTabs from '@/feature/transactions/components/ExpenseOverviewTabs';
-import ThemedText from '@/theme/components/ThemedText';
+import SharedExpenseDashboard from '@/feature/transactions/components/SharedExpenseDashboard';
 
 const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
   const hasAccounts = dashboard.activeAccounts.length > 0;
@@ -63,15 +63,15 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
                 totalIncomeCents={dashboard.categoryTotals.totalIncomeCents}
               />
             ) : (
-              <View className="rounded-2xl border border-gray-200 bg-white px-4 py-5">
-                <ThemedText className="text-base text-gray-900" weight="semiBold">
-                  Shared expenses
-                </ThemedText>
-                <ThemedText className="mt-2 text-sm leading-5 text-gray-500">
-                  Shared category dashboards will appear here once shared
-                  account activity is connected.
-                </ThemedText>
-              </View>
+              <SharedExpenseDashboard
+                currencies={dashboard.currencies}
+                displayCurrency={dashboard.displayCurrency}
+                error={dashboard.sharedExpensesDashboardError}
+                friends={dashboard.sharedExpenseFriends}
+                isLoading={dashboard.isSharedExpensesDashboardLoading}
+                onRetry={dashboard.refreshSharedExpensesDashboard}
+                selectedAccount={dashboard.selectedAccount}
+              />
             )}
           </ExpenseOverviewTabs>
         ) : null}

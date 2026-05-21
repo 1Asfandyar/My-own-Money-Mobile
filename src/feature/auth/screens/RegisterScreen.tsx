@@ -5,7 +5,8 @@ import ThemedPhoneInput from '@/theme/components/ThemedPhoneInput'
 import ThemedText from '@/theme/components/ThemedText'
 import { CountryOption } from '@/types/country.types'
 import useRegisterScreen from '@/feature/auth/hooks/useRegisterScreen'
-import { Image, View } from 'react-native'
+import { Image } from 'expo-image'
+import { View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const RegisterScreen = () => {
@@ -13,6 +14,8 @@ const RegisterScreen = () => {
     form,
     isKeyboardVisible,
     openLogin,
+    passwordVisibility,
+    togglePasswordVisibility,
   } = useRegisterScreen()
   const {
     values,
@@ -30,7 +33,7 @@ const RegisterScreen = () => {
       {!isKeyboardVisible && <Image
         source={require('../../../assets/logo/myownmoney_logo.png')}
         style={{ width: '40%', height: '40%' }}
-        resizeMode="contain"
+        contentFit="contain"
       />}
       <View className='w-full'>
         <ThemedInput
@@ -76,7 +79,9 @@ const RegisterScreen = () => {
           value={values.password}
           onChangeText={(value) => updateField('password', value)}
           onBlur={() => validateField('password')}
-          secureTextEntry
+          secureTextEntry={!passwordVisibility.password}
+          rightIcon={passwordVisibility.password ? 'eye-off-outline' : 'eye-outline'}
+          onRightIconPress={() => togglePasswordVisibility('password')}
           autoComplete='new-password'
           textContentType='newPassword'
           returnKeyType='next'
@@ -89,7 +94,9 @@ const RegisterScreen = () => {
           value={values.password_confirmation}
           onChangeText={(value) => updateField('password_confirmation', value)}
           onBlur={() => validateField('password_confirmation')}
-          secureTextEntry
+          secureTextEntry={!passwordVisibility.password_confirmation}
+          rightIcon={passwordVisibility.password_confirmation ? 'eye-off-outline' : 'eye-outline'}
+          onRightIconPress={() => togglePasswordVisibility('password_confirmation')}
           autoComplete='new-password'
           textContentType='newPassword'
           returnKeyType='done'

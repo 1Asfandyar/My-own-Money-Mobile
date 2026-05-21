@@ -1,10 +1,17 @@
 import type { CreateAccountPayload } from '@/types/account.types';
+import type { Currency } from '@/types/currency.types';
 
 export type AuthUser = {
+  avatar_url?: string | null;
+  currency?: Currency | null;
+  currency_code?: string | null;
   id: number;
   full_name: string;
   mobile_number: string;
   email: string;
+  photo_url?: string | null;
+  profile_image_url?: string | null;
+  profile_photo_url?: string | null;
   role: string;
   onboarding_completed?: boolean;
   has_completed_onboarding?: boolean;
@@ -44,7 +51,13 @@ export type RegisterFormValues = {
 };
 
 export type UpdateMePayload = {
+  current_password?: string;
+  email?: string;
+  full_name?: string;
+  mobile_number?: string;
   onboarding_completed?: boolean;
+  password?: string;
+  password_confirmation?: string;
   currency_id?: number;
 };
 
@@ -73,4 +86,5 @@ export type AuthStore = {
   logout: () => Promise<void>;
   clearSession: () => Promise<void>;
   completeOnboarding: (payload: CompleteOnboardingPayload) => Promise<void>;
+  updateProfile: (payload: UpdateMePayload) => Promise<AuthUser>;
 };

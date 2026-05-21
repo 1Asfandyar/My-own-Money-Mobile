@@ -1,10 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, TouchableOpacity, View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { FlatList, Modal, TouchableOpacity, View } from 'react-native';
+import type { ListRenderItem } from 'react-native';
 
+import AccountOptionRow from '@/feature/accounts/components/AccountOptionRow';
+import { accountPickerModalStyles } from '@/feature/accounts/components/AccountPickerModal.styles';
 import type { AccountPickerModalProps } from '@/feature/accounts/types/accountsOverview.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatCents } from '@/utils/currency';
+import type { Account } from '@/types/account.types';
+
+const keyExtractor = (account: Account) => String(account.id);
 
 const AccountPickerModal = ({
   accounts,
@@ -14,6 +20,18 @@ const AccountPickerModal = ({
   onSelectAccount,
   selectedAccount,
 }: AccountPickerModalProps) => {
+  const renderItem = useCallback<ListRenderItem<Account>>(
+    ({ item }) => (
+      <AccountOptionRow
+        account={item}
+        currencies={currencies}
+        isSelected={item.id === selectedAccount?.id}
+        onSelectAccount={onSelectAccount}
+      />
+    ),
+    [currencies, onSelectAccount, selectedAccount?.id],
+  );
+
   return (
     <Modal
       animationType="fade"
@@ -52,58 +70,21 @@ const AccountPickerModal = ({
             </TouchableOpacity>
           </View>
 
-          {accounts.map((account) => {
-            const isSelected = account.id === selectedAccount?.id;
-
-            return (
-              <TouchableOpacity
-                key={account.id}
-                activeOpacity={0.78}
-                accessibilityRole="button"
-                accessibilityLabel={`Select ${account.name}`}
-                onPress={() => onSelectAccount(account.id)}
-                className={`mb-3 flex-row items-center rounded-2xl border px-4 py-4 ${
-                  isSelected ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'
-                }`}
-              >
-                <View className="h-11 w-11 items-center justify-center rounded-full bg-white">
-                  <Ionicons
-                    name="wallet-outline"
-                    size={21}
-                    color={isSelected ? themeColors.primary : themeColors.gray700}
-                  />
-                </View>
-
-                <View className="ml-3 flex-1">
-                  <ThemedText
-                    className="text-base text-gray-900"
-                    weight="semiBold"
-                    numberOfLines={1}
-                  >
-                    {account.name}
-                  </ThemedText>
-                  <ThemedText className="mt-1 text-sm text-gray-500">
-                    {formatCents(
-                      account.current_balance_cents,
-                      account.currency_id,
-                      currencies,
-                    )}
-                  </ThemedText>
-                </View>
-                {isSelected ? (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={22}
-                    color={themeColors.primary}
-                  />
-                ) : null}
-              </TouchableOpacity>
-            );
-          })}
+          <FlatList
+            data={accounts}
+            initialNumToRender={8}
+            keyExtractor={keyExtractor}
+            keyboardShouldPersistTaps="handled"
+            maxToRenderPerBatch={8}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={accounts.length > 5}
+            style={accountPickerModalStyles.accountList}
+            windowSize={5}
+          />
         </View>
       </View>
     </Modal>
   );
 };
 
-export default AccountPickerModal;
+export default memo(AccountPickerModal);
