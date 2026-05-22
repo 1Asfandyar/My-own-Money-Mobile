@@ -3,6 +3,10 @@ export const mainPlaceholderScreens = {
     description: 'Shared spending groups will live here.',
     title: 'Groups',
   },
+  information: {
+    description: 'App information, help, and support details will live here.',
+    title: 'Information',
+  },
   profile: {
     description: 'Your account details and preferences will live here.',
     title: 'You',

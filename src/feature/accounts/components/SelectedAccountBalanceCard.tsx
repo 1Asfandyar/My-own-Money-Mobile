@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
+import AccountBalanceTrendGraph from '@/feature/accounts/components/AccountBalanceTrendGraph';
 import type { SelectedAccountBalanceCardProps } from '@/feature/accounts/types/accountsOverview.types';
+import { getBalanceTrend } from '@/feature/accounts/utils/accountBalanceTrend.utils';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 import { formatCents } from '@/utils/currency';
@@ -14,14 +16,28 @@ const SelectedAccountBalanceCard = ({
   selectedAccount,
 }: SelectedAccountBalanceCardProps) => {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const currentBalanceCents = selectedAccount?.current_balance_cents ?? 0;
+  const initialBalanceCents = selectedAccount?.initial_balance_cents ?? 0;
+  const trend = useMemo(
+    () =>
+      getBalanceTrend({
+        currencies,
+        currentBalanceCents,
+        displayCurrencyId: displayCurrency.id,
+        initialBalanceCents,
+      }),
+    [currencies, currentBalanceCents, displayCurrency.id, initialBalanceCents],
+  );
+  const trendAccentColor =
+    trend.direction === 'down' ? '#FCA5A5' : themeColors.accent;
   const balanceLabel = formatCents(
-    selectedAccount?.current_balance_cents ?? 0,
+    currentBalanceCents,
     displayCurrency.id,
     currencies,
   );
 
   return (
-    <View className="mt-8 rounded-3xl bg-secondary px-5 py-6">
+    <View className="mt-4 rounded-3xl bg-secondary px-5 py-6">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
           <ThemedText className="text-sm uppercase tracking-wide text-white/60">
@@ -79,6 +95,12 @@ const SelectedAccountBalanceCard = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      <AccountBalanceTrendGraph
+        accentColor={trendAccentColor}
+        isBalanceVisible={isBalanceVisible}
+        trend={trend}
+      />
     </View>
   );
 };
