@@ -1,31 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { themeColors } from '@/theme/utilities';
+import MainHeaderView from '@/feature/main/components/MainHeaderView';
+import { useMainHeader } from '@/feature/main/hooks/useMainHeader';
 
 const MainHeader = () => {
-  return (
-    <SafeAreaView edges={['top']} className="bg-white">
-      <View className="flex-row items-center justify-between border-b border-gray-100 px-5 pb-3 pt-2">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open side menu"
-          className="h-11 w-11 items-center justify-center rounded-xl bg-gray-100"
-        >
-          <Ionicons name="menu" size={24} color={themeColors.gray900} />
-        </Pressable>
+  const header = useMainHeader();
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Notifications"
-          className="h-11 w-11 items-center justify-center rounded-xl bg-gray-100"
-        >
-          <Ionicons name="notifications-outline" size={21} color={themeColors.gray700} />
-        </Pressable>
-      </View>
-    </SafeAreaView>
-  );
+  return <MainHeaderView {...header} />;
 };
 
 export default MainHeader;
