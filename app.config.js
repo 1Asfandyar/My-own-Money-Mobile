@@ -5,6 +5,7 @@ export default ({ config }) => ({
   plugins: [
     ...(config.plugins ?? []),
     'expo-secure-store',
+    '@react-native-firebase/app',
     '@react-native-google-signin/google-signin',
   ],
   extra: {

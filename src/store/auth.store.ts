@@ -17,6 +17,7 @@ import {
 import { createAccount } from '@/feature/accounts/api/accounts.api';
 import { ApiError } from '@/services/api';
 import { logger } from '@/services/logger';
+import { registerFCMToken, unregisterFCMToken } from '@/services/notifications';
 import { AuthStore, AuthUser } from '@/types/auth.types';
 
 const getHasCompletedOnboarding = (user: AuthUser) =>
@@ -53,6 +54,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isAuthenticated: true,
         hasCompletedOnboarding: getHasCompletedOnboarding(user),
       });
+      void registerFCMToken(token);
     } catch (error) {
       if (!(error instanceof ApiError)) {
         const cachedUser = await getStoredUser();
@@ -99,6 +101,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isAuthenticated: true,
         hasCompletedOnboarding: getHasCompletedOnboarding(session.user),
       });
+      void registerFCMToken(session.token);
     } finally {
       set({ status: 'idle' });
     }
@@ -116,6 +119,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isAuthenticated: true,
         hasCompletedOnboarding: getHasCompletedOnboarding(session.user),
       });
+      void registerFCMToken(session.token);
     } finally {
       set({ status: 'idle' });
     }
@@ -133,6 +137,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isAuthenticated: true,
         hasCompletedOnboarding: false,
       });
+      void registerFCMToken(session.token);
     } finally {
       set({ status: 'idle' });
     }
@@ -152,22 +157,28 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           error: error instanceof Error ? error.message : String(error),
         });
       }
-    } finally {
-      try {
-        await removeSession();
-      } catch (storageError) {
-        logger.warn('Failed to clear local session.', {
-          error: storageError instanceof Error ? storageError.message : String(storageError),
-        });
-      }
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-        hasCompletedOnboarding: false,
-        status: 'idle',
+    }
+
+    // Must run before removeSession() — reads device token ID from SecureStore
+    if (token) {
+      await unregisterFCMToken(token);
+    }
+
+    try {
+      await removeSession();
+    } catch (storageError) {
+      logger.warn('Failed to clear local session.', {
+        error: storageError instanceof Error ? storageError.message : String(storageError),
       });
     }
+
+    set({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      hasCompletedOnboarding: false,
+      status: 'idle',
+    });
   },
 
   clearSession: async () => {

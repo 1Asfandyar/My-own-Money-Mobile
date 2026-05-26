@@ -3,8 +3,8 @@ import { useCallback, useState } from 'react';
 
 import { ERROR_MESSAGES } from '@/config/constants';
 import { ROUTES } from '@/config/routes';
-import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { useLoginForm } from '@/feature/auth/hooks/useLoginForm';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin';
 
@@ -42,6 +42,7 @@ const useLoginScreen = () => {
       router.replace(ROUTES.ONBOARDING);
     } catch (error: unknown) {
       if (isErrorWithCode(error)) {
+        console.error('Google Sign-In error:', error);
         switch (error.code) {
           case statusCodes.SIGN_IN_CANCELLED:
           case statusCodes.IN_PROGRESS:

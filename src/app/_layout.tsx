@@ -1,5 +1,6 @@
 import { ENV } from '@/config/env';
 import AppSplashScreen from '@/feature/splash/components/AppSplashScreen';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useAuthStore } from '@/store/auth.store';
 import { appFonts } from '@/theme/fonts';
 import { themeColors } from '@/theme/utilities';
@@ -21,6 +22,8 @@ export default function RootLayout() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
   const isRestoring = useAuthStore((state) => state.isRestoring);
   const isAppReady = fontsLoaded && !isRestoring;
+
+  usePushNotifications();
 
   useEffect(() => {
     console.log('Configuring Google Sign-In with webClientId:', ENV.GOOGLE_CLIENT_ID);
