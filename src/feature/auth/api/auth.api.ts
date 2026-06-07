@@ -90,20 +90,6 @@ export const updateMe = async (token: string, payload: UpdateMePayload) => {
   return getMe(token);
 };
 
-export const googleLogin = async (idToken: string) => {
-  const result = await apiRequest<AuthSuccess>('/api/v0/auth/google', {
-    method: 'POST',
-    body: { token: idToken },
-  });
-  const token = extractBearerToken(result.response, result.data);
-
-  if (!token) {
-    throw new Error('Google login succeeded, but no auth token was returned.');
-  }
-
-  return { token, user: getValidatedUser(result.data) };
-};
-
 export const logout = async (token: string) => {
   await apiRequest<{ success: true; message: string }>('/api/v0/auth/logout', {
     method: 'DELETE',

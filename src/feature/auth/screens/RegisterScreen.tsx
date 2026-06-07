@@ -1,5 +1,4 @@
 import ThemedButton from '@/theme/components/ThemedButton'
-import ThemedDivider from '@/theme/components/ThemedDivider'
 import ThemedInput from '@/theme/components/ThemedInput'
 import ThemedPhoneInput from '@/theme/components/ThemedPhoneInput'
 import ThemedText from '@/theme/components/ThemedText'
@@ -113,15 +112,6 @@ const RegisterScreen = () => {
         containerClassName='w-full'
         onPress={submit}
         loading={isLoading}
-      />
-      <ThemedDivider label='or continue with' />
-      <ThemedButton
-        title='Register with Google'
-        variant='outline'
-        leftIcon='logo-google'
-        textClassName='text-gray-700'
-        containerClassName='w-full'
-        disabled
       />
       <View className="mt-4 flex-row justify-center items-center">
         <ThemedText className="text-l text-gray-500">

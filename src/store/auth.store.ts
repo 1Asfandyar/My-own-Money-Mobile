@@ -8,7 +8,6 @@ import {
 } from '@/feature/auth/storage/auth.storage';
 import {
   getMe,
-  googleLogin as googleLoginRequest,
   login as loginRequest,
   logout as logoutRequest,
   signup as signupRequest,
@@ -92,23 +91,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     try {
       const session = await loginRequest(payload);
-      await saveSession(session.token, session.user);
-      set({
-        token: session.token,
-        user: session.user,
-        isAuthenticated: true,
-        hasCompletedOnboarding: getHasCompletedOnboarding(session.user),
-      });
-    } finally {
-      set({ status: 'idle' });
-    }
-  },
-
-  googleLogin: async (idToken) => {
-    set({ status: 'googleSignIn' });
-
-    try {
-      const session = await googleLoginRequest(idToken);
       await saveSession(session.token, session.user);
       set({
         token: session.token,
