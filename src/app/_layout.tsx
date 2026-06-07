@@ -1,9 +1,7 @@
-import { ENV } from '@/config/env';
 import AppSplashScreen from '@/feature/splash/components/AppSplashScreen';
 import { useAuthStore } from '@/store/auth.store';
 import { appFonts } from '@/theme/fonts';
 import { themeColors } from '@/theme/utilities';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -21,11 +19,6 @@ export default function RootLayout() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
   const isRestoring = useAuthStore((state) => state.isRestoring);
   const isAppReady = fontsLoaded && !isRestoring;
-
-  useEffect(() => {
-    console.log('Configuring Google Sign-In with webClientId:', ENV.GOOGLE_CLIENT_ID);
-    GoogleSignin.configure({ webClientId: ENV.GOOGLE_CLIENT_ID });
-  }, []);
 
   useEffect(() => {
     restoreSession();

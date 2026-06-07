@@ -71,8 +71,7 @@ export type AuthStatus =
   | 'restoring'
   | 'signingIn'
   | 'signingUp'
-  | 'signingOut'
-  | 'googleSignIn';
+  | 'signingOut';
 
 export type AuthStore = {
   token: string | null;
@@ -83,7 +82,6 @@ export type AuthStore = {
   isRestoring: boolean;
   restoreSession: () => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
-  googleLogin: (idToken: string) => Promise<void>;
   signup: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   clearSession: () => Promise<void>;

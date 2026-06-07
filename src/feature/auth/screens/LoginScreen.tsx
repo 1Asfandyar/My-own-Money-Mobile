@@ -1,5 +1,4 @@
 import ThemedButton from '@/theme/components/ThemedButton'
-import ThemedDivider from '@/theme/components/ThemedDivider'
 import ThemedInput from '@/theme/components/ThemedInput'
 import ThemedText from '@/theme/components/ThemedText'
 import useLoginScreen from '@/feature/auth/hooks/useLoginScreen'
@@ -12,11 +11,8 @@ const LoginScreen = () => {
     form,
     isPasswordVisible,
     isKeyboardVisible,
-    googleError,
-    isGoogleSigningIn,
     openRegister,
     togglePasswordVisibility,
-    handleGoogleSignIn,
   } = useLoginScreen()
   const {
     values,
@@ -84,21 +80,6 @@ const LoginScreen = () => {
         onPress={submit}
         loading={isLoading}
       />
-      <ThemedDivider label='or continue with' />
-      <ThemedButton
-        title='Login with Google'
-        variant='outline'
-        leftIcon='logo-google'
-        textClassName='text-gray-700'
-        containerClassName='w-full'
-        onPress={handleGoogleSignIn}
-        loading={isGoogleSigningIn}
-      />
-      {googleError ? (
-        <ThemedText className='w-full text-center text-sm text-red-500'>
-          {googleError}
-        </ThemedText>
-      ) : null}
       <View className="mt-4 flex-row justify-center items-center">
         <ThemedText className="text-l text-gray-500">
           Dont have an account?{' '}
