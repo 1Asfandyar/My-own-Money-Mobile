@@ -11,8 +11,11 @@ const SharedTransactionRecordForm = ({ form }: SharedTransactionRecordFormProps)
       <SharedExpenseParticipants
         error={form.fieldErrors.sharedUserIds}
         friends={form.friends}
+        onChangeAudiencePress={form.changeSharedAudience}
         query={form.friendPickerQuery}
+        selectedGroup={form.selectedSharedGroup}
         selectedFriends={form.selectedSharedFriends}
+        selectedGroupMembers={form.selectedSharedGroupMembers}
         selectedUserIds={form.selectedSharedUserIds}
         onAddFriendPress={form.openAddFriendModal}
         onQueryChange={form.setFriendPickerQuery}

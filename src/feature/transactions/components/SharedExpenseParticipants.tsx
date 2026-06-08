@@ -12,11 +12,14 @@ import { themeColors, typography } from '@/theme/utilities';
 const SharedExpenseParticipants = ({
   error,
   friends,
+  onChangeAudiencePress,
   onAddFriendPress,
   onQueryChange,
   onToggleFriend,
   query,
+  selectedGroup,
   selectedFriends,
+  selectedGroupMembers = [],
   selectedUserIds,
 }: SharedExpenseParticipantsProps) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -50,6 +53,105 @@ const SharedExpenseParticipants = ({
   }, [friends, normalizedQuery, selectedUserIdSet]);
   const shouldShowSearchResults = normalizedQuery.length > 0;
   const hasSearchResults = friendSearchResults.length > 0;
+
+  if (selectedGroup) {
+    const selectedGroupName = selectedGroup.name?.trim() || 'Group';
+
+    return (
+      <View className="mb-6">
+        <View className="mb-2 flex-row items-center justify-between">
+          <ThemedText className="text-base text-gray-900" weight="semiBold">
+            With group:
+          </ThemedText>
+
+          {onChangeAudiencePress ? (
+            <TouchableOpacity
+              activeOpacity={0.76}
+              accessibilityRole="button"
+              accessibilityLabel="Change group"
+              onPress={onChangeAudiencePress}
+              className="flex-row items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-2"
+            >
+              <Ionicons
+                name="swap-horizontal-outline"
+                size={16}
+                color={themeColors.primary}
+              />
+              <ThemedText
+                className="ml-1.5 text-xs text-primary"
+                weight="semiBold"
+              >
+                Change
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        <View
+          className={`min-h-16 rounded-2xl border bg-white px-3 py-3 ${
+            error ? 'border-red-400' : 'border-gray-200'
+          }`}
+        >
+          <View className="flex-row items-center">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Ionicons
+                name="people-outline"
+                size={20}
+                color={themeColors.primary}
+              />
+            </View>
+            <View className="ml-3 min-w-0 flex-1">
+              <ThemedText
+                className="text-sm text-gray-900"
+                weight="semiBold"
+                numberOfLines={1}
+              >
+                {selectedGroupName}
+              </ThemedText>
+              <ThemedText className="mt-0.5 text-xs text-gray-500">
+                {selectedGroupMembers.length}{' '}
+                {selectedGroupMembers.length === 1 ? 'member' : 'members'}
+              </ThemedText>
+            </View>
+          </View>
+
+          {selectedGroupMembers.length > 0 ? (
+            <View className="mt-3 flex-row flex-wrap">
+              {selectedGroupMembers.slice(0, 5).map((member) => (
+                <View
+                  key={member.id}
+                  className="mb-2 mr-2 flex-row items-center rounded-full bg-gray-100 px-2 py-1"
+                >
+                  <SharedExpenseAvatar user={member} size={24} />
+                  <ThemedText
+                    className="ml-1.5 max-w-28 text-xs text-gray-700"
+                    numberOfLines={1}
+                  >
+                    {getUserLabel(member)}
+                  </ThemedText>
+                </View>
+              ))}
+
+              {selectedGroupMembers.length > 5 ? (
+                <View className="mb-2 mr-2 rounded-full bg-primary/10 px-3 py-1.5">
+                  <ThemedText
+                    className="text-xs text-primary"
+                    weight="semiBold"
+                  >
+                    +{selectedGroupMembers.length - 5}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+
+        {error ? (
+          <ThemedText className="mt-1 text-xs text-red-500">{error}</ThemedText>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View className="mb-6">

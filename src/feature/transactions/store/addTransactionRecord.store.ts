@@ -15,6 +15,7 @@ const initialAddTransactionRecordState: AddTransactionRecordState = {
   friendSearchResults: [],
   friends: [],
   formError: '',
+  groups: [],
   isAddFriendModalVisible: false,
   isAddingFriend: false,
   isCategoryPickerVisible: false,
@@ -66,6 +67,7 @@ export const useAddTransactionRecordStore =
       set({ friendSearchResults }),
     setFriends: (friends) => set({ friends }),
     setFormError: (formError) => set({ formError }),
+    setGroups: (groups) => set({ groups }),
     setIsAddingFriend: (isAddingFriend) => set({ isAddingFriend }),
     setIsLoadingOptions: (isLoadingOptions) => set({ isLoadingOptions }),
     setIsSearchingFriend: (isSearchingFriend) =>

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Share } from 'react-native';
+import { Share } from 'react-native';
 
 import { createAccount } from '@/feature/accounts/api/accounts.api';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
@@ -9,6 +9,7 @@ import {
   createFriendships,
   listFriendships,
 } from '@/feature/friendships/api/friendships.api';
+import useFriendshipNotifications from '@/feature/friendships/hooks/useFriendshipNotifications';
 import { searchUsersByEmail } from '@/feature/groups/api/groups.api';
 import type { GroupUser } from '@/feature/groups/types/group.types';
 import type { MainHeaderViewProps, MainSideMenuItem } from '@/feature/main/types/mainHeader.types';
@@ -62,6 +63,18 @@ export const useMainHeader = (): MainHeaderViewProps => {
     displayCurrencies,
   );
   const currentDateLabel = useMemo(() => getCurrentDateLabel(), []);
+  const {
+    acceptingFriendshipId,
+    error: notificationsError,
+    incomingRequests,
+    isLoading: isNotificationsLoading,
+    isVisible: isNotificationsVisible,
+    notificationCount,
+    onAcceptRequest,
+    onClose: closeNotifications,
+    onOpen: openNotificationsSheet,
+    onRetry: retryNotifications,
+  } = useFriendshipNotifications();
 
   const closeAddAccountModal = useCallback(() => {
     setAccountError('');
@@ -219,8 +232,8 @@ export const useMainHeader = (): MainHeaderViewProps => {
 
   const openNotifications = useCallback(() => {
     setIsMenuVisible(false);
-    Alert.alert('Notifications', 'No new notifications yet.');
-  }, []);
+    openNotificationsSheet();
+  }, [openNotificationsSheet]);
 
   const shareInvite = useCallback(async () => {
     setIsMenuVisible(false);
@@ -259,10 +272,21 @@ export const useMainHeader = (): MainHeaderViewProps => {
         icon: 'notifications-outline',
         label: 'Notifications',
         onPress: openNotifications,
-        subtitle: 'View recent alerts and updates',
+        subtitle:
+          notificationCount > 0
+            ? `${notificationCount} friend request${
+                notificationCount === 1 ? '' : 's'
+              } waiting`
+            : 'View recent alerts and updates',
       },
     ],
-    [openAddAccountModal, openAddFriendModal, openNotifications, shareInvite],
+    [
+      notificationCount,
+      openAddAccountModal,
+      openAddFriendModal,
+      openNotifications,
+      shareInvite,
+    ],
   );
   const secondaryMenuItems = useMemo<MainSideMenuItem[]>(
     () => [
@@ -316,6 +340,17 @@ export const useMainHeader = (): MainHeaderViewProps => {
     },
     currentDateLabel,
     isMenuVisible,
+    notificationCount,
+    notificationsModal: {
+      acceptingFriendshipId,
+      error: notificationsError,
+      isLoading: isNotificationsLoading,
+      isVisible: isNotificationsVisible,
+      onAcceptRequest,
+      onClose: closeNotifications,
+      onRetry: retryNotifications,
+      requests: incomingRequests,
+    },
     onCloseMenu: () => setIsMenuVisible(false),
     onNotificationsPress: openNotifications,
     onOpenMenu: () => setIsMenuVisible(true),

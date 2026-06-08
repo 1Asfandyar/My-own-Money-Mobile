@@ -7,6 +7,7 @@ import type { Account } from '@/types/account.types';
 
 type UseAddTransactionRecordOptionsParams = {
   loadFriends: () => Promise<unknown>;
+  loadGroups?: () => Promise<unknown>;
   recordKind: AddTransactionRecordKind;
   resetAddTransactionRecord: () => void;
   setAccounts: (accounts: Account[]) => void;
@@ -18,6 +19,7 @@ type UseAddTransactionRecordOptionsParams = {
 
 const useAddTransactionRecordOptions = ({
   loadFriends,
+  loadGroups,
   recordKind,
   resetAddTransactionRecord,
   setAccounts,
@@ -47,6 +49,7 @@ const useAddTransactionRecordOptions = ({
       const [options] = await Promise.all([
         loadAddTransactionRecordOptions(token),
         isSharedRecord ? loadFriends() : Promise.resolve(),
+        isSharedRecord && loadGroups ? loadGroups() : Promise.resolve(),
       ]);
 
       setAccounts(options.accounts);
@@ -63,6 +66,7 @@ const useAddTransactionRecordOptions = ({
   }, [
     isSharedRecord,
     loadFriends,
+    loadGroups,
     setAccounts,
     setCategories,
     setFormError,

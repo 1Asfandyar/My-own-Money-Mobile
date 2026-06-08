@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CategoryPickerModal from '@/feature/categories/components/CategoryPickerModal';
 import AddFriendModal from '@/feature/transactions/components/AddFriendModal';
+import SharedExpenseAudienceStep from '@/feature/transactions/components/SharedExpenseAudienceStep';
 import SharedExpenseSplitSheet from '@/feature/transactions/components/SharedExpenseSplitSheet';
 import SharedTransactionRecordForm from '@/feature/transactions/components/SharedTransactionRecordForm';
 import TransactionRecordFields from '@/feature/transactions/components/TransactionRecordFields';
@@ -28,17 +29,19 @@ const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
     () => form.friends.map((friend) => friend.id),
     [form.friends],
   );
-  const headerTitle = form.isSharedRecord
-    ? form.isEditing
-      ? 'Edit expense'
-      : 'Add an expense'
-    : form.values.transactionType === 'income'
-      ? form.isEditing
-        ? 'Edit income'
-        : 'Add income'
+  let headerTitle = 'Add expense';
+
+  if (form.isSharedRecord) {
+    headerTitle = form.isSharedAudienceStepVisible
+      ? 'Add shared'
       : form.isEditing
         ? 'Edit expense'
-        : 'Add expense';
+        : 'Add an expense';
+  } else if (form.values.transactionType === 'income') {
+    headerTitle = form.isEditing ? 'Edit income' : 'Add income';
+  } else {
+    headerTitle = form.isEditing ? 'Edit expense' : 'Add expense';
+  }
   const confirmDelete = () => {
     Alert.alert(
       'Delete transaction?',
@@ -75,7 +78,7 @@ const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
       </ThemedText>
 
       <View className="min-w-28 flex-row items-center justify-end">
-        {form.isEditing ? (
+        {form.isSharedAudienceStepVisible ? null : form.isEditing ? (
           <TouchableOpacity
             activeOpacity={0.76}
             accessibilityRole="button"
@@ -97,27 +100,31 @@ const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity
-          activeOpacity={0.76}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: form.isSubmitDisabled }}
-          disabled={form.isSubmitDisabled}
-          onPress={form.submit}
-          className="min-w-14 items-end py-2"
-        >
-          {form.isSaving ? (
-            <ActivityIndicator color={themeColors.primary} />
-          ) : (
-            <ThemedText
-              className={`text-lg ${
-                form.isSubmitDisabled ? 'text-gray-300' : 'text-primary'
-              }`}
-              weight="bold"
-            >
-              Save
-            </ThemedText>
-          )}
-        </TouchableOpacity>
+        {form.isSharedAudienceStepVisible ? (
+          <View className="min-w-14" />
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.76}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: form.isSubmitDisabled }}
+            disabled={form.isSubmitDisabled}
+            onPress={form.submit}
+            className="min-w-14 items-end py-2"
+          >
+            {form.isSaving ? (
+              <ActivityIndicator color={themeColors.primary} />
+            ) : (
+              <ThemedText
+                className={`text-lg ${
+                  form.isSubmitDisabled ? 'text-gray-300' : 'text-primary'
+                }`}
+                weight="bold"
+              >
+                Save
+              </ThemedText>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -141,6 +148,22 @@ const AddTransactionRecordView = ({ form }: AddTransactionRecordViewProps) => {
                 Loading shared expense options
               </ThemedText>
             </View>
+          ) : form.isSharedAudienceStepVisible ? (
+            <SharedExpenseAudienceStep
+              currentUserId={form.currentUserId}
+              error={form.sharedAudienceError || form.formError}
+              friends={form.friends}
+              groups={form.groups}
+              isResolvingGroup={form.isResolvingSharedGroup}
+              onAddFriendPress={form.openAddFriendModal}
+              onChangeFriendQuery={form.setFriendPickerQuery}
+              onContinue={form.continueSharedAudience}
+              onSelectGroup={form.selectSharedGroup}
+              onToggleFriend={form.toggleSharedAudienceFriend}
+              query={form.friendPickerQuery}
+              selectedFriendIds={form.selectedSharedAudienceFriendIds}
+              selectedGroupId={form.selectedSharedGroupId}
+            />
           ) : (
             <ScrollView
               className="flex-1"

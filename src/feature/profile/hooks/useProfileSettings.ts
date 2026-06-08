@@ -254,7 +254,7 @@ export const useProfileSettings = (): ProfileSettingsViewModel => {
     return (
       profileValues.full_name.trim() !== user.full_name.trim() ||
       profileValues.email.trim() !== user.email.trim() ||
-      profileValues.mobile_number.trim() !== user.mobile_number.trim() ||
+      profileValues.mobile_number.trim() !== (user.mobile_number ?? '').trim() ||
       profileValues.currency_id !== user.currency_id
     );
   }, [profileValues, user]);

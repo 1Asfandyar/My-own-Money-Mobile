@@ -72,3 +72,19 @@ export const createFriendships = async (
 
   return result.data.friendships ?? [];
 };
+
+export const acceptFriendship = async (
+  token: string,
+  friendshipId: number,
+) => {
+  const result = await apiRequest<{
+    success: true;
+    friendship: FriendshipLedgerResponse;
+  }>(`/api/v0/friendships/${friendshipId}`, {
+    method: 'PATCH',
+    token,
+    body: { status: 'accepted' },
+  });
+
+  return normalizeFriendshipLedger(result.data.friendship);
+};

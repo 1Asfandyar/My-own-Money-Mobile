@@ -11,7 +11,10 @@ import { useAddTransactionRecordStore } from '@/feature/transactions/store/addTr
 import useAddTransactionRecordOptions from '@/feature/transactions/hooks/useAddTransactionRecordOptions';
 import useSaveAddTransactionRecord from '@/feature/transactions/hooks/useSaveAddTransactionRecord';
 import useSharedExpenseFriends from '@/feature/transactions/hooks/useSharedExpenseFriends';
+import useSharedExpenseGroups from '@/feature/transactions/hooks/useSharedExpenseGroups';
 import useSharedExpenseParticipants from '@/feature/transactions/hooks/useSharedExpenseParticipants';
+import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
+import type { Group } from '@/feature/groups/types/group.types';
 import type {
   AddTransactionRecordFormValues,
   AddTransactionRecordKind,
@@ -121,7 +124,19 @@ const useAddTransactionRecord = (
   const hasAppliedRouteSharedFieldsRef = useRef(false);
   const hasAppliedRouteTransactionTypeRef = useRef(false);
   const [friendPickerQuery, setFriendPickerQuery] = useState('');
+  const [hasConfirmedSharedAudience, setHasConfirmedSharedAudience] = useState(
+    Boolean(editingTransactionId || params.sharedUserIds),
+  );
   const [isSplitSheetVisible, setIsSplitSheetVisible] = useState(false);
+  const [isResolvingSharedGroup, setIsResolvingSharedGroup] = useState(false);
+  const [selectedSharedAudienceFriendIds, setSelectedSharedAudienceFriendIds] =
+    useState<number[]>([]);
+  const [selectedSharedGroupId, setSelectedSharedGroupId] = useState<
+    number | null
+  >(null);
+  const [selectedSharedGroup, setSelectedSharedGroup] =
+    useState<Group | null>(null);
+  const [sharedAudienceError, setSharedAudienceError] = useState('');
   const [splitValuesError, setSplitValuesError] = useState('');
 
   const activeAccounts = useMemo(
@@ -197,8 +212,14 @@ const useAddTransactionRecord = (
   });
   const { loadFriends, toggleSharedUser: toggleSharedFriendUser } =
     sharedFriends;
+  const {
+    groups: sharedExpenseGroups,
+    loadGroups,
+    resolveGroup,
+  } = useSharedExpenseGroups({ token });
   useAddTransactionRecordOptions({
     loadFriends,
+    loadGroups,
     recordKind,
     resetAddTransactionRecord,
     setAccounts,
@@ -207,9 +228,24 @@ const useAddTransactionRecord = (
     setIsLoadingOptions,
     token,
   });
+  const selectedSharedGroupMembers = useMemo(
+    () => getGroupUsers(selectedSharedGroup, user?.id),
+    [selectedSharedGroup, user?.id],
+  );
+  const shareableUsers = useMemo(() => {
+    const usersById = new Map(
+      sharedFriends.friends.map((friend) => [friend.id, friend]),
+    );
+
+    selectedSharedGroupMembers.forEach((member) => {
+      usersById.set(member.id, member);
+    });
+
+    return Array.from(usersById.values());
+  }, [selectedSharedGroupMembers, sharedFriends.friends]);
   const { selectedSharedFriends, splitParticipantIds, splitParticipants } =
     useSharedExpenseParticipants({
-      friends: sharedFriends.friends,
+      friends: shareableUsers,
       selectedUserIds: values.sharedUserIds,
       user,
     });
@@ -585,6 +621,89 @@ const useAddTransactionRecord = (
     setIsSplitSheetVisible(false);
   }, []);
 
+  const toggleSharedAudienceFriend = useCallback((userId: number) => {
+    setSelectedSharedAudienceFriendIds((currentIds) =>
+      currentIds.includes(userId)
+        ? currentIds.filter((currentId) => currentId !== userId)
+        : [...currentIds, userId],
+    );
+    setSelectedSharedGroup(null);
+    setSelectedSharedGroupId(null);
+    setSharedAudienceError('');
+  }, []);
+
+  const selectSharedGroup = useCallback((groupId: number) => {
+    setSelectedSharedGroupId((currentGroupId) =>
+      currentGroupId === groupId ? null : groupId,
+    );
+    setSelectedSharedAudienceFriendIds([]);
+    setSelectedSharedGroup(null);
+    setSharedAudienceError('');
+  }, []);
+
+  const continueSharedAudience = useCallback(async () => {
+    if (selectedSharedGroupId !== null) {
+      setIsResolvingSharedGroup(true);
+      setSharedAudienceError('');
+
+      try {
+        const nextGroup = await resolveGroup(selectedSharedGroupId);
+        const nextGroupMembers = getGroupUsers(nextGroup, user?.id);
+        const nextGroupMemberIds = nextGroupMembers.map((member) => member.id);
+
+        if (!nextGroup || nextGroupMemberIds.length === 0) {
+          setSharedAudienceError('This group needs at least one other member.');
+          return;
+        }
+
+        setSelectedSharedGroup(nextGroup);
+        updateSharedUserIds(nextGroupMemberIds);
+        setHasConfirmedSharedAudience(true);
+        setFriendPickerQuery('');
+      } catch (error) {
+        setSharedAudienceError(
+          error instanceof Error ? error.message : 'Could not load this group.',
+        );
+      } finally {
+        setIsResolvingSharedGroup(false);
+      }
+
+      return;
+    }
+
+    if (selectedSharedAudienceFriendIds.length === 0) {
+      setSharedAudienceError('Select at least one friend or group.');
+      return;
+    }
+
+    setSelectedSharedGroup(null);
+    updateSharedUserIds(selectedSharedAudienceFriendIds);
+    setHasConfirmedSharedAudience(true);
+    setFriendPickerQuery('');
+    setSharedAudienceError('');
+  }, [
+    selectedSharedAudienceFriendIds,
+    selectedSharedGroupId,
+    resolveGroup,
+    updateSharedUserIds,
+    user?.id,
+  ]);
+
+  const changeSharedAudience = useCallback(() => {
+    setSharedAudienceError('');
+    setFriendPickerQuery('');
+
+    if (selectedSharedGroup) {
+      setSelectedSharedGroupId(selectedSharedGroup.id);
+      setSelectedSharedAudienceFriendIds([]);
+    } else {
+      setSelectedSharedGroupId(null);
+      setSelectedSharedAudienceFriendIds(values.sharedUserIds);
+    }
+
+    setHasConfirmedSharedAudience(false);
+  }, [selectedSharedGroup, values.sharedUserIds]);
+
   const toggleSharedUser = useCallback(
     (userId: number) => {
       toggleSharedFriendUser(userId);
@@ -593,12 +712,16 @@ const useAddTransactionRecord = (
     [toggleSharedFriendUser],
   );
 
+  const isSharedAudienceStepVisible =
+    isSharedRecord && !editingTransactionId && !hasConfirmedSharedAudience;
+
   return {
     accountDropdownQuery,
     accountOptions,
     addFriend: sharedFriends.addFriend,
     categoryPickerQuery,
     categoryOptions,
+    changeSharedAudience,
     closeAddFriendModal: sharedFriends.closeAddFriendModal,
     closeCategoryPicker,
     closeDropdown,
@@ -611,6 +734,7 @@ const useAddTransactionRecord = (
     friendSearchResults: sharedFriends.friendSearchResults,
     friends: sharedFriends.friends,
     formError,
+    groups: sharedExpenseGroups,
     isAddFriendModalVisible: sharedFriends.isAddFriendModalVisible,
     isAddingFriend: sharedFriends.isAddingFriend,
     isCategoryPickerVisible,
@@ -619,6 +743,8 @@ const useAddTransactionRecord = (
     isLoadingOptions,
     isSaving: isSavingRecord || isSubmitting,
     isSearchingFriend: sharedFriends.isSearchingFriend,
+    isResolvingSharedGroup,
+    isSharedAudienceStepVisible,
     isSharedRecord,
     isSplitSheetVisible,
     isSubmitDisabled:
@@ -627,8 +753,10 @@ const useAddTransactionRecord = (
       isSavingRecord ||
       isSubmitting ||
       sharedFriends.isAddingFriend ||
+      isSharedAudienceStepVisible ||
       (isSharedRecord && values.sharedUserIds.length === 0),
     closeSplitSheet,
+    continueSharedAudience,
     openAddFriendModal: sharedFriends.openAddFriendModal,
     openAccountDropdown,
     openCategoryPicker,
@@ -641,7 +769,11 @@ const useAddTransactionRecord = (
     selectedAccountCurrencyId,
     selectedCategory,
     selectedCategoryId,
+    selectedSharedAudienceFriendIds,
     selectedSharedFriends,
+    selectedSharedGroup,
+    selectedSharedGroupId,
+    selectedSharedGroupMembers,
     selectedSharedUserIds: values.sharedUserIds,
     setFriendPickerQuery,
     setAccountDropdownQuery,
@@ -650,7 +782,10 @@ const useAddTransactionRecord = (
     splitMethodLabel,
     splitParticipants,
     friendPickerQuery,
+    selectSharedGroup,
+    sharedAudienceError,
     submit,
+    toggleSharedAudienceFriend,
     toggleSharedUser,
     totalAmountCents,
     updateField,

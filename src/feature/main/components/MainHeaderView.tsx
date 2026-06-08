@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FriendshipNotificationsModal from '@/feature/main/components/FriendshipNotificationsModal';
 import MainSideMenuModal from '@/feature/main/components/MainSideMenuModal';
 import QuickAddAccountModal from '@/feature/main/components/QuickAddAccountModal';
 import type { MainHeaderViewProps } from '@/feature/main/types/mainHeader.types';
 import AddFriendModal from '@/feature/transactions/components/AddFriendModal';
+import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
 const MainHeaderView = ({
@@ -13,6 +15,8 @@ const MainHeaderView = ({
   addFriendModal,
   currentDateLabel,
   isMenuVisible,
+  notificationCount,
+  notificationsModal,
   onCloseMenu,
   onNotificationsPress,
   onOpenMenu,
@@ -41,6 +45,13 @@ const MainHeaderView = ({
           size={21}
           color={themeColors.gray700}
         />
+        {notificationCount > 0 ? (
+          <View className="absolute -right-1 -top-1 min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1">
+            <ThemedText className="text-[10px] text-white" weight="bold">
+              {notificationCount > 9 ? '9+' : notificationCount}
+            </ThemedText>
+          </View>
+        ) : null}
       </Pressable>
     </View>
 
@@ -54,6 +65,7 @@ const MainHeaderView = ({
 
     <QuickAddAccountModal {...addAccountModal} />
     <AddFriendModal {...addFriendModal} />
+    <FriendshipNotificationsModal {...notificationsModal} />
   </SafeAreaView>
 );
 

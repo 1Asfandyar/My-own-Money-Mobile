@@ -1,5 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
 
+import type { FriendshipLedger } from '@/feature/friendships/types/friendship.types';
 import type { AddFriendModalProps } from '@/feature/transactions/types/addTransactionRecord.types';
 
 export type MainSideMenuItem = {
@@ -35,9 +36,22 @@ export type MainHeaderViewProps = {
   addFriendModal: AddFriendModalProps;
   currentDateLabel: string;
   isMenuVisible: boolean;
+  notificationCount: number;
+  notificationsModal: FriendshipNotificationsModalProps;
   onCloseMenu: () => void;
   onNotificationsPress: () => void;
   onOpenMenu: () => void;
   primaryMenuItems: MainSideMenuItem[];
   secondaryMenuItems: MainSideMenuItem[];
+};
+
+export type FriendshipNotificationsModalProps = {
+  acceptingFriendshipId: number | null;
+  error: string;
+  isLoading: boolean;
+  isVisible: boolean;
+  onAcceptRequest: (friendshipId: number) => void;
+  onClose: () => void;
+  onRetry: () => void;
+  requests: FriendshipLedger[];
 };

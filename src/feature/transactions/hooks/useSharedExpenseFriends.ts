@@ -66,7 +66,7 @@ const useSharedExpenseFriends = ({
 
   const loadFriends = useCallback(async () => {
     if (!token) {
-      return;
+      return [];
     }
 
     const friendships = await listFriendships(token);
@@ -78,6 +78,7 @@ const useSharedExpenseFriends = ({
       );
 
     setFriends(nextFriends);
+    return nextFriends;
   }, [currentUserId, setFriends, token]);
 
   const toggleSharedUser = useCallback(
@@ -150,9 +151,9 @@ const useSharedExpenseFriends = ({
 
       try {
         await createFriendships(token, [friendUserId]);
-        await loadFriends();
+        const nextFriends = await loadFriends();
 
-        const isAcceptedFriend = friends.some(
+        const isAcceptedFriend = nextFriends.some(
           (friend) => friend.id === friendUserId,
         );
 
@@ -173,7 +174,6 @@ const useSharedExpenseFriends = ({
     },
     [
       closeAddFriendModal,
-      friends,
       loadFriends,
       onSelectionChange,
       selectedUserIds,

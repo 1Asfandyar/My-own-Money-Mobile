@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import type { Category } from '@/feature/categories/types/category.types';
-import type { GroupUser } from '@/feature/groups/types/group.types';
+import type { Group, GroupUser } from '@/feature/groups/types/group.types';
 import type {
   SharedExpenseSplitMethod,
   SharedExpenseSplitValueMap,
@@ -112,12 +112,31 @@ export type CategoryPickerModalProps = {
 export type SharedExpenseParticipantsProps = {
   error?: string;
   friends: GroupUser[];
+  onChangeAudiencePress?: () => void;
   query: string;
   onAddFriendPress: () => void;
   onQueryChange: (query: string) => void;
   onToggleFriend: (id: number) => void;
+  selectedGroup?: Group | null;
   selectedFriends: GroupUser[];
+  selectedGroupMembers?: GroupUser[];
   selectedUserIds: number[];
+};
+
+export type SharedExpenseAudienceStepProps = {
+  currentUserId?: number | null;
+  error: string;
+  friends: GroupUser[];
+  groups: Group[];
+  isResolvingGroup: boolean;
+  onChangeFriendQuery: (query: string) => void;
+  onAddFriendPress: () => void;
+  onContinue: () => void;
+  onSelectGroup: (groupId: number) => void;
+  onToggleFriend: (userId: number) => void;
+  query: string;
+  selectedFriendIds: number[];
+  selectedGroupId: number | null;
 };
 
 export type SharedExpenseAvatarProps = {
@@ -198,6 +217,7 @@ export type AddTransactionRecordState = {
   friendSearchResults: GroupUser[];
   friends: GroupUser[];
   formError: string;
+  groups: Group[];
   isAddFriendModalVisible: boolean;
   isAddingFriend: boolean;
   isCategoryPickerVisible: boolean;
@@ -223,6 +243,7 @@ export type AddTransactionRecordActions = {
   setFriendSearchResults: (users: GroupUser[]) => void;
   setFriends: (friends: GroupUser[]) => void;
   setFormError: (formError: string) => void;
+  setGroups: (groups: Group[]) => void;
   setIsAddingFriend: (isAddingFriend: boolean) => void;
   setIsLoadingOptions: (isLoadingOptions: boolean) => void;
   setIsSearchingFriend: (isSearchingFriend: boolean) => void;
@@ -252,6 +273,7 @@ export type AddTransactionRecordViewModel = {
   friendSearchResults: GroupUser[];
   friends: GroupUser[];
   formError: string;
+  groups: Group[];
   currentUserId?: number | null;
   deleteRecord: () => void;
   isAddFriendModalVisible: boolean;
@@ -263,9 +285,13 @@ export type AddTransactionRecordViewModel = {
   isSaving: boolean;
   isSearchingFriend: boolean;
   isSharedRecord: boolean;
+  isSharedAudienceStepVisible: boolean;
   isSubmitDisabled: boolean;
+  isResolvingSharedGroup: boolean;
   isSplitSheetVisible: boolean;
+  changeSharedAudience: () => void;
   closeSplitSheet: () => void;
+  continueSharedAudience: () => void;
   openAddFriendModal: () => void;
   openAccountDropdown: () => void;
   openCategoryPicker: () => void;
@@ -277,7 +303,11 @@ export type AddTransactionRecordViewModel = {
   selectedAccountCurrencyId?: number | null;
   selectedCategory?: AddTransactionRecordDropdownOption;
   selectedCategoryId: number | null;
+  selectedSharedAudienceFriendIds: number[];
   selectedSharedFriends: GroupUser[];
+  selectedSharedGroup: Group | null;
+  selectedSharedGroupId: number | null;
+  selectedSharedGroupMembers: GroupUser[];
   selectedSharedUserIds: number[];
   setFriendPickerQuery: (query: string) => void;
   setAccountDropdownQuery: (query: string) => void;
@@ -288,7 +318,10 @@ export type AddTransactionRecordViewModel = {
   friendPickerQuery: string;
   openSplitSheet: () => void;
   submit: () => void;
+  selectSharedGroup: (id: number) => void;
+  sharedAudienceError: string;
   toggleSharedUser: (id: number) => void;
+  toggleSharedAudienceFriend: (id: number) => void;
   totalAmountCents: number;
   updateSplitMethod: (method: SharedExpenseSplitMethod) => void;
   updateSplitValue: (userId: number, value: string) => void;
