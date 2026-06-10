@@ -5,14 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ROUTES } from '@/config/routes';
 import { listAccounts } from '@/feature/accounts/api/accounts.api';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
-import { listCurrencies } from '@/feature/currencies/api/currencies.api';
+import { listCategories } from '@/feature/categories/api/categories.api';
+import type { Category } from '@/feature/categories/types/category.types';
 import {
   CATEGORY_COLOR_FALLBACK,
   CATEGORY_ICON_FALLBACK,
   CATEGORY_SUMMARY_ICONS,
   CATEGORY_TYPE_LABELS,
 } from '@/feature/categories/constants/categoryDashboard.constants';
-import { EMPTY_TRANSACTION_DATE_FILTERS } from '@/feature/transactions/constants/transactionDateFilter.constants';
+import { EMPTY_TRANSACTION_FILTERS } from '@/feature/transactions/constants/transactionDateFilter.constants';
 import { listAccountTransactions } from '@/feature/transactions/api/transactions.api';
 import { useTransactionsStore } from '@/feature/transactions/store/transactions.store';
 import type {
@@ -21,7 +22,9 @@ import type {
   TransactionsSummaryMetric,
   TransactionsViewModel,
 } from '@/feature/transactions/types/transaction.types';
-import type { TransactionDateFilters } from '@/feature/transactions/types/transactionDateFilter.types';
+import type {
+  TransactionFilters,
+} from '@/feature/transactions/types/transactionDateFilter.types';
 import {
   getSignedTransactionAmountCents,
   getTransactionAmountCents,
@@ -39,6 +42,7 @@ import {
   formatCents,
   getCurrencyById,
 } from '@/utils/currency';
+import { listCurrencies } from '@/feature/currencies/api/currencies.api';
 
 const getSoftColor = (color: string) =>
   /^#[0-9a-f]{6}$/i.test(color) ? `${color}1A` : '#F3F4F6';
@@ -68,8 +72,10 @@ const formatSignedCents = (
 const getTransactionIcon = (
   transaction: Transaction,
 ): keyof typeof Ionicons.glyphMap => {
-  if (transaction.category?.icon && transaction.category.icon in Ionicons.glyphMap) {
-    return transaction.category.icon as keyof typeof Ionicons.glyphMap;
+  const category = transaction.display?.category ?? transaction.category;
+
+  if (category?.icon && category.icon in Ionicons.glyphMap) {
+    return category.icon as keyof typeof Ionicons.glyphMap;
   }
 
   return CATEGORY_ICON_FALLBACK[transaction.transaction_type];
@@ -79,28 +85,99 @@ const getTransactionListItem = (
   transaction: Transaction,
   displayCurrency: Currency,
   currencies: Currency[],
+  userId?: number,
 ): TransactionListItem => {
-  const color =
-    transaction.category?.color ??
-    CATEGORY_COLOR_FALLBACK[transaction.transaction_type];
-  const categoryLabel =
-    transaction.category?.name ?? `Category #${transaction.category_id}`;
-  const typeLabel = CATEGORY_TYPE_LABELS[transaction.transaction_type];
+  const display = transaction.display;
+  const category = display?.category ?? transaction.category;
+  const { transaction_type, visibility_type } = transaction;
+  const currencyId = transaction.currency_id ?? displayCurrency.id;
+  const dateLabel = formatTransactionDate(transaction.transaction_date);
+  const typeLabel = CATEGORY_TYPE_LABELS[transaction_type];
+
+  // Personal transfer
+  if (visibility_type === 'personal' && transaction_type === 'transfer') {
+    const color = CATEGORY_COLOR_FALLBACK.transfer;
+    const from = display?.account?.name ?? 'Unknown';
+    const to = display?.transfer_to_account?.name ?? 'Unknown';
+    return {
+      amountLabel: formatCents(Math.abs(transaction.amount_cents), currencyId, currencies),
+      categoryLabel: typeLabel,
+      color,
+      dateLabel,
+      iconName: CATEGORY_ICON_FALLBACK.transfer,
+      id: transaction.id,
+      note: transaction.note?.trim() || undefined,
+      softColor: getSoftColor(color),
+      sourceTransaction: transaction,
+      subtitleLabel: `${from} → ${to}`,
+      title: transaction.title || typeLabel,
+      typeLabel,
+    };
+  }
+
+  // Shared settlement
+  if (visibility_type === 'shared' && transaction_type === 'settlement') {
+    const color = CATEGORY_COLOR_FALLBACK.settlement;
+    const payer = display?.payer?.full_name ?? 'Unknown';
+    const settlesUser = display?.settles_user?.full_name ?? 'Unknown';
+    return {
+      amountLabel: formatCents(Math.abs(transaction.amount_cents), currencyId, currencies),
+      categoryLabel: typeLabel,
+      color,
+      dateLabel,
+      iconName: CATEGORY_ICON_FALLBACK.settlement,
+      id: transaction.id,
+      note: transaction.note?.trim() || undefined,
+      softColor: getSoftColor(color),
+      sourceTransaction: transaction,
+      subtitleLabel: `${payer} paid ${settlesUser}`,
+      title: transaction.title || typeLabel,
+      typeLabel,
+    };
+  }
+
+  // Shared expense
+  if (visibility_type === 'shared' && transaction_type === 'expense') {
+    const color = category?.color ?? CATEGORY_COLOR_FALLBACK.expense;
+    const payer = display?.payer?.full_name ?? 'Unknown';
+    const userSplit = display?.splits?.find((s) => s.user_id === userId);
+    const splitAmountCents = userSplit?.owed_amount_cents ?? transaction.amount_cents;
+    const totalLabel = formatCents(Math.abs(transaction.amount_cents), currencyId, currencies);
+    return {
+      amountLabel: formatSignedCents(-Math.abs(splitAmountCents), currencyId, currencies),
+      categoryLabel: category?.name ?? typeLabel,
+      color,
+      dateLabel,
+      iconName: getTransactionIcon(transaction),
+      id: transaction.id,
+      note: transaction.note?.trim() || undefined,
+      softColor: getSoftColor(color),
+      sourceTransaction: transaction,
+      subtitleLabel: `${payer} paid ${totalLabel}`,
+      title: transaction.title || (category?.name ?? typeLabel),
+      typeLabel,
+    };
+  }
+
+  // Personal income / expense
+  const color = category?.color ?? CATEGORY_COLOR_FALLBACK[transaction_type];
+  const categoryLabel = category?.name ?? `Category #${transaction.category_id}`;
 
   return {
     amountLabel: formatSignedCents(
       getSignedTransactionAmountCents(transaction),
-      transaction.currency_id ?? displayCurrency.id,
+      currencyId,
       currencies,
     ),
     categoryLabel,
     color,
-    dateLabel: formatTransactionDate(transaction.transaction_date),
+    dateLabel,
     iconName: getTransactionIcon(transaction),
     id: transaction.id,
     note: transaction.note?.trim() || undefined,
     softColor: getSoftColor(color),
     sourceTransaction: transaction,
+    subtitleLabel: `${categoryLabel} - ${dateLabel}`,
     title: transaction.title || categoryLabel || typeLabel,
     typeLabel,
   };
@@ -135,16 +212,10 @@ const getSummaryMetrics = (
       const amount = Math.abs(getTransactionAmountCents(transaction));
 
       if (transaction.transaction_type === 'income') {
-        return {
-          ...nextTotals,
-          income: nextTotals.income + amount,
-        };
+        return { ...nextTotals, income: nextTotals.income + amount };
       }
 
-      return {
-        ...nextTotals,
-        expense: nextTotals.expense + amount,
-      };
+      return { ...nextTotals, expense: nextTotals.expense + amount };
     },
     { expense: 0, income: 0 },
   );
@@ -158,11 +229,8 @@ const getSummaryMetrics = (
 export const useTransactions = (): TransactionsViewModel => {
   const router = useRouter();
   const transactionRequestIdRef = useRef(0);
-  const [dateFilters, setDateFilters] = useState<TransactionDateFilters>(
-    EMPTY_TRANSACTION_DATE_FILTERS,
-  );
-  const [isTransactionAccountPickerVisible, setIsTransactionAccountPickerVisible] =
-    useState(false);
+  const [filters, setFilters] = useState<TransactionFilters>(EMPTY_TRANSACTION_FILTERS);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [hasLoadedTransactions, setHasLoadedTransactions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -171,14 +239,8 @@ export const useTransactions = (): TransactionsViewModel => {
   const clearSession = useAuthStore((state) => state.clearSession);
   const accounts = useAccountsOverviewStore((state) => state.accounts);
   const currencies = useAccountsOverviewStore((state) => state.currencies);
-  const selectedAccountId = useAccountsOverviewStore(
-    (state) => state.selectedAccountId,
-  );
   const setAccounts = useAccountsOverviewStore((state) => state.setAccounts);
   const setCurrencies = useAccountsOverviewStore((state) => state.setCurrencies);
-  const setSelectedAccountId = useAccountsOverviewStore(
-    (state) => state.setSelectedAccountId,
-  );
   const error = useTransactionsStore((state) => state.error);
   const isAccountContextLoading = useTransactionsStore(
     (state) => state.isAccountContextLoading,
@@ -201,21 +263,17 @@ export const useTransactions = (): TransactionsViewModel => {
     () => accounts.filter((account) => !account.is_archived),
     [accounts],
   );
-  const selectedAccount = useMemo(
-    () =>
-      activeAccounts.find((account) => account.id === selectedAccountId) ??
-      activeAccounts[0],
-    [activeAccounts, selectedAccountId],
+
+  const filteredAccount = useMemo(
+    () => activeAccounts.find((account) => account.id === filters.accountId),
+    [activeAccounts, filters.accountId],
   );
+
   const displayCurrency = getCurrencyById(
-    selectedAccount?.currency_id ?? user?.currency_id,
+    filteredAccount?.currency_id ?? user?.currency_id,
     currencies,
   );
-  const accountBalanceLabel = formatCents(
-    selectedAccount?.current_balance_cents ?? 0,
-    displayCurrency.id,
-    currencies,
-  );
+
   const transactionItems = useMemo(
     () =>
       transactions.map((transaction) =>
@@ -223,54 +281,38 @@ export const useTransactions = (): TransactionsViewModel => {
           transaction,
           displayCurrency,
           currencies,
+          user?.id,
         ),
       ),
-    [currencies, displayCurrency, transactions],
+    [currencies, displayCurrency, transactions, user?.id],
   );
+
   const summaryMetrics = useMemo(
     () => getSummaryMetrics(transactions, displayCurrency, currencies),
     [currencies, displayCurrency, transactions],
   );
+
   const hasActiveSearch = searchQuery.trim().length > 0;
-  const hasActiveDateFilter = Boolean(dateFilters.fromDate || dateFilters.toDate);
+  const hasActiveDateFilter = Boolean(
+    filters.fromDate || filters.toDate || filters.accountId || filters.categoryId,
+  );
   const hasActiveFilters = hasActiveSearch || hasActiveDateFilter;
+
+  const applyFilters = useCallback((nextFilters: TransactionFilters) => {
+    setFilters(nextFilters);
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ ...EMPTY_TRANSACTION_FILTERS });
+  }, []);
 
   const updateSearchQuery = useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
 
-  const applyDateFilters = useCallback((filters: TransactionDateFilters) => {
-    setDateFilters({
-      fromDate: filters.fromDate,
-      toDate: filters.toDate,
-    });
-  }, []);
-
-  const clearDateFilters = useCallback(() => {
-    setDateFilters({ ...EMPTY_TRANSACTION_DATE_FILTERS });
-  }, []);
-
   const clearSearchQuery = useCallback(() => {
     setSearchQuery('');
   }, []);
-
-  const openAccountPicker = useCallback(() => {
-    if (activeAccounts.length > 0) {
-      setIsTransactionAccountPickerVisible(true);
-    }
-  }, [activeAccounts.length]);
-
-  const closeAccountPicker = useCallback(() => {
-    setIsTransactionAccountPickerVisible(false);
-  }, []);
-
-  const selectAccount = useCallback(
-    (accountId: number) => {
-      setSelectedAccountId(accountId);
-      setIsTransactionAccountPickerVisible(false);
-    },
-    [setSelectedAccountId],
-  );
 
   const selectTransaction = useCallback(
     (transaction: Transaction) => {
@@ -306,21 +348,20 @@ export const useTransactions = (): TransactionsViewModel => {
     setError(null);
 
     try {
-      const [nextAccounts, nextCurrencies] = await Promise.all([
+      const [nextAccounts, nextCurrencies, nextCategories] = await Promise.all([
         listAccounts(token),
-        listCurrencies(token).catch((error: unknown) => {
-          if (error instanceof ApiError && error.status === 401) {
-            throw error;
-          }
-
+        listCurrencies(token).catch((err: unknown) => {
+          if (err instanceof ApiError && err.status === 401) throw err;
           return fallbackCurrencies;
         }),
+        listCategories(token).catch(() => [] as Category[]),
       ]);
 
       setAccounts(nextAccounts);
       setCurrencies(
         nextCurrencies.length > 0 ? nextCurrencies : fallbackCurrencies,
       );
+      setCategories(nextCategories);
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
         await redirectToLogin();
@@ -346,7 +387,7 @@ export const useTransactions = (): TransactionsViewModel => {
   ]);
 
   const refreshTransactions = useCallback(async () => {
-    if (!token || !selectedAccount?.id) {
+    if (!token) {
       transactionRequestIdRef.current += 1;
       setTransactions([]);
       setHasLoadedTransactions(false);
@@ -359,26 +400,20 @@ export const useTransactions = (): TransactionsViewModel => {
     setError(null);
 
     try {
-      const nextTransactions = await listAccountTransactions(
-        token,
-        selectedAccount.id,
-        {
-          fromDate: dateFilters.fromDate,
-          search: debouncedSearchQuery,
-          toDate: dateFilters.toDate,
-        },
-      );
+      const nextTransactions = await listAccountTransactions(token, {
+        accountId: filters.accountId,
+        categoryId: filters.categoryId,
+        fromDate: filters.fromDate,
+        search: debouncedSearchQuery,
+        toDate: filters.toDate,
+      });
 
-      if (transactionRequestIdRef.current !== requestId) {
-        return;
-      }
+      if (transactionRequestIdRef.current !== requestId) return;
 
       setTransactions(nextTransactions);
       setHasLoadedTransactions(true);
     } catch (requestError) {
-      if (transactionRequestIdRef.current !== requestId) {
-        return;
-      }
+      if (transactionRequestIdRef.current !== requestId) return;
 
       if (requestError instanceof ApiError && requestError.status === 401) {
         await redirectToLogin();
@@ -396,11 +431,12 @@ export const useTransactions = (): TransactionsViewModel => {
       }
     }
   }, [
-    dateFilters.fromDate,
-    dateFilters.toDate,
     debouncedSearchQuery,
+    filters.accountId,
+    filters.categoryId,
+    filters.fromDate,
+    filters.toDate,
     redirectToLogin,
-    selectedAccount?.id,
     setError,
     setIsLoading,
     setTransactions,
@@ -413,7 +449,7 @@ export const useTransactions = (): TransactionsViewModel => {
 
   useEffect(() => {
     setHasLoadedTransactions(false);
-  }, [selectedAccount?.id]);
+  }, [filters.accountId]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -422,21 +458,6 @@ export const useTransactions = (): TransactionsViewModel => {
 
     return () => clearTimeout(timeout);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (activeAccounts.length === 0) {
-      setSelectedAccountId(null);
-      return;
-    }
-
-    const hasSelectedAccount = activeAccounts.some(
-      (account) => account.id === selectedAccountId,
-    );
-
-    if (!hasSelectedAccount) {
-      setSelectedAccountId(activeAccounts[0].id);
-    }
-  }, [activeAccounts, selectedAccountId, setSelectedAccountId]);
 
   useEffect(() => {
     void refreshTransactions();
@@ -448,31 +469,25 @@ export const useTransactions = (): TransactionsViewModel => {
   }, [loadAccountContext, refreshTransactions]);
 
   return {
-    accountBalanceLabel,
-    accountCurrencyCode: displayCurrency.code,
     activeAccounts,
+    categories,
     currencies,
-    dateFilters,
     error,
+    filters,
     hasActiveDateFilter,
     hasActiveFilters,
     hasActiveSearch,
-    hasAccount: Boolean(selectedAccount),
+    hasAccount: activeAccounts.length > 0,
     hasLoadedTransactions,
     hasTransactions: transactionItems.length > 0,
-    isAccountPickerVisible: isTransactionAccountPickerVisible,
     isLoading: isAccountContextLoading || isLoading,
-    onApplyDateFilters: applyDateFilters,
-    onChangeAccountPress: openAccountPicker,
-    onCloseAccountPicker: closeAccountPicker,
-    onClearDateFilters: clearDateFilters,
+    onApplyFilters: applyFilters,
+    onClearFilters: clearFilters,
     onClearSearch: clearSearchQuery,
     onRefresh: refresh,
     onSearchQueryChange: updateSearchQuery,
-    onSelectAccount: selectAccount,
     onSelectTransaction: selectTransaction,
     searchQuery,
-    selectedAccount,
     summaryMetrics,
     transactions: transactionItems,
   };

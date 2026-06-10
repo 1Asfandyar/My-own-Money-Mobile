@@ -62,13 +62,18 @@ export const getTransaction = async (token: string, transactionId: number) => {
 
 export const listAccountTransactions = async (
   token: string,
-  accountId: number,
   params: ListAccountTransactionsParams = {},
 ) => {
-  const queryParams = new URLSearchParams({
-    account_id: String(accountId),
-  });
+  const queryParams = new URLSearchParams();
   const trimmedSearch = params.search?.trim();
+
+  if (params.accountId) {
+    queryParams.set('account_id', String(params.accountId));
+  }
+
+  if (params.categoryId) {
+    queryParams.set('category_id', String(params.categoryId));
+  }
 
   if (params.type) {
     queryParams.set('type', params.type);

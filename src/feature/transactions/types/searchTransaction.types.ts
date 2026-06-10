@@ -1,10 +1,14 @@
-import type { TransactionDateFilters } from '@/feature/transactions/types/transactionDateFilter.types';
+import type { Account } from '@/types/account.types';
+import type { Category } from '@/feature/categories/types/category.types';
+import type { TransactionFilters } from '@/feature/transactions/types/transactionDateFilter.types';
 
 export type SearchTransactionProps = {
-  dateFilters: TransactionDateFilters;
+  accounts: Account[];
+  categories: Category[];
+  filters: TransactionFilters;
   hasActiveDateFilter: boolean;
-  onApplyDateFilters: (filters: TransactionDateFilters) => void;
-  onClearDateFilters: () => void;
+  onApplyFilters: (filters: TransactionFilters) => void;
+  onClearFilters: () => void;
   onClearSearch: () => void;
   onSearchQueryChange: (query: string) => void;
   searchQuery: string;

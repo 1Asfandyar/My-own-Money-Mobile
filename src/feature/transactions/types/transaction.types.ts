@@ -7,12 +7,30 @@ import type {
   SharedExpenseSplitMethod,
   SharedExpenseUserSharePayload,
 } from '@/feature/transactions/types/sharedExpenseSplit.types';
-import type { TransactionDateFilters } from '@/feature/transactions/types/transactionDateFilter.types';
+import type { TransactionFilters } from '@/feature/transactions/types/transactionDateFilter.types';
 import type { Account } from '@/types/account.types';
 import type { Currency } from '@/types/currency.types';
 
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = 'expense' | 'income' | 'transfer' | 'settlement';
 export type TransactionFilterType = 'personal' | 'shared' | 'none';
+export type TransactionVisibilityType = 'personal' | 'shared';
+
+export type TransactionDisplaySplit = {
+  user_id: number;
+  full_name: string;
+  owed_amount_cents: number;
+  split_method: string;
+  allocation_value: number | null;
+};
+
+export type TransactionDisplay = {
+  account: { id: number; name: string } | null;
+  category: { id: number; name: string; icon: string | null; color: string | null } | null;
+  payer: { id: number; full_name: string } | null;
+  settles_user: { id: number; full_name: string } | null;
+  transfer_to_account: { id: number; name: string } | null;
+  splits: TransactionDisplaySplit[];
+};
 
 export type TransactionPayload = {
   title: string;
@@ -31,18 +49,23 @@ export type TransactionPayload = {
 
 export type Transaction = Omit<TransactionPayload, 'note'> & {
   category?: Category | null;
+  display?: TransactionDisplay;
   id: number;
   note?: string | null;
   split_amount_cents?: number | null;
   transfer_account_id?: number | null;
   user_id?: number;
-  visibility_type?: TransactionFilterType | string | null;
+  visibility_type?: TransactionVisibilityType | TransactionFilterType | string | null;
   created_at?: string;
   updated_at?: string;
 };
 
-export type ListAccountTransactionsParams = Partial<TransactionDateFilters> & {
+export type ListAccountTransactionsParams = {
+  accountId?: number | null;
+  categoryId?: number | null;
+  fromDate?: string;
   search?: string;
+  toDate?: string;
   type?: TransactionFilterType;
 };
 
@@ -76,6 +99,7 @@ export type TransactionListItem = {
   note?: string;
   softColor: string;
   sourceTransaction: Transaction;
+  subtitleLabel: string;
   title: string;
   typeLabel: string;
 };
@@ -90,12 +114,11 @@ export type TransactionsSummaryMetric = {
 };
 
 export type TransactionsViewModel = {
-  accountBalanceLabel: string;
-  accountCurrencyCode: string;
   activeAccounts: Account[];
+  categories: Category[];
   currencies: Currency[];
-  dateFilters: TransactionDateFilters;
   error: string | null;
+  filters: TransactionFilters;
   hasActiveDateFilter: boolean;
   hasActiveFilters: boolean;
   hasActiveSearch: boolean;
@@ -103,18 +126,13 @@ export type TransactionsViewModel = {
   hasLoadedTransactions: boolean;
   hasTransactions: boolean;
   isLoading: boolean;
-  isAccountPickerVisible: boolean;
-  onApplyDateFilters: (filters: TransactionDateFilters) => void;
-  onChangeAccountPress: () => void;
-  onCloseAccountPicker: () => void;
+  onApplyFilters: (filters: TransactionFilters) => void;
+  onClearFilters: () => void;
   onClearSearch: () => void;
-  onClearDateFilters: () => void;
   onRefresh: () => void;
   onSearchQueryChange: (query: string) => void;
-  onSelectAccount: (accountId: number) => void;
   onSelectTransaction: (transaction: Transaction) => void;
   searchQuery: string;
-  selectedAccount?: Account;
   summaryMetrics: TransactionsSummaryMetric[];
   transactions: TransactionListItem[];
 };

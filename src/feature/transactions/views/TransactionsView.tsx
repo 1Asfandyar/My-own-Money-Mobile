@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
-import AccountPickerModal from '@/feature/accounts/components/AccountPickerModal';
 import SearchTransaction from '@/feature/transactions/components/SearchTransaction';
 import TransactionList from '@/feature/transactions/components/TransactionList';
-import TransactionsAccountCard from '@/feature/transactions/components/TransactionsAccountCard';
 import TransactionsStatus from '@/feature/transactions/components/TransactionsStatus';
 import TransactionsSummary from '@/feature/transactions/components/TransactionsSummary';
 import type { TransactionsViewProps } from '@/feature/transactions/types/transaction.types';
@@ -25,17 +23,10 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => {
             Transactions
           </ThemedText>
           <ThemedText className="mt-1 text-sm leading-5 text-gray-500">
-            All income and expenses for the current account.
+            All income and expenses across your accounts.
           </ThemedText>
         </View>
       </View>
-
-      <TransactionsAccountCard
-        accountBalanceLabel={transactions.accountBalanceLabel}
-        accountCurrencyCode={transactions.accountCurrencyCode}
-        selectedAccount={transactions.selectedAccount}
-        onChangeAccountPress={transactions.onChangeAccountPress}
-      />
 
       <TransactionsStatus
         error={transactions.error}
@@ -54,10 +45,12 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => {
             </ThemedText>
 
             <SearchTransaction
-              dateFilters={transactions.dateFilters}
+              accounts={transactions.activeAccounts}
+              categories={transactions.categories}
+              filters={transactions.filters}
               hasActiveDateFilter={transactions.hasActiveDateFilter}
-              onApplyDateFilters={transactions.onApplyDateFilters}
-              onClearDateFilters={transactions.onClearDateFilters}
+              onApplyFilters={transactions.onApplyFilters}
+              onClearFilters={transactions.onClearFilters}
               onClearSearch={transactions.onClearSearch}
               onSearchQueryChange={transactions.onSearchQueryChange}
               searchQuery={transactions.searchQuery}
@@ -78,31 +71,20 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => {
       <ThemedText className="mt-3 text-center text-sm leading-5 text-gray-500">
         {transactions.hasActiveFilters
           ? 'No transactions matched your filters.'
-          : 'No transactions found for this account yet.'}
+          : 'No transactions found yet.'}
       </ThemedText>
     </View>
   ) : null;
 
   return (
-    <>
-      <TransactionList
-        isRefreshing={transactions.isLoading}
-        ListEmptyComponent={emptyState}
-        ListHeaderComponent={listHeader}
-        onRefresh={transactions.onRefresh}
-        onSelectTransaction={transactions.onSelectTransaction}
-        transactions={shouldShowActivity ? transactions.transactions : []}
-      />
-
-      <AccountPickerModal
-        accounts={transactions.activeAccounts}
-        currencies={transactions.currencies}
-        isVisible={transactions.isAccountPickerVisible}
-        selectedAccount={transactions.selectedAccount}
-        onClose={transactions.onCloseAccountPicker}
-        onSelectAccount={transactions.onSelectAccount}
-      />
-    </>
+    <TransactionList
+      isRefreshing={transactions.isLoading}
+      ListEmptyComponent={emptyState}
+      ListHeaderComponent={listHeader}
+      onRefresh={transactions.onRefresh}
+      onSelectTransaction={transactions.onSelectTransaction}
+      transactions={shouldShowActivity ? transactions.transactions : []}
+    />
   );
 };
 

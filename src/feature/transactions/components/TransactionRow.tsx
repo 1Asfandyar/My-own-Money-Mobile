@@ -51,7 +51,7 @@ const TransactionRow = ({ onPress, transaction }: TransactionRowProps) => (
       </View>
 
       <ThemedText className="mt-1 text-xs text-gray-500" numberOfLines={1}>
-        {transaction.categoryLabel} - {transaction.dateLabel}
+        {transaction.subtitleLabel}
       </ThemedText>
       {transaction.note ? (
         <ThemedText className="mt-1 text-xs text-gray-400" numberOfLines={1}>
