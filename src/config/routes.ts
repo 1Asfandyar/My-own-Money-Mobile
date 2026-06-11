@@ -6,6 +6,7 @@ export const ROUTES = {
   RECORD_PAYMENT: '/(main)/record-payment',
   FRIENDSHIP_DETAIL: '/(main)/friendship/[friendshipId]',
   SHARED_TRANSACTION_DETAIL: '/(main)/shared-transaction/[transactionId]',
+  TRANSACTION_DETAIL: '/(main)/transaction/[transactionId]',
   GROUP_DETAIL: '/(main)/groups/[groupId]',
   ONBOARDING: '/(onboarding)/welcome',
   MAIN_HOME: '/(main)/(tabs)/home',

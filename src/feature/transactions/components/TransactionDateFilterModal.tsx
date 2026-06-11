@@ -9,9 +9,11 @@ const TransactionDateFilterModal = (
 
   return (
     <TransactionDateFilterModalView
-      {...viewModel}
+      accounts={props.accounts}
+      categories={props.categories}
       isVisible={props.isVisible}
       onClose={props.onClose}
+      {...viewModel}
     />
   );
 };

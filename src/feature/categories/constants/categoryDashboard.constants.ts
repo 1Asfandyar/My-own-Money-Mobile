@@ -8,16 +8,22 @@ export const CATEGORY_ICON_FALLBACK: Record<
 > = {
   expense: 'trending-down-outline',
   income: 'trending-up-outline',
+  settlement: 'checkmark-circle-outline',
+  transfer: 'swap-horizontal-outline',
 };
 
 export const CATEGORY_COLOR_FALLBACK: Record<TransactionType, string> = {
   expense: '#DC2626',
   income: '#16A34A',
+  settlement: '#16A34A',
+  transfer: '#2563EB',
 };
 
 export const CATEGORY_AMOUNT_TEXT_COLORS: Record<TransactionType, string> = {
   expense: '#B91C1C',
   income: '#15803D',
+  settlement: '#15803D',
+  transfer: '#1D4ED8',
 };
 
 export const CATEGORY_SUMMARY_ICONS: Record<
@@ -26,11 +32,15 @@ export const CATEGORY_SUMMARY_ICONS: Record<
 > = {
   expense: 'arrow-down-outline',
   income: 'arrow-up-outline',
+  settlement: 'checkmark-circle-outline',
+  transfer: 'swap-horizontal-outline',
 };
 
 export const CATEGORY_TYPE_LABELS: Record<TransactionType, string> = {
   expense: 'Expense',
   income: 'Income',
+  settlement: 'Settlement',
+  transfer: 'Transfer',
 };
 
 const PROGRESS_SEGMENT_COUNT = 24;

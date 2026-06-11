@@ -8,10 +8,12 @@ import { fontFamilies } from '@/theme/fonts';
 import { themeColors, typography } from '@/theme/utilities';
 
 const SearchTransaction = ({
-  dateFilters,
+  accounts,
+  categories,
+  filters,
   hasActiveDateFilter,
-  onApplyDateFilters,
-  onClearDateFilters,
+  onApplyFilters,
+  onClearFilters,
   onClearSearch,
   onSearchQueryChange,
   searchQuery,
@@ -74,10 +76,12 @@ const SearchTransaction = ({
       </View>
 
       <TransactionDateFilterModal
-        dateFilters={dateFilters}
+        accounts={accounts}
+        categories={categories}
+        filters={filters}
         isVisible={isFilterVisible}
-        onApplyDateFilters={onApplyDateFilters}
-        onClearDateFilters={onClearDateFilters}
+        onApplyFilters={onApplyFilters}
+        onClearFilters={onClearFilters}
         onClose={() => setIsFilterVisible(false)}
       />
     </>

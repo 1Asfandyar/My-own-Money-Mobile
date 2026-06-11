@@ -1,4 +1,5 @@
 import type {
+  ApiTransaction,
   ListAccountTransactionsParams,
   Transaction,
   TransactionPayload,
@@ -60,15 +61,29 @@ export const getTransaction = async (token: string, transactionId: number) => {
   return result.data.transaction;
 };
 
+export const getApiTransaction = async (token: string, transactionId: number) => {
+  const result = await apiRequest<{ success: true; transaction: ApiTransaction }>(
+    `/api/v0/transactions/${transactionId}`,
+    { token },
+  );
+
+  return result.data.transaction;
+};
+
 export const listAccountTransactions = async (
   token: string,
-  accountId: number,
   params: ListAccountTransactionsParams = {},
 ) => {
-  const queryParams = new URLSearchParams({
-    account_id: String(accountId),
-  });
+  const queryParams = new URLSearchParams();
   const trimmedSearch = params.search?.trim();
+
+  if (params.accountId) {
+    queryParams.set('account_id', String(params.accountId));
+  }
+
+  if (params.categoryId) {
+    queryParams.set('category_id', String(params.categoryId));
+  }
 
   if (params.type) {
     queryParams.set('type', params.type);
@@ -86,7 +101,7 @@ export const listAccountTransactions = async (
     queryParams.set('to', params.toDate);
   }
 
-  const result = await apiRequest<{ success: true; transactions: Transaction[] }>(
+  const result = await apiRequest<{ success: true; transactions: ApiTransaction[] }>(
     `/api/v0/transactions?${queryParams.toString()}`,
     { token },
   );

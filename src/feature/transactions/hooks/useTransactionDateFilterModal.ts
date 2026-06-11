@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EMPTY_TRANSACTION_DATE_FILTERS } from '@/feature/transactions/constants/transactionDateFilter.constants';
+import { EMPTY_TRANSACTION_FILTERS } from '@/feature/transactions/constants/transactionDateFilter.constants';
 import type {
   TransactionDateFilterField,
-  TransactionDateFilters,
+  TransactionFilters,
   UseTransactionDateFilterModalParams,
 } from '@/feature/transactions/types/transactionDateFilter.types';
 import {
@@ -15,19 +15,20 @@ import {
 } from '@/feature/transactions/utils/transactionDateFilter.utils';
 
 const useTransactionDateFilterModal = ({
-  dateFilters,
+  filters,
   isVisible,
-  onApplyDateFilters,
-  onClearDateFilters,
+  onApplyFilters,
+  onClearFilters,
   onClose,
 }: UseTransactionDateFilterModalParams) => {
   const [activeField, setActiveField] =
     useState<TransactionDateFilterField>('fromDate');
   const [draftFilters, setDraftFilters] =
-    useState<TransactionDateFilters>(dateFilters);
+    useState<TransactionFilters>(filters);
   const [visibleMonth, setVisibleMonth] = useState(() =>
     getDateFilterMonthStart(new Date()),
   );
+
   const calendarDays = useMemo(
     () => getDateFilterCalendarDays(visibleMonth),
     [visibleMonth],
@@ -41,14 +42,14 @@ const useTransactionDateFilterModal = ({
     if (!isVisible) return;
 
     const initialDate =
-      parseDateFilterValue(dateFilters.fromDate) ??
-      parseDateFilterValue(dateFilters.toDate) ??
+      parseDateFilterValue(filters.fromDate) ??
+      parseDateFilterValue(filters.toDate) ??
       new Date();
 
-    setDraftFilters(dateFilters);
+    setDraftFilters(filters);
     setActiveField('fromDate');
     setVisibleMonth(getDateFilterMonthStart(initialDate));
-  }, [dateFilters, isVisible]);
+  }, [filters, isVisible]);
 
   const selectField = useCallback(
     (field: TransactionDateFilterField) => {
@@ -70,10 +71,7 @@ const useTransactionDateFilterModal = ({
   const selectDate = useCallback(
     (value: string) => {
       setDraftFilters((currentFilters) => {
-        const nextFilters = {
-          ...currentFilters,
-          [activeField]: value,
-        };
+        const nextFilters = { ...currentFilters, [activeField]: value };
 
         if (
           activeField === 'fromDate' &&
@@ -101,16 +99,24 @@ const useTransactionDateFilterModal = ({
     [activeField],
   );
 
+  const selectAccount = useCallback((accountId: number | null) => {
+    setDraftFilters((current) => ({ ...current, accountId }));
+  }, []);
+
+  const selectCategory = useCallback((categoryId: number | null) => {
+    setDraftFilters((current) => ({ ...current, categoryId }));
+  }, []);
+
   const applyFilters = useCallback(() => {
-    onApplyDateFilters(draftFilters);
+    onApplyFilters(draftFilters);
     onClose();
-  }, [draftFilters, onApplyDateFilters, onClose]);
+  }, [draftFilters, onApplyFilters, onClose]);
 
   const clearFilters = useCallback(() => {
-    setDraftFilters({ ...EMPTY_TRANSACTION_DATE_FILTERS });
-    onClearDateFilters();
+    setDraftFilters({ ...EMPTY_TRANSACTION_FILTERS });
+    onClearFilters();
     onClose();
-  }, [onClearDateFilters, onClose]);
+  }, [onClearFilters, onClose]);
 
   return {
     activeField,
@@ -120,6 +126,8 @@ const useTransactionDateFilterModal = ({
     onApply: applyFilters,
     onChangeMonth: changeMonth,
     onClear: clearFilters,
+    onSelectAccount: selectAccount,
+    onSelectCategory: selectCategory,
     onSelectDate: selectDate,
     onSelectField: selectField,
   };
