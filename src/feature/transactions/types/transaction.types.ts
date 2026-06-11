@@ -15,6 +15,58 @@ export type TransactionType = 'expense' | 'income' | 'transfer' | 'settlement';
 export type TransactionFilterType = 'personal' | 'shared' | 'none';
 export type TransactionVisibilityType = 'personal' | 'shared';
 
+// ── New unified API response types ──────────────────────────────────────────
+
+export type TransactionRenderAs =
+  | 'personal_expense'
+  | 'personal_income'
+  | 'transfer'
+  | 'shared_expense_payer'
+  | 'shared_expense_participant'
+  | 'settlement_settler'
+  | 'settlement_settlee';
+
+export type TransactionViewerRole =
+  | 'owner'
+  | 'payer'
+  | 'participant'
+  | 'settler'
+  | 'settlee';
+
+export type ApiTransactionSplitMethod = 'equal' | 'percentage' | 'shares' | 'exact';
+
+export type ApiTransactionSplit = {
+  user: { id: number; name: string; is_you: boolean };
+  owed_amount_cents: number;
+  allocation_value: number | null;
+  category: { id: number; name: string } | null;
+};
+
+export type ApiTransaction = {
+  id: number;
+  type: TransactionType;
+  visibility: TransactionVisibilityType;
+  title: string;
+  note: string | null;
+  date: string;
+  currency: { code: string; symbol: string };
+  amount_cents: number;
+  render_as: TransactionRenderAs;
+  viewer_role: TransactionViewerRole;
+  summary: {
+    label: string;
+    amount_cents: number;
+    paid_by_label: string;
+  };
+  paid_by: { id: number; name: string; is_you: boolean };
+  account: { id: number; name: string };
+  transfer_to_account: { id: number; name: string } | null;
+  category: { id: number; name: string } | null;
+  counterpart: { id: number; name: string } | null;
+  split_method: ApiTransactionSplitMethod | null;
+  splits: ApiTransactionSplit[] | null;
+};
+
 export type TransactionDisplaySplit = {
   user_id: number;
   full_name: string;
@@ -90,18 +142,17 @@ export type TransactionsStore = TransactionsStoreState &
   TransactionsStoreActions;
 
 export type TransactionListItem = {
-  amountLabel: string;
-  categoryLabel: string;
   color: string;
   dateLabel: string;
   iconName: keyof typeof Ionicons.glyphMap;
   id: number;
   note?: string;
+  secondaryLine: string;
   softColor: string;
-  sourceTransaction: Transaction;
-  subtitleLabel: string;
+  sourceTransaction: ApiTransaction;
+  summaryAmountLabel: string;
+  summaryLabel: string;
   title: string;
-  typeLabel: string;
 };
 
 export type TransactionsSummaryMetric = {
@@ -131,7 +182,7 @@ export type TransactionsViewModel = {
   onClearSearch: () => void;
   onRefresh: () => void;
   onSearchQueryChange: (query: string) => void;
-  onSelectTransaction: (transaction: Transaction) => void;
+  onSelectTransaction: (transaction: ApiTransaction) => void;
   searchQuery: string;
   summaryMetrics: TransactionsSummaryMetric[];
   transactions: TransactionListItem[];
@@ -169,12 +220,12 @@ export type TransactionListProps = {
   ListEmptyComponent?: ReactElement | null;
   ListHeaderComponent?: ReactElement | null;
   onRefresh?: () => void;
-  onSelectTransaction?: (transaction: Transaction) => void;
+  onSelectTransaction?: (transaction: ApiTransaction) => void;
   transactions: TransactionListItem[];
 };
 
 export type TransactionRowProps = {
-  onPress?: (transaction: Transaction) => void;
+  onPress?: (transaction: ApiTransaction) => void;
   transaction: TransactionListItem;
 };
 
@@ -210,4 +261,21 @@ export type SharedTransactionDetailViewModel = {
 
 export type SharedTransactionDetailViewProps = {
   detail: SharedTransactionDetailViewModel;
+};
+
+export type TransactionDetailViewModel = {
+  canDelete: boolean;
+  canEdit: boolean;
+  error: string | null;
+  isDeleting: boolean;
+  isLoading: boolean;
+  onBack: () => void;
+  onDelete: () => void;
+  onEdit: () => void;
+  onRetry: () => void;
+  transaction: ApiTransaction | null;
+};
+
+export type TransactionDetailViewProps = {
+  detail: TransactionDetailViewModel;
 };

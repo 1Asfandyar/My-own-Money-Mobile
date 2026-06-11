@@ -17,30 +17,22 @@ import { EMPTY_TRANSACTION_FILTERS } from '@/feature/transactions/constants/tran
 import { listAccountTransactions } from '@/feature/transactions/api/transactions.api';
 import { useTransactionsStore } from '@/feature/transactions/store/transactions.store';
 import type {
-  Transaction,
+  ApiTransaction,
   TransactionListItem,
+  TransactionRenderAs,
   TransactionsSummaryMetric,
   TransactionsViewModel,
 } from '@/feature/transactions/types/transaction.types';
 import type {
   TransactionFilters,
 } from '@/feature/transactions/types/transactionDateFilter.types';
-import {
-  getSignedTransactionAmountCents,
-  getTransactionAmountCents,
-} from '@/feature/transactions/utils/transactionAmount.utils';
-import {
-  getSharedTransactionDetailRouteParams,
-  getTransactionEditRouteParams,
-  isSharedTransaction,
-} from '@/feature/transactions/utils/transactionRouteParams.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import type { Currency } from '@/types/currency.types';
 import {
   fallbackCurrencies,
   formatCents,
-  getCurrencyById,
+  getCurrencyByCode,
 } from '@/utils/currency';
 import { listCurrencies } from '@/feature/currencies/api/currencies.api';
 
@@ -59,141 +51,75 @@ const formatTransactionDate = (value: string) => {
   });
 };
 
-const formatSignedCents = (
-  cents: number,
-  currencyId: number,
-  currencies: Currency[],
-) => {
-  const sign = cents >= 0 ? '+' : '-';
-
-  return `${sign}${formatCents(Math.abs(cents), currencyId, currencies)}`;
+const RENDER_AS_COLORS: Record<TransactionRenderAs, string> = {
+  personal_expense: CATEGORY_COLOR_FALLBACK.expense,
+  personal_income: CATEGORY_COLOR_FALLBACK.income,
+  transfer: CATEGORY_COLOR_FALLBACK.transfer,
+  shared_expense_payer: CATEGORY_COLOR_FALLBACK.income,
+  shared_expense_participant: CATEGORY_COLOR_FALLBACK.expense,
+  settlement_settler: CATEGORY_COLOR_FALLBACK.settlement,
+  settlement_settlee: CATEGORY_COLOR_FALLBACK.settlement,
 };
 
-const getTransactionIcon = (
-  transaction: Transaction,
-): keyof typeof Ionicons.glyphMap => {
-  const category = transaction.display?.category ?? transaction.category;
-
-  if (category?.icon && category.icon in Ionicons.glyphMap) {
-    return category.icon as keyof typeof Ionicons.glyphMap;
-  }
-
-  return CATEGORY_ICON_FALLBACK[transaction.transaction_type];
+const RENDER_AS_ICONS: Record<TransactionRenderAs, keyof typeof Ionicons.glyphMap> = {
+  personal_expense: CATEGORY_ICON_FALLBACK.expense,
+  personal_income: CATEGORY_ICON_FALLBACK.income,
+  transfer: CATEGORY_ICON_FALLBACK.transfer,
+  shared_expense_payer: CATEGORY_ICON_FALLBACK.expense,
+  shared_expense_participant: CATEGORY_ICON_FALLBACK.expense,
+  settlement_settler: CATEGORY_ICON_FALLBACK.settlement,
+  settlement_settlee: CATEGORY_ICON_FALLBACK.settlement,
 };
 
 const getTransactionListItem = (
-  transaction: Transaction,
-  displayCurrency: Currency,
+  transaction: ApiTransaction,
   currencies: Currency[],
-  userId?: number,
 ): TransactionListItem => {
-  const display = transaction.display;
-  const category = display?.category ?? transaction.category;
-  const { transaction_type, visibility_type } = transaction;
-  const currencyId = transaction.currency_id ?? displayCurrency.id;
-  const dateLabel = formatTransactionDate(transaction.transaction_date);
-  const typeLabel = CATEGORY_TYPE_LABELS[transaction_type];
+  const currency = getCurrencyByCode(transaction.currency.code, currencies);
+  const color = RENDER_AS_COLORS[transaction.render_as];
+  const iconName = RENDER_AS_ICONS[transaction.render_as];
+  const dateLabel = formatTransactionDate(transaction.date);
 
-  // Personal transfer
-  if (visibility_type === 'personal' && transaction_type === 'transfer') {
-    const color = CATEGORY_COLOR_FALLBACK.transfer;
-    const from = display?.account?.name ?? 'Unknown';
-    const to = display?.transfer_to_account?.name ?? 'Unknown';
-    return {
-      amountLabel: formatCents(Math.abs(transaction.amount_cents), currencyId, currencies),
-      categoryLabel: typeLabel,
-      color,
-      dateLabel,
-      iconName: CATEGORY_ICON_FALLBACK.transfer,
-      id: transaction.id,
-      note: transaction.note?.trim() || undefined,
-      softColor: getSoftColor(color),
-      sourceTransaction: transaction,
-      subtitleLabel: `${from} → ${to}`,
-      title: transaction.title || typeLabel,
-      typeLabel,
-    };
-  }
+  const summaryAmountLabel = `${transaction.currency.symbol} ${(
+    transaction.summary.amount_cents / 100
+  ).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-  // Shared settlement
-  if (visibility_type === 'shared' && transaction_type === 'settlement') {
-    const color = CATEGORY_COLOR_FALLBACK.settlement;
-    const payer = display?.payer?.full_name ?? 'Unknown';
-    const settlesUser = display?.settles_user?.full_name ?? 'Unknown';
-    return {
-      amountLabel: formatCents(Math.abs(transaction.amount_cents), currencyId, currencies),
-      categoryLabel: typeLabel,
-      color,
-      dateLabel,
-      iconName: CATEGORY_ICON_FALLBACK.settlement,
-      id: transaction.id,
-      note: transaction.note?.trim() || undefined,
-      softColor: getSoftColor(color),
-      sourceTransaction: transaction,
-      subtitleLabel: `${payer} paid ${settlesUser}`,
-      title: transaction.title || typeLabel,
-      typeLabel,
-    };
-  }
-
-  // Shared expense
-  if (visibility_type === 'shared' && transaction_type === 'expense') {
-    const color = category?.color ?? CATEGORY_COLOR_FALLBACK.expense;
-    const payer = display?.payer?.full_name ?? 'Unknown';
-    const userSplit = display?.splits?.find((s) => s.user_id === userId);
-    const splitAmountCents = userSplit?.owed_amount_cents ?? transaction.amount_cents;
-    const totalLabel = formatCents(Math.abs(transaction.amount_cents), currencyId, currencies);
-    return {
-      amountLabel: formatSignedCents(-Math.abs(splitAmountCents), currencyId, currencies),
-      categoryLabel: category?.name ?? typeLabel,
-      color,
-      dateLabel,
-      iconName: getTransactionIcon(transaction),
-      id: transaction.id,
-      note: transaction.note?.trim() || undefined,
-      softColor: getSoftColor(color),
-      sourceTransaction: transaction,
-      subtitleLabel: `${payer} paid ${totalLabel}`,
-      title: transaction.title || (category?.name ?? typeLabel),
-      typeLabel,
-    };
-  }
-
-  // Personal income / expense
-  const color = category?.color ?? CATEGORY_COLOR_FALLBACK[transaction_type];
-  const categoryLabel = category?.name ?? `Category #${transaction.category_id}`;
+  const totalAmountLabel = formatCents(
+    transaction.amount_cents,
+    currency.id,
+    currencies,
+  );
+  const secondaryLine = `${transaction.summary.paid_by_label} paid ${totalAmountLabel}`;
 
   return {
-    amountLabel: formatSignedCents(
-      getSignedTransactionAmountCents(transaction),
-      currencyId,
-      currencies,
-    ),
-    categoryLabel,
     color,
     dateLabel,
-    iconName: getTransactionIcon(transaction),
+    iconName,
     id: transaction.id,
     note: transaction.note?.trim() || undefined,
+    secondaryLine,
     softColor: getSoftColor(color),
     sourceTransaction: transaction,
-    subtitleLabel: `${categoryLabel} - ${dateLabel}`,
-    title: transaction.title || categoryLabel || typeLabel,
-    typeLabel,
+    summaryAmountLabel,
+    summaryLabel: transaction.summary.label,
+    title: transaction.title,
   };
 };
 
 const getSummaryMetric = (
-  type: Transaction['transaction_type'],
+  type: ApiTransaction['type'],
   amountCents: number,
-  displayCurrency: Currency,
   currencies: Currency[],
+  currencyCode: string,
 ): TransactionsSummaryMetric => {
   const color = CATEGORY_COLOR_FALLBACK[type];
+  const currency = getCurrencyByCode(currencyCode, currencies);
   const signedAmount = type === 'income' ? amountCents : -amountCents;
+  const sign = signedAmount >= 0 ? '+' : '-';
+  const formatted = formatCents(Math.abs(signedAmount), currency.id, currencies);
 
   return {
-    amountLabel: formatSignedCents(signedAmount, displayCurrency.id, currencies),
+    amountLabel: `${sign}${formatted}`,
     color,
     iconName: CATEGORY_SUMMARY_ICONS[type],
     label: CATEGORY_TYPE_LABELS[type],
@@ -203,26 +129,21 @@ const getSummaryMetric = (
 };
 
 const getSummaryMetrics = (
-  transactions: Transaction[],
-  displayCurrency: Currency,
+  transactions: ApiTransaction[],
   currencies: Currency[],
-) => {
+  currencyCode: string,
+): TransactionsSummaryMetric[] => {
   const totals = transactions.reduce(
-    (nextTotals, transaction) => {
-      const amount = Math.abs(getTransactionAmountCents(transaction));
-
-      if (transaction.transaction_type === 'income') {
-        return { ...nextTotals, income: nextTotals.income + amount };
-      }
-
-      return { ...nextTotals, expense: nextTotals.expense + amount };
+    (acc, t) => {
+      if (t.type === 'income') return { ...acc, income: acc.income + t.amount_cents };
+      return { ...acc, expense: acc.expense + t.amount_cents };
     },
     { expense: 0, income: 0 },
   );
 
   return [
-    getSummaryMetric('income', totals.income, displayCurrency, currencies),
-    getSummaryMetric('expense', totals.expense, displayCurrency, currencies),
+    getSummaryMetric('income', totals.income, currencies, currencyCode),
+    getSummaryMetric('expense', totals.expense, currencies, currencyCode),
   ];
 };
 
@@ -234,6 +155,7 @@ export const useTransactions = (): TransactionsViewModel => {
   const [hasLoadedTransactions, setHasLoadedTransactions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [apiTransactions, setApiTransactions] = useState<ApiTransaction[]>([]);
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
@@ -251,13 +173,6 @@ export const useTransactions = (): TransactionsViewModel => {
     (state) => state.setIsAccountContextLoading,
   );
   const setIsLoading = useTransactionsStore((state) => state.setIsLoading);
-  const setTransactions = useTransactionsStore(
-    (state) => state.setTransactions,
-  );
-  const setSelectedTransaction = useTransactionsStore(
-    (state) => state.setSelectedTransaction,
-  );
-  const transactions = useTransactionsStore((state) => state.transactions);
 
   const activeAccounts = useMemo(
     () => accounts.filter((account) => !account.is_archived),
@@ -269,27 +184,20 @@ export const useTransactions = (): TransactionsViewModel => {
     [activeAccounts, filters.accountId],
   );
 
-  const displayCurrency = getCurrencyById(
-    filteredAccount?.currency_id ?? user?.currency_id,
-    currencies,
-  );
+  const displayCurrencyCode: string =
+    (filteredAccount
+      ? currencies.find((c) => c.id === filteredAccount.currency_id)?.code
+      : currencies.find((c) => c.id === user?.currency_id)?.code)
+    ?? 'PKR';
 
   const transactionItems = useMemo(
-    () =>
-      transactions.map((transaction) =>
-        getTransactionListItem(
-          transaction,
-          displayCurrency,
-          currencies,
-          user?.id,
-        ),
-      ),
-    [currencies, displayCurrency, transactions, user?.id],
+    () => apiTransactions.map((t) => getTransactionListItem(t, currencies)),
+    [apiTransactions, currencies],
   );
 
   const summaryMetrics = useMemo(
-    () => getSummaryMetrics(transactions, displayCurrency, currencies),
-    [currencies, displayCurrency, transactions],
+    () => getSummaryMetrics(apiTransactions, currencies, displayCurrencyCode),
+    [apiTransactions, currencies, displayCurrencyCode],
   );
 
   const hasActiveSearch = searchQuery.trim().length > 0;
@@ -315,23 +223,13 @@ export const useTransactions = (): TransactionsViewModel => {
   }, []);
 
   const selectTransaction = useCallback(
-    (transaction: Transaction) => {
-      setSelectedTransaction(transaction);
-
-      if (isSharedTransaction(transaction)) {
-        router.push({
-          pathname: ROUTES.SHARED_TRANSACTION_DETAIL,
-          params: getSharedTransactionDetailRouteParams(transaction),
-        });
-        return;
-      }
-
+    (transaction: ApiTransaction) => {
       router.push({
-        pathname: ROUTES.ADD_PERSONAL_RECORD,
-        params: getTransactionEditRouteParams(transaction),
+        pathname: ROUTES.TRANSACTION_DETAIL,
+        params: { transactionId: String(transaction.id) },
       });
     },
-    [router, setSelectedTransaction],
+    [router],
   );
 
   const redirectToLogin = useCallback(async () => {
@@ -389,7 +287,7 @@ export const useTransactions = (): TransactionsViewModel => {
   const refreshTransactions = useCallback(async () => {
     if (!token) {
       transactionRequestIdRef.current += 1;
-      setTransactions([]);
+      setApiTransactions([]);
       setHasLoadedTransactions(false);
       return;
     }
@@ -410,7 +308,7 @@ export const useTransactions = (): TransactionsViewModel => {
 
       if (transactionRequestIdRef.current !== requestId) return;
 
-      setTransactions(nextTransactions);
+      setApiTransactions(nextTransactions);
       setHasLoadedTransactions(true);
     } catch (requestError) {
       if (transactionRequestIdRef.current !== requestId) return;
@@ -439,7 +337,6 @@ export const useTransactions = (): TransactionsViewModel => {
     redirectToLogin,
     setError,
     setIsLoading,
-    setTransactions,
     token,
   ]);
 

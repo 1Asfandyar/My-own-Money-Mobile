@@ -1,4 +1,5 @@
 import type {
+  ApiTransaction,
   ListAccountTransactionsParams,
   Transaction,
   TransactionPayload,
@@ -60,6 +61,15 @@ export const getTransaction = async (token: string, transactionId: number) => {
   return result.data.transaction;
 };
 
+export const getApiTransaction = async (token: string, transactionId: number) => {
+  const result = await apiRequest<{ success: true; transaction: ApiTransaction }>(
+    `/api/v0/transactions/${transactionId}`,
+    { token },
+  );
+
+  return result.data.transaction;
+};
+
 export const listAccountTransactions = async (
   token: string,
   params: ListAccountTransactionsParams = {},
@@ -91,7 +101,7 @@ export const listAccountTransactions = async (
     queryParams.set('to', params.toDate);
   }
 
-  const result = await apiRequest<{ success: true; transactions: Transaction[] }>(
+  const result = await apiRequest<{ success: true; transactions: ApiTransaction[] }>(
     `/api/v0/transactions?${queryParams.toString()}`,
     { token },
   );
