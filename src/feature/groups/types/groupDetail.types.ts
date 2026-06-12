@@ -1,4 +1,5 @@
 import type { Group, GroupUser } from '@/feature/groups/types/group.types';
+import type { ApiTransaction, TransactionListItem } from '@/feature/transactions/types/transaction.types';
 
 export type GroupDetailViewModel = {
   currentUserId?: number | null;
@@ -19,7 +20,9 @@ export type GroupDetailViewModel = {
   onOpenEditModal: () => void;
   onRefresh: () => void;
   onSaveGroup: () => void;
+  onSelectTransaction: (transaction: ApiTransaction) => void;
   onToggleEditFriend: (userId: number) => void;
+  transactions: TransactionListItem[];
 };
 
 export type GroupDetailViewProps = {

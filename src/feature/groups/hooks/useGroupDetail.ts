@@ -13,6 +13,9 @@ import {
 import type { Group, GroupUser } from '@/feature/groups/types/group.types';
 import type { GroupDetailViewModel } from '@/feature/groups/types/groupDetail.types';
 import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
+import type { ApiTransaction } from '@/feature/transactions/types/transaction.types';
+import { getTransactionListItem } from '@/feature/transactions/utils/transactionListItem.utils';
+import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -40,6 +43,7 @@ const useGroupDetail = (
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const currencies = useAccountsOverviewStore((state) => state.currencies);
   const [editError, setEditError] = useState('');
   const [editGroupName, setEditGroupName] = useState('');
   const [editSelectedFriendIds, setEditSelectedFriendIds] = useState<number[]>(
@@ -48,6 +52,7 @@ const useGroupDetail = (
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<GroupUser[]>([]);
   const [group, setGroup] = useState<Group | null>(null);
+  const [apiTransactions, setApiTransactions] = useState<ApiTransaction[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,6 +61,10 @@ const useGroupDetail = (
   const editableMembers = useMemo(
     () => getGroupUsers(group, user?.id),
     [group, user?.id],
+  );
+  const transactionItems = useMemo(
+    () => apiTransactions.map((t) => getTransactionListItem(t, currencies)),
+    [apiTransactions, currencies],
   );
   const editFriends = useMemo(
     () => mergeUsersById(friends, editableMembers),
@@ -74,6 +83,16 @@ const useGroupDetail = (
     router.replace(ROUTES.AUTH_LOGIN);
   }, [clearSession, router]);
 
+  const selectTransaction = useCallback(
+    (transaction: ApiTransaction) => {
+      router.push({
+        pathname: ROUTES.TRANSACTION_DETAIL,
+        params: { transactionId: String(transaction.id) },
+      });
+    },
+    [router],
+  );
+
   const loadGroup = useCallback(async () => {
     if (!token || !groupId) {
       setIsLoading(false);
@@ -84,18 +103,20 @@ const useGroupDetail = (
     setError('');
 
     try {
-      const [nextGroup, friendships] = await Promise.all([
+      const [groupDetail, friendships] = await Promise.all([
         getGroup(token, groupId),
         listFriendships(token),
       ]);
 
-      if (!nextGroup) {
+      if (!groupDetail) {
         setError('Could not find this group.');
         setGroup(null);
+        setApiTransactions([]);
         return;
       }
 
-      setGroup(nextGroup);
+      setGroup(groupDetail.group);
+      setApiTransactions(groupDetail.transactions);
       setFriends(
         friendships
           .map((friendship) => friendshipUserToGroupUser(friendship.friend))
@@ -236,7 +257,9 @@ const useGroupDetail = (
     onOpenEditModal: openEditModal,
     onRefresh: loadGroup,
     onSaveGroup: saveGroup,
+    onSelectTransaction: selectTransaction,
     onToggleEditFriend: toggleEditFriend,
+    transactions: transactionItems,
   };
 };
 
