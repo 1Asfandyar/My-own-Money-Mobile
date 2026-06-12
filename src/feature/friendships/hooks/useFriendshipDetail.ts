@@ -5,8 +5,6 @@ import { ROUTES } from '@/config/routes';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import { getFriendship } from '@/feature/friendships/api/friendships.api';
 import type {
-  FriendshipActivity,
-  FriendshipActivityItem,
   FriendshipDetail,
   FriendshipDetailViewModel,
 } from '@/feature/friendships/types/friendship.types';
@@ -14,73 +12,11 @@ import {
   getFriendshipBalanceColor,
   getFriendshipBalanceLabel,
 } from '@/feature/friendships/utils/friendshipDisplay.utils';
+import type { ApiTransaction } from '@/feature/transactions/types/transaction.types';
+import { getTransactionListItem } from '@/feature/transactions/utils/transactionListItem.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { fallbackCurrencies, formatCents, getCurrencyById } from '@/utils/currency';
-
-const formatActivityDate = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return 'No date';
-
-  return date.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const getActivityDatePart = (
-  value: string,
-  part: 'day' | 'month',
-) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return '';
-
-  return date.toLocaleDateString(undefined, { [part]: part === 'day' ? 'numeric' : 'short' });
-};
-
-const getImpactLabel = (activity: FriendshipActivity) => {
-  if (activity.balance_impact.type === 'you_lent') return 'You lent';
-
-  return 'You borrowed';
-};
-
-const getImpactColor = (activity: FriendshipActivity) =>
-  activity.balance_impact.type === 'you_lent' ? '#0F766E' : '#DC2626';
-
-const getActivityItems = (
-  activity: FriendshipActivity[],
-  currencyId: number,
-  currencies: ReturnType<typeof useAccountsOverviewStore.getState>['currencies'],
-): FriendshipActivityItem[] =>
-  [...activity]
-    .sort(
-      (first, second) =>
-        new Date(second.transaction_date).getTime() -
-        new Date(first.transaction_date).getTime(),
-    )
-    .map((item) => ({
-      ...item,
-      amountLabel: formatCents(
-        Math.abs(item.balance_impact.amount_cents),
-        currencyId,
-        currencies,
-      ),
-      dateLabel: formatActivityDate(item.transaction_date),
-      dayLabel: getActivityDatePart(item.transaction_date, 'day'),
-      groupLabel: item.group?.name?.trim() || 'Direct expense',
-      impactBackgroundColor: `${getImpactColor(item)}0D`,
-      impactColor: getImpactColor(item),
-      impactLabel: getImpactLabel(item),
-      monthLabel: getActivityDatePart(item.transaction_date, 'month'),
-      transactionAmountLabel: formatCents(
-        Math.abs(item.amount_cents),
-        currencyId,
-        currencies,
-      ),
-    }));
 
 const useFriendshipDetail = (): FriendshipDetailViewModel => {
   const router = useRouter();
@@ -119,14 +55,10 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     amount_cents: 0,
     type: 'settled_up' as const,
   };
-  const activity = useMemo(
-    () =>
-      getActivityItems(
-        friendship?.activity ?? [],
-        displayCurrency.id,
-        displayCurrencies,
-      ),
-    [displayCurrencies, displayCurrency.id, friendship?.activity],
+
+  const transactions = useMemo(
+    () => (friendship?.transactions ?? []).map((t) => getTransactionListItem(t, displayCurrencies)),
+    [displayCurrencies, friendship?.transactions],
   );
 
   const redirectToLogin = useCallback(async () => {
@@ -172,21 +104,14 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     router.back();
   }, [router]);
 
-  const onOpenTransaction = useCallback(
-    (transactionId: number) => {
+  const onSelectTransaction = useCallback(
+    (transaction: ApiTransaction) => {
       router.push({
-        pathname: ROUTES.SHARED_TRANSACTION_DETAIL,
-        params: {
-          friendId: friendship?.friend.id ? String(friendship.friend.id) : undefined,
-          friendName:
-            friendship?.friend.full_name?.trim() ||
-            friendship?.friend.email?.trim() ||
-            undefined,
-          transactionId: String(transactionId),
-        },
+        pathname: ROUTES.TRANSACTION_DETAIL,
+        params: { transactionId: String(transaction.id) },
       });
     },
-    [friendship?.friend, router],
+    [router],
   );
 
   const onSettleUp = useCallback(() => {
@@ -210,7 +135,6 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
   }, [balance.amount_cents, balance.type, friendship?.friend, router, selectedAccount?.id]);
 
   return {
-    activity,
     balanceAmountLabel: formatCents(
       Math.abs(balance.amount_cents),
       displayCurrency.id,
@@ -223,14 +147,15 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     friendship,
     isLoading,
     onBack,
-    onOpenTransaction,
     onRetry: loadFriendship,
+    onSelectTransaction,
     onSettleUp,
     settleUpDisabled:
       !friendship ||
       !selectedAccount?.id ||
       balance.type === 'settled_up' ||
       Math.abs(balance.amount_cents) <= 0,
+    transactions,
   };
 };
 
