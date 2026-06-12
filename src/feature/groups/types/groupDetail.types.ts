@@ -1,8 +1,10 @@
-import type { Group, GroupUser } from '@/feature/groups/types/group.types';
+import type { Group, GroupUser, MemberBalances } from '@/feature/groups/types/group.types';
 import type { ApiTransaction, TransactionListItem } from '@/feature/transactions/types/transaction.types';
 
 export type GroupDetailViewModel = {
   currentUserId?: number | null;
+  displayCurrencyId: number | undefined;
+  memberBalances: MemberBalances | null;
   editError: string;
   editFriends: GroupUser[];
   editGroupName: string;

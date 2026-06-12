@@ -113,8 +113,14 @@ export const getGroup = async (
     mobile_number: m.mobile_number,
   }));
 
+  const memberBalances = apiGroup.member_balances ?? {
+    overall: { type: 'settled_up' as const, amount_cents: 0 },
+    per_member: [],
+  };
+
   return {
     group: { id: apiGroup.id, name: apiGroup.name, members },
+    memberBalances,
     transactions: apiGroup.transactions ?? [],
   };
 };

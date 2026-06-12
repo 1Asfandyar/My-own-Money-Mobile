@@ -5,11 +5,96 @@ import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
 import EditGroupModal from '@/feature/groups/components/EditGroupModal';
 import MembersModal from '@/feature/groups/components/MembersModal';
 import type { GroupDetailViewProps } from '@/feature/groups/types/groupDetail.types';
+import type { GroupBalanceType, MemberBalanceEntry, MemberBalances } from '@/feature/groups/types/group.types';
 import { getUserInitial } from '@/feature/groups/utils/groupMembers.utils';
+import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import TransactionList from '@/feature/transactions/components/TransactionList';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
+import { fallbackCurrencies, formatCents } from '@/utils/currency';
+
+const DEBT_COLOR = '#DC2626';
+
+const getBalanceColor = (type: GroupBalanceType) => {
+  if (type === 'owes_you') return themeColors.primary;
+  if (type === 'you_owe') return DEBT_COLOR;
+  return themeColors.gray500;
+};
+
+const getBalanceLabel = (type: GroupBalanceType) => {
+  if (type === 'owes_you') return 'You are owed';
+  if (type === 'you_owe') return 'You owe';
+  return 'Settled up';
+};
+
+const getEntryDescription = (entry: MemberBalanceEntry) => {
+  const fromName = entry.from_user.is_you ? 'You' : entry.from_user.name;
+  const toName = entry.to_user.is_you ? 'you' : entry.to_user.name;
+  const verb = entry.from_user.is_you ? 'owe' : 'owes';
+  return `${fromName} ${verb} ${toName}`;
+};
+
+const getEntryColor = (entry: MemberBalanceEntry) => {
+  if (entry.from_user.is_you) return DEBT_COLOR;
+  if (entry.to_user.is_you) return themeColors.primary;
+  return themeColors.gray500;
+};
+
+type BalanceSectionProps = {
+  currencies: Parameters<typeof formatCents>[2];
+  currencyId: number | undefined;
+  memberBalances: MemberBalances;
+};
+
+const BalanceSection = ({ currencies, currencyId, memberBalances }: BalanceSectionProps) => {
+  const { overall, per_member } = memberBalances;
+  const overallColor = getBalanceColor(overall.type);
+  const overallLabel = getBalanceLabel(overall.type);
+
+  return (
+    <View className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4">
+      <View className="flex-row items-center justify-between">
+        <ThemedText className="text-sm text-gray-500">Overall balance</ThemedText>
+        <View className="flex-row items-center gap-1">
+          <ThemedText className="text-sm" style={{ color: overallColor }} weight="semiBold">
+            {overallLabel}
+          </ThemedText>
+          {overall.type !== 'settled_up' && (
+            <ThemedText className="text-sm" style={{ color: overallColor }} weight="semiBold">
+              {formatCents(overall.amount_cents, currencyId, currencies)}
+            </ThemedText>
+          )}
+        </View>
+      </View>
+
+      {per_member.length > 0 && (
+        <>
+          <View className="my-3 h-px bg-gray-200" />
+          {per_member.map((entry) => {
+            const color = getEntryColor(entry);
+            return (
+              <View
+                key={`${entry.from_user.id}-${entry.to_user.id}`}
+                className="flex-row items-center justify-between py-1"
+              >
+                <ThemedText
+                  className="min-w-0 flex-1 text-sm text-gray-700"
+                  numberOfLines={1}
+                >
+                  {getEntryDescription(entry)}
+                </ThemedText>
+                <ThemedText className="ml-4 text-sm" style={{ color }} weight="semiBold">
+                  {formatCents(entry.amount_cents, currencyId, currencies)}
+                </ThemedText>
+              </View>
+            );
+          })}
+        </>
+      )}
+    </View>
+  );
+};
 
 const CONTENT_STYLE = { paddingBottom: 40, paddingHorizontal: 20, paddingTop: 20 };
 
@@ -17,6 +102,8 @@ const AVATAR_MAX = 3;
 
 const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
   const [isMembersModalVisible, setIsMembersModalVisible] = useState(false);
+  const storeCurrencies = useAccountsOverviewStore((state) => state.currencies);
+  const currencies = storeCurrencies.length > 0 ? storeCurrencies : fallbackCurrencies;
   const groupName = detail.group?.name?.trim() || 'Group';
   const previewMembers = detail.members.slice(0, AVATAR_MAX);
   const extraCount = detail.members.length - AVATAR_MAX;
@@ -125,6 +212,14 @@ const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
               </View>
             </View>
           </View>
+
+          {detail.memberBalances && (
+            <BalanceSection
+              currencies={currencies}
+              currencyId={detail.displayCurrencyId}
+              memberBalances={detail.memberBalances}
+            />
+          )}
 
           <View className="mb-3 mt-6 flex-row items-center justify-between">
             <ThemedText className="text-base text-gray-900" weight="semiBold">

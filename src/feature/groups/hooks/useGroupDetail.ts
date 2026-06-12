@@ -10,7 +10,7 @@ import {
   removeGroupMember,
   updateGroup,
 } from '@/feature/groups/api/groups.api';
-import type { Group, GroupUser } from '@/feature/groups/types/group.types';
+import type { Group, GroupUser, MemberBalances } from '@/feature/groups/types/group.types';
 import type { GroupDetailViewModel } from '@/feature/groups/types/groupDetail.types';
 import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
 import type { ApiTransaction } from '@/feature/transactions/types/transaction.types';
@@ -52,6 +52,7 @@ const useGroupDetail = (
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<GroupUser[]>([]);
   const [group, setGroup] = useState<Group | null>(null);
+  const [memberBalances, setMemberBalances] = useState<MemberBalances | null>(null);
   const [apiTransactions, setApiTransactions] = useState<ApiTransaction[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,11 +112,13 @@ const useGroupDetail = (
       if (!groupDetail) {
         setError('Could not find this group.');
         setGroup(null);
+        setMemberBalances(null);
         setApiTransactions([]);
         return;
       }
 
       setGroup(groupDetail.group);
+      setMemberBalances(groupDetail.memberBalances);
       setApiTransactions(groupDetail.transactions);
       setFriends(
         friendships
@@ -240,7 +243,9 @@ const useGroupDetail = (
 
   return {
     currentUserId: user?.id,
+    displayCurrencyId: user?.currency_id ?? undefined,
     editError,
+    memberBalances,
     editFriends,
     editGroupName,
     editSelectedFriendIds,
