@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
 
 import EditGroupModal from '@/feature/groups/components/EditGroupModal';
+import MembersModal from '@/feature/groups/components/MembersModal';
 import type { GroupDetailViewProps } from '@/feature/groups/types/groupDetail.types';
-import {
-  getUserInitial,
-  getUserLabel,
-} from '@/feature/groups/utils/groupMembers.utils';
+import { getUserInitial } from '@/feature/groups/utils/groupMembers.utils';
 import TransactionList from '@/feature/transactions/components/TransactionList';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
@@ -14,8 +13,13 @@ import { themeColors } from '@/theme/utilities';
 
 const CONTENT_STYLE = { paddingBottom: 40, paddingHorizontal: 20, paddingTop: 20 };
 
+const AVATAR_MAX = 3;
+
 const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
+  const [isMembersModalVisible, setIsMembersModalVisible] = useState(false);
   const groupName = detail.group?.name?.trim() || 'Group';
+  const previewMembers = detail.members.slice(0, AVATAR_MAX);
+  const extraCount = detail.members.length - AVATAR_MAX;
 
   const listHeader = (
     <View>
@@ -86,62 +90,43 @@ const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
                 >
                   {groupName}
                 </ThemedText>
-                <ThemedText className="mt-1 text-sm text-gray-600">
-                  {detail.members.length}{' '}
-                  {detail.members.length === 1 ? 'member' : 'members'}
-                </ThemedText>
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel="View members"
+                  onPress={() => setIsMembersModalVisible(true)}
+                  className="mt-2 flex-row items-center"
+                >
+                  <View className="flex-row">
+                    {previewMembers.map((member, index) => (
+                      <View
+                        key={member.id}
+                        className="h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-primary/15"
+                        style={{ marginLeft: index === 0 ? 0 : -8 }}
+                      >
+                        <ThemedText className="text-xs text-primary" weight="semiBold">
+                          {getUserInitial(member)}
+                        </ThemedText>
+                      </View>
+                    ))}
+                  </View>
+                  {extraCount > 0 && (
+                    <ThemedText className="ml-2 text-xs text-gray-500">
+                      +{extraCount} more
+                    </ThemedText>
+                  )}
+                  <Ionicons
+                    name="chevron-forward"
+                    size={13}
+                    color={themeColors.gray400}
+                    style={{ marginLeft: 4 }}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           </View>
 
           <View className="mb-3 mt-6 flex-row items-center justify-between">
-            <ThemedText className="text-base text-gray-900" weight="semiBold">
-              Members
-            </ThemedText>
-            <ThemedButton
-              title="Edit"
-              leftIcon="create-outline"
-              variant="outline"
-              onPress={detail.onOpenEditModal}
-              containerClassName="px-3 py-2"
-              textClassName="text-xs"
-              iconSize={14}
-            />
-          </View>
-
-          {detail.members.map((member) => {
-            const supportingLabel =
-              member.id === detail.currentUserId
-                ? 'You'
-                : member.email ?? member.mobile_number ?? 'Group member';
-
-            return (
-              <View
-                key={member.id}
-                className="mb-3 flex-row items-center rounded-xl border border-gray-200 bg-white px-4 py-4"
-              >
-                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-                  <ThemedText className="text-sm text-primary" weight="semiBold">
-                    {getUserInitial(member)}
-                  </ThemedText>
-                </View>
-                <View className="ml-3 min-w-0 flex-1">
-                  <ThemedText
-                    className="text-sm text-gray-900"
-                    weight="semiBold"
-                    numberOfLines={1}
-                  >
-                    {getUserLabel(member)}
-                  </ThemedText>
-                  <ThemedText className="mt-0.5 text-xs text-gray-500" numberOfLines={1}>
-                    {supportingLabel}
-                  </ThemedText>
-                </View>
-              </View>
-            );
-          })}
-
-          <View className="mb-3 mt-3 flex-row items-center justify-between">
             <ThemedText className="text-base text-gray-900" weight="semiBold">
               Activity
             </ThemedText>
@@ -206,6 +191,13 @@ const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
         onSave={detail.onSaveGroup}
         onToggleFriend={detail.onToggleEditFriend}
         selectedFriendIds={detail.editSelectedFriendIds}
+      />
+
+      <MembersModal
+        currentUserId={detail.currentUserId}
+        isVisible={isMembersModalVisible}
+        members={detail.members}
+        onClose={() => setIsMembersModalVisible(false)}
       />
     </View>
   );
