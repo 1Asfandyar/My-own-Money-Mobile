@@ -43,11 +43,13 @@ const useSharedExpenseGroups = ({ token }: UseSharedExpenseGroupsParams) => {
         return existingGroup;
       }
 
-      const nextGroup = await getGroup(token, groupId);
+      const groupDetail = await getGroup(token, groupId);
 
-      if (!nextGroup) {
+      if (!groupDetail) {
         return existingGroup;
       }
+
+      const nextGroup = groupDetail.group;
 
       setGroups(
         sortGroupsByName([

@@ -97,6 +97,7 @@ export type TransactionPayload = {
   shared_by?: number[];
   split_method?: SharedExpenseSplitMethod;
   user_shares?: SharedExpenseUserSharePayload[];
+  group_id?: number | null;
 };
 
 export type Transaction = Omit<TransactionPayload, 'note'> & {
