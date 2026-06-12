@@ -1,4 +1,5 @@
 import { apiRequest } from '@/services/api';
+import type { ApiTransaction } from '@/feature/transactions/types/transaction.types';
 import type {
   Friendship,
   FriendshipDetail,
@@ -10,8 +11,9 @@ type FriendshipLedgerResponse = FriendshipLedger & {
   balance?: FriendshipLedger['balance_summary'];
 };
 
-type FriendshipDetailResponse = FriendshipDetail & {
+type FriendshipDetailResponse = Omit<FriendshipDetail, 'transactions'> & {
   balance?: FriendshipDetail['balance_summary'];
+  transactions: ApiTransaction[];
 };
 
 const normalizeFriendshipLedger = (
@@ -54,7 +56,16 @@ export const getFriendship = async (token: string, friendshipId: number) => {
     friendship: FriendshipDetailResponse;
   }>(`/api/v0/friendships/${friendshipId}`, { token });
 
-  return normalizeFriendshipLedger(result.data.friendship) as FriendshipDetail;
+  const raw = result.data.friendship;
+
+  return {
+    ...raw,
+    balance_summary:
+      raw.balance_summary ??
+      raw.balance ?? { amount_cents: 0, type: 'settled_up' as const },
+    group_balances: raw.group_balances ?? [],
+    transactions: raw.transactions ?? [],
+  } satisfies FriendshipDetail;
 };
 
 export const createFriendships = async (

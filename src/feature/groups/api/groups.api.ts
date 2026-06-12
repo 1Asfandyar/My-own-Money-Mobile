@@ -5,6 +5,8 @@ import type {
   CreateGroupResponse,
   GetGroupResponse,
   Group,
+  GroupDetailResult,
+  GroupMember,
   GroupUser,
   ListGroupsResponse,
   RemoveGroupMemberResponse,
@@ -92,12 +94,35 @@ export const createGroup = async (
   return getGroupFromResponse(result.data);
 };
 
-export const getGroup = async (token: string, groupId: number) => {
+export const getGroup = async (
+  token: string,
+  groupId: number,
+): Promise<GroupDetailResult | null> => {
   const result = await apiRequest<GetGroupResponse>(`/api/v0/groups/${groupId}`, {
     token,
   });
 
-  return getGroupFromResponse(result.data);
+  const apiGroup = result.data.group;
+
+  if (!apiGroup) return null;
+
+  const members: GroupMember[] = apiGroup.members.map((m) => ({
+    id: m.id,
+    full_name: m.full_name,
+    email: m.email,
+    mobile_number: m.mobile_number,
+  }));
+
+  const memberBalances = apiGroup.member_balances ?? {
+    overall: { type: 'settled_up' as const, amount_cents: 0 },
+    per_member: [],
+  };
+
+  return {
+    group: { id: apiGroup.id, name: apiGroup.name, members },
+    memberBalances,
+    transactions: apiGroup.transactions ?? [],
+  };
 };
 
 export const updateGroup = async (

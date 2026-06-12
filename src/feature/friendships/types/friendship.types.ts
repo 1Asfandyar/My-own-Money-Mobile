@@ -1,4 +1,5 @@
 import type { Currency } from '@/types/currency.types';
+import type { ApiTransaction, TransactionListItem } from '@/feature/transactions/types/transaction.types';
 
 export type FriendshipStatus = 'pending' | 'accepted' | 'blocked';
 
@@ -37,32 +38,17 @@ export type FriendshipLedger = Friendship & {
   balance_summary: FriendshipBalance;
 };
 
-export type FriendshipActivityImpactType = 'you_lent' | 'you_borrowed';
-
-export type FriendshipActivity = {
-  transaction_id: number;
-  title: string;
-  amount_cents: number;
-  transaction_date: string;
-  payer: {
-    id: number;
-    full_name?: string | null;
-  };
-  group?: {
-    id: number;
-    name?: string | null;
-  } | null;
-  balance_impact: {
-    type: FriendshipActivityImpactType;
-    amount_cents: number;
-  };
+export type GroupBalance = {
+  group_id: number;
+  group_name: string;
+  balance: FriendshipBalance;
 };
 
 export type FriendshipDetail = Friendship & {
   balance?: FriendshipBalance;
   balance_summary: FriendshipBalance;
-  group_balances?: unknown[];
-  activity: FriendshipActivity[];
+  group_balances: GroupBalance[];
+  transactions: ApiTransaction[];
 };
 
 export type ListFriendshipsParams = {
@@ -87,20 +73,7 @@ export type SharedFriendshipRowProps = {
   onPress: (friendshipId: number) => void;
 };
 
-export type FriendshipActivityItem = FriendshipActivity & {
-  amountLabel: string;
-  dateLabel: string;
-  dayLabel: string;
-  groupLabel: string;
-  impactBackgroundColor: string;
-  impactLabel: string;
-  impactColor: string;
-  monthLabel: string;
-  transactionAmountLabel: string;
-};
-
 export type FriendshipDetailViewModel = {
-  activity: FriendshipActivityItem[];
   balanceAmountLabel: string;
   balanceLabel: string;
   balanceColor: string;
@@ -109,10 +82,11 @@ export type FriendshipDetailViewModel = {
   friendship: FriendshipDetail | null;
   isLoading: boolean;
   onBack: () => void;
-  onOpenTransaction: (transactionId: number) => void;
   onRetry: () => void;
+  onSelectTransaction: (transaction: ApiTransaction) => void;
   onSettleUp: () => void;
   settleUpDisabled: boolean;
+  transactions: TransactionListItem[];
 };
 
 export type FriendshipDetailViewProps = {

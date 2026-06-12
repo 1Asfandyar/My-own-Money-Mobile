@@ -25,6 +25,7 @@ type UseSaveAddTransactionRecordParams = {
   categories: Category[];
   editingTransactionDate?: string | null;
   editingTransactionId?: number | null;
+  groupId?: number | null;
   isSharedRecord: boolean;
   onSaved: () => void;
   setFormError: (error: string) => void;
@@ -38,6 +39,7 @@ const useSaveAddTransactionRecord = ({
   categories,
   editingTransactionDate,
   editingTransactionId,
+  groupId,
   isSharedRecord,
   onSaved,
   setFormError,
@@ -141,6 +143,7 @@ const useSaveAddTransactionRecord = ({
       try {
         const payload = buildAddTransactionPayload({
           formValues,
+          groupId,
           isSharedRecord,
           paidByUserId: user?.id,
           selectedAccount,
@@ -187,6 +190,7 @@ const useSaveAddTransactionRecord = ({
       categories,
       editingTransactionDate,
       editingTransactionId,
+      groupId,
       isSharedRecord,
       lockSave,
       onSaved,

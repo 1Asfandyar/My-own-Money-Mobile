@@ -149,6 +149,7 @@ const useAddTransactionRecord = (
     categories,
     editingTransactionDate: params.transactionDate,
     editingTransactionId,
+    groupId: selectedSharedGroupId,
     isSharedRecord,
     onSaved,
     setFormError,

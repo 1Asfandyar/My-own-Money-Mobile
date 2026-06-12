@@ -159,6 +159,7 @@ export const getLiveSplitValuesError = ({
 
 export const buildAddTransactionPayload = ({
   formValues,
+  groupId,
   isSharedRecord,
   paidByUserId,
   selectedAccount,
@@ -168,6 +169,7 @@ export const buildAddTransactionPayload = ({
   userCurrencyId,
 }: {
   formValues: AddTransactionRecordFormValues;
+  groupId?: number | null;
   isSharedRecord: boolean;
   paidByUserId?: number;
   selectedAccount: Account;
@@ -200,6 +202,10 @@ export const buildAddTransactionPayload = ({
       participantIds: sharedParticipantIds,
       values: formValues.splitValues,
     });
+
+    if (groupId) {
+      payload.group_id = groupId;
+    }
   }
 
   return payload;
