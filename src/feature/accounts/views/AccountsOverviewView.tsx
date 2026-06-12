@@ -95,9 +95,8 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
         isVisible={Boolean(dashboard.selectedCategoryBreakdown)}
         onAddRecord={dashboard.addDashboardCategoryRecord}
         onClose={dashboard.closeDashboardCategory}
-        onEditTransaction={dashboard.editDashboardCategoryTransaction}
+        onSelectTransaction={dashboard.selectDashboardCategoryTransaction}
       />
-
     </View>
   );
 };

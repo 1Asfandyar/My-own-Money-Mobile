@@ -99,3 +99,41 @@ export const acceptFriendship = async (
 
   return normalizeFriendshipLedger(result.data.friendship);
 };
+
+export const deleteFriendship = async (
+  token: string,
+  friendshipId: number,
+) => {
+  await apiRequest<{ success: true }>(
+    `/api/v0/friendships/${friendshipId}`,
+    {
+      method: 'DELETE',
+      token,
+    },
+  );
+};
+
+export const rejectFriendship = async (
+  token: string,
+  friendshipId: number,
+) => {
+  await apiRequest<{ success: true }>(`/api/v0/friendships/${friendshipId}`, {
+    method: 'PATCH',
+    token,
+    body: { status: 'rejected' },
+  });
+};
+
+export const blockFriendship = async (
+  token: string,
+  friendshipId: number,
+) => {
+  await apiRequest<{ success: true; friendship: Friendship }>(
+    `/api/v0/friendships/${friendshipId}`,
+    {
+      method: 'PATCH',
+      token,
+      body: { status: 'blocked' },
+    },
+  );
+};

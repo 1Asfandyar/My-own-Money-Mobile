@@ -27,7 +27,7 @@ const CategoryTransactionRow = ({
     <TouchableOpacity
       activeOpacity={0.78}
       accessibilityRole="button"
-      accessibilityLabel={`Edit ${transaction.title || categoryName}`}
+      accessibilityLabel={`Open ${transaction.title || categoryName} details`}
       className="mt-3 flex-row items-center rounded-2xl border border-gray-100 px-4 py-3"
       onPress={() => onPress?.(transaction)}
     >

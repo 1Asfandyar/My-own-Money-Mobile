@@ -1,6 +1,9 @@
 import { apiRequest } from '@/services/api';
 import type { TransactionsByCategoryDashboard } from '@/feature/categories/types/categoryDashboard.types';
-import type { Category } from '@/feature/categories/types/category.types';
+import type {
+  Category,
+  CreateCategoryPayload,
+} from '@/feature/categories/types/category.types';
 
 export const listCategories = async (token: string) => {
   const result = await apiRequest<{ success: true; categories: Category[] }>(
@@ -8,7 +11,10 @@ export const listCategories = async (token: string) => {
     { token },
   );
 
-  return result.data.categories;
+  return (result.data.categories ?? []).map((category) => ({
+    ...category,
+    balance_cents: category.balance_cents ?? 0,
+  }));
 };
 
 export const getCategoriesSummary = async (
@@ -34,4 +40,30 @@ export const getCategoriesSummary = async (
     ),
     categories,
   };
+};
+
+export const createCategory = async (
+  token: string,
+  payload: CreateCategoryPayload,
+) => {
+  const result = await apiRequest<{ success: true; category: Category }>(
+    '/api/v0/categories',
+    {
+      body: payload,
+      method: 'POST',
+      token,
+    },
+  );
+
+  return {
+    ...result.data.category,
+    balance_cents: result.data.category.balance_cents ?? 0,
+  };
+};
+
+export const deleteCategory = async (token: string, categoryId: number) => {
+  await apiRequest<{ success: true }>(`/api/v0/categories/${categoryId}`, {
+    method: 'DELETE',
+    token,
+  });
 };

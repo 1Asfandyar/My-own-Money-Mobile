@@ -9,6 +9,7 @@ import type {
 } from '@/feature/reports/types/report.types';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import { fallbackCurrencies, getCurrencyByCode, getCurrencyById } from '@/utils/currency';
 import { ROUTES } from '@/config/routes';
 
@@ -32,6 +33,9 @@ export const useReports = (): ReportsViewModel => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const reportDataVersion = useServerDataInvalidationStore(
+    (state) => state.reports,
+  );
 
   const currentMonthKey = getCurrentMonthKey();
   const paramMonth = isValidMonthKey(params.month) ? params.month : null;
@@ -86,7 +90,7 @@ export const useReports = (): ReportsViewModel => {
 
   useEffect(() => {
     void fetchReport(selectedMonthKey);
-  }, [fetchReport, selectedMonthKey]);
+  }, [fetchReport, reportDataVersion, selectedMonthKey]);
 
   const navigateToMonth = useCallback((monthKey: string) => {
     setSelectedMonthKey(monthKey);

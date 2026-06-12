@@ -8,6 +8,7 @@ import type {
   TransactionDetailViewProps,
   TransactionRenderAs,
 } from '@/feature/transactions/types/transaction.types';
+import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -46,7 +47,7 @@ const RENDER_AS_COLORS: Record<TransactionRenderAs, string> = {
   personal_expense: CATEGORY_COLOR_FALLBACK.expense,
   personal_income: CATEGORY_COLOR_FALLBACK.income,
   transfer: CATEGORY_COLOR_FALLBACK.transfer,
-  shared_expense_payer: CATEGORY_COLOR_FALLBACK.income,
+  shared_expense_payer: CATEGORY_COLOR_FALLBACK.expense,
   shared_expense_participant: CATEGORY_COLOR_FALLBACK.expense,
   settlement_settler: CATEGORY_COLOR_FALLBACK.settlement,
   settlement_settlee: CATEGORY_COLOR_FALLBACK.settlement,
@@ -60,13 +61,6 @@ const RENDER_AS_ICONS: Record<TransactionRenderAs, keyof typeof Ionicons.glyphMa
   shared_expense_participant: CATEGORY_ICON_FALLBACK.expense,
   settlement_settler: CATEGORY_ICON_FALLBACK.settlement,
   settlement_settlee: CATEGORY_ICON_FALLBACK.settlement,
-};
-
-const SPLIT_METHOD_LABELS: Record<string, string> = {
-  equal: 'Equal',
-  exact: 'Exact',
-  percentage: 'Percentage',
-  shares: 'Shares',
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -120,6 +114,49 @@ const DetailRow = ({
   </View>
 );
 
+const TransactionActions = ({
+  canDelete,
+  canEdit,
+  deleteFirst,
+  isDeleting,
+  onDelete,
+  onEdit,
+}: {
+  canDelete: boolean;
+  canEdit: boolean;
+  deleteFirst: boolean;
+  isDeleting: boolean;
+  onDelete: () => void;
+  onEdit: () => void;
+}) => {
+  const deleteButton = canDelete ? (
+    <HeaderIconButton
+      accessibilityLabel="Delete transaction"
+      disabled={isDeleting}
+      iconName="trash-outline"
+      onPress={onDelete}
+    />
+  ) : null;
+  const editButton = canEdit ? (
+    <HeaderIconButton
+      accessibilityLabel="Edit transaction"
+      iconName="create-outline"
+      onPress={onEdit}
+    />
+  ) : null;
+
+  if (!canEdit && !canDelete) {
+    return <View className="w-11" />;
+  }
+
+  return (
+    <View className="flex-row items-center gap-2">
+      {deleteFirst ? deleteButton : editButton}
+      {deleteFirst ? editButton : deleteButton}
+    </View>
+  );
+};
+
 // ── Per-type body sections ────────────────────────────────────────────────────
 
 const PersonalTransactionBody = ({ transaction }: { transaction: ApiTransaction }) => (
@@ -163,57 +200,43 @@ const TransferBody = ({ transaction }: { transaction: ApiTransaction }) => (
   </View>
 );
 
-const SplitRow = ({
-  currency,
+const SharedExpenseSplitRow = ({
+  currencySymbol,
+  payerId,
   split,
-  splitMethod,
 }: {
-  currency: { symbol: string };
+  currencySymbol: string;
+  payerId: number;
   split: ApiTransactionSplit;
-  splitMethod: string | null;
 }) => {
   const label = split.user.is_you ? 'You owe' : `${split.user.name} owes`;
-  const amountLabel = formatAmount(split.owed_amount_cents, currency.symbol);
-
-  let allocationLabel: string | null = null;
-
-  if (splitMethod === 'percentage' && split.allocation_value !== null) {
-    allocationLabel = `${split.allocation_value}%`;
-  } else if (splitMethod === 'shares' && split.allocation_value !== null) {
-    allocationLabel = `${split.allocation_value} shares`;
-  }
+  const amountLabel = formatAmount(split.owed_amount_cents, currencySymbol);
 
   return (
-    <View
-      className={`mt-3 flex-row items-center rounded-xl px-3 py-2.5 ${
-        split.user.is_you ? 'bg-primary/5' : 'bg-gray-50'
-      }`}
-    >
-      <View className="flex-1">
-        <ThemedText
-          className={`text-sm ${split.user.is_you ? 'text-primary' : 'text-gray-700'}`}
-          weight={split.user.is_you ? 'semiBold' : 'regular'}
-        >
-          {label}
+    <View className="mt-4 flex-row items-center">
+      <SharedExpenseAvatar
+        size={36}
+        user={{
+          full_name: split.user.is_you ? 'You' : split.user.name,
+          id: split.user.id,
+        }}
+      />
+      <View className="ml-3 min-w-0 flex-1">
+        <ThemedText className="text-sm text-gray-700" numberOfLines={1}>
+          {label} {amountLabel}
         </ThemedText>
-        {allocationLabel ? (
-          <ThemedText className="mt-0.5 text-xs text-gray-400">
-            {allocationLabel}
+        {split.user.id === payerId ? (
+          <ThemedText className="mt-0.5 text-xs text-primary">
+            Paid this expense
           </ThemedText>
         ) : null}
       </View>
-      <ThemedText
-        className={`text-sm ${split.user.is_you ? 'text-primary' : 'text-gray-700'}`}
-        weight="semiBold"
-      >
-        {amountLabel}
-      </ThemedText>
     </View>
   );
 };
 
 const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => {
-  const { paid_by, currency, splits, split_method } = transaction;
+  const { paid_by, currency, splits } = transaction;
   const paidByLabel = paid_by.is_you
     ? `You paid ${formatAmount(transaction.amount_cents, currency.symbol)}`
     : `${paid_by.name} paid ${formatAmount(transaction.amount_cents, currency.symbol)}`;
@@ -222,25 +245,27 @@ const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => 
     <View className="mt-6">
       <View className="h-px bg-gray-100" />
 
-      <View className="mt-4 flex-row items-center justify-between">
-        <ThemedText className="text-sm text-gray-600">{paidByLabel}</ThemedText>
-        {split_method ? (
-          <View className="rounded-full bg-gray-100 px-2.5 py-1">
-            <ThemedText className="text-xs text-gray-500" weight="semiBold">
-              {SPLIT_METHOD_LABELS[split_method] ?? split_method}
-            </ThemedText>
-          </View>
-        ) : null}
+      <View className="mt-7 flex-row items-center">
+        <SharedExpenseAvatar
+          size={50}
+          user={{
+            full_name: paid_by.is_you ? 'You' : paid_by.name,
+            id: paid_by.id,
+          }}
+        />
+        <ThemedText className="ml-3 flex-1 text-base text-gray-900">
+          {paidByLabel}
+        </ThemedText>
       </View>
 
       {splits && splits.length > 0 ? (
-        <View className="mt-3">
+        <View className="ml-6 mt-2 border-l border-gray-200 pl-6">
           {splits.map((split) => (
-            <SplitRow
+            <SharedExpenseSplitRow
               key={split.user.id}
-              currency={currency}
+              currencySymbol={currency.symbol}
+              payerId={paid_by.id}
               split={split}
-              splitMethod={split_method}
             />
           ))}
         </View>
@@ -357,6 +382,14 @@ const TransactionDetailView = ({ detail }: TransactionDetailViewProps) => {
   const iconName = RENDER_AS_ICONS[transaction.render_as];
   const totalLabel = formatAmount(transaction.amount_cents, transaction.currency.symbol);
   const dateLabel = formatDate(transaction.date);
+  const isSharedExpense =
+    transaction.render_as === 'shared_expense_payer' ||
+    transaction.render_as === 'shared_expense_participant';
+  const heroDateLabel = isSharedExpense
+    ? `Added by ${
+        transaction.paid_by.is_you ? 'you' : transaction.paid_by.name
+      } on ${dateLabel}`
+    : dateLabel;
 
   return (
     <SafeAreaView
@@ -378,26 +411,14 @@ const TransactionDetailView = ({ detail }: TransactionDetailViewProps) => {
           <ThemedText className="text-xl text-gray-900" weight="semiBold">
             Details
           </ThemedText>
-          <View className="flex-row items-center gap-2">
-            {detail.canEdit ? (
-              <HeaderIconButton
-                accessibilityLabel="Edit transaction"
-                iconName="create-outline"
-                onPress={detail.onEdit}
-              />
-            ) : null}
-            {detail.canDelete ? (
-              <HeaderIconButton
-                accessibilityLabel="Delete transaction"
-                disabled={detail.isDeleting}
-                iconName="trash-outline"
-                onPress={detail.onDelete}
-              />
-            ) : null}
-            {!detail.canEdit && !detail.canDelete ? (
-              <View className="w-11" />
-            ) : null}
-          </View>
+          <TransactionActions
+            canDelete={detail.canDelete}
+            canEdit={detail.canEdit}
+            deleteFirst={isSharedExpense}
+            isDeleting={detail.isDeleting}
+            onDelete={detail.onDelete}
+            onEdit={detail.onEdit}
+          />
         </View>
 
         {/* Hero */}
@@ -426,7 +447,7 @@ const TransactionDetailView = ({ detail }: TransactionDetailViewProps) => {
               {totalLabel}
             </ThemedText>
             <ThemedText className="mt-2 text-sm text-gray-500">
-              {dateLabel}
+              {heroDateLabel}
             </ThemedText>
             {transaction.note ? (
               <ThemedText className="mt-2 text-sm leading-5 text-gray-500">

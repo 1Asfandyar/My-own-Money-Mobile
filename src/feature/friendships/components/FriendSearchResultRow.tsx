@@ -1,9 +1,9 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
-import type { FriendSearchResultRowProps } from '@/feature/transactions/types/addTransactionRecord.types';
+import type { FriendSearchResultRowProps } from '@/feature/friendships/types/friendship.types';
 import { getUserLabel } from '@/feature/groups/utils/groupMembers.utils';
+import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 

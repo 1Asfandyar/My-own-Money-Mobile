@@ -26,6 +26,7 @@ import type {
 import { getSoftColor, getTransactionListItem } from '@/feature/transactions/utils/transactionListItem.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import type { Currency } from '@/types/currency.types';
 import {
   fallbackCurrencies,
@@ -86,6 +87,9 @@ export const useTransactions = (): TransactionsViewModel => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const transactionDataVersion = useServerDataInvalidationStore(
+    (state) => state.transactions,
+  );
   const accounts = useAccountsOverviewStore((state) => state.accounts);
   const currencies = useAccountsOverviewStore((state) => state.currencies);
   const setAccounts = useAccountsOverviewStore((state) => state.setAccounts);
@@ -285,7 +289,7 @@ export const useTransactions = (): TransactionsViewModel => {
 
   useEffect(() => {
     void refreshTransactions();
-  }, [refreshTransactions]);
+  }, [refreshTransactions, transactionDataVersion]);
 
   const refresh = useCallback(() => {
     void loadAccountContext();

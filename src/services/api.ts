@@ -20,13 +20,21 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
 const parseErrorBody = (data: unknown) => {
-  const firstError =
-    isRecord(data) && Array.isArray(data.errors) ? data.errors[0] : null;
   const fieldErrors: ApiFieldErrors = {};
 
-  if (isRecord(firstError)) {
-    Object.entries(firstError).forEach(([key, value]) => {
-      fieldErrors[key] = Array.isArray(value) ? String(value[0]) : String(value);
+  if (isRecord(data) && Array.isArray(data.errors)) {
+    data.errors.forEach((error) => {
+      if (!isRecord(error)) {
+        return;
+      }
+
+      Object.entries(error).forEach(([key, value]) => {
+        if (!(key in fieldErrors)) {
+          fieldErrors[key] = Array.isArray(value)
+            ? String(value[0])
+            : String(value);
+        }
+      });
     });
   }
 
@@ -66,7 +74,7 @@ export const apiRequest = async <T>(
   }
 
   if (options.token) {
-    headers.Authorization = options.token;
+    headers.Authorization = toBearerToken(options.token);
   }
 
   let response: Response;

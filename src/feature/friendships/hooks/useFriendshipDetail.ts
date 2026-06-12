@@ -16,6 +16,7 @@ import type { ApiTransaction } from '@/feature/transactions/types/transaction.ty
 import { getTransactionListItem } from '@/feature/transactions/utils/transactionListItem.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import { fallbackCurrencies, formatCents, getCurrencyById } from '@/utils/currency';
 
 const useFriendshipDetail = (): FriendshipDetailViewModel => {
@@ -28,6 +29,9 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const friendshipDataVersion = useServerDataInvalidationStore(
+    (state) => state.friendships,
+  );
   const accounts = useAccountsOverviewStore((state) => state.accounts);
   const currencies = useAccountsOverviewStore((state) => state.currencies);
   const selectedAccountId = useAccountsOverviewStore(
@@ -55,6 +59,10 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     amount_cents: 0,
     type: 'settled_up' as const,
   };
+  const canSettleUp =
+    Boolean(friendship && selectedAccount?.id) &&
+    balance.type === 'you_owe' &&
+    balance.amount_cents > 0;
 
   const transactions = useMemo(
     () => (friendship?.transactions ?? []).map((t) => getTransactionListItem(t, displayCurrencies)),
@@ -98,7 +106,7 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
 
   useEffect(() => {
     void loadFriendship();
-  }, [loadFriendship]);
+  }, [friendshipDataVersion, loadFriendship]);
 
   const onBack = useCallback(() => {
     router.back();
@@ -115,7 +123,7 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
   );
 
   const onSettleUp = useCallback(() => {
-    if (!friendship?.friend || !selectedAccount?.id) {
+    if (!canSettleUp || !friendship?.friend || !selectedAccount?.id) {
       return;
     }
 
@@ -123,16 +131,15 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
       pathname: ROUTES.RECORD_PAYMENT,
       params: {
         accountId: selectedAccount.id,
-        amountCents: Math.abs(balance.amount_cents),
-        balanceType: balance.type,
-        friendId: friendship.friend.id,
+        amountCents: balance.amount_cents,
         friendName:
           friendship.friend.full_name?.trim() ||
           friendship.friend.email?.trim() ||
           `Friend #${friendship.friend.id}`,
+        friendshipId: friendship.id,
       },
     });
-  }, [balance.amount_cents, balance.type, friendship?.friend, router, selectedAccount?.id]);
+  }, [balance.amount_cents, canSettleUp, friendship, router, selectedAccount?.id]);
 
   return {
     balanceAmountLabel: formatCents(
@@ -142,6 +149,7 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     ),
     balanceColor: getFriendshipBalanceColor(balance.type),
     balanceLabel: getFriendshipBalanceLabel(balance.type),
+    canSettleUp,
     error,
     friend: friendship?.friend ?? null,
     friendship,
@@ -150,11 +158,6 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     onRetry: loadFriendship,
     onSelectTransaction,
     onSettleUp,
-    settleUpDisabled:
-      !friendship ||
-      !selectedAccount?.id ||
-      balance.type === 'settled_up' ||
-      Math.abs(balance.amount_cents) <= 0,
     transactions,
   };
 };

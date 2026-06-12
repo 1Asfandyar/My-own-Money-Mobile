@@ -58,7 +58,6 @@ export type AccountsOverviewViewModel = {
   closeDashboardCategory: () => void;
   currencies: Currency[];
   displayCurrency: Currency;
-  editDashboardCategoryTransaction: (transaction: Transaction) => void;
   error: string | null;
   friendshipDashboardError: string | null;
   friendshipLedgers: FriendshipLedger[];
@@ -77,6 +76,7 @@ export type AccountsOverviewViewModel = {
   selectedExpenseTab: ExpenseOverviewTab;
   selectAccount: (accountId: number) => void;
   selectDashboardCategory: (categoryId: number) => void;
+  selectDashboardCategoryTransaction: (transaction: Transaction) => void;
   selectFriendship: (friendshipId: number) => void;
   setSelectedExpenseTab: (tab: ExpenseOverviewTab) => void;
   userFirstName?: string;

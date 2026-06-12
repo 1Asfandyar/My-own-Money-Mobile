@@ -5,9 +5,11 @@ export const ROUTES = {
   ADD_SHARED_RECORD: '/(main)/add-shared-record',
   RECORD_PAYMENT: '/(main)/record-payment',
   FRIENDSHIP_DETAIL: '/(main)/friendship/[friendshipId]',
-  SHARED_TRANSACTION_DETAIL: '/(main)/shared-transaction/[transactionId]',
   TRANSACTION_DETAIL: '/(main)/transaction/[transactionId]',
   GROUP_DETAIL: '/(main)/groups/[groupId]',
+  MANAGE_ACCOUNTS: '/(main)/manage-accounts',
+  MANAGE_CATEGORIES: '/(main)/manage-categories',
+  MANAGE_FRIENDS: '/(main)/manage-friends',
   ONBOARDING: '/(onboarding)/welcome',
   MAIN_HOME: '/(main)/(tabs)/home',
 } as const;

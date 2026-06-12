@@ -1,15 +1,17 @@
 import type { Account } from '@/types/account.types';
 import type { Currency } from '@/types/currency.types';
 import type { Ionicons } from '@expo/vector-icons';
+import type { ManageableCategoryType } from '@/feature/categories/types/category.types';
 import type {
   Transaction,
   TransactionType,
 } from '@/feature/transactions/types/transaction.types';
 
 export type TransactionCategorySummary = {
+  balance_cents: number;
   id: number;
   name: string;
-  category_type: TransactionType;
+  category_type: ManageableCategoryType;
   icon?: string | null;
   color?: string | null;
 };
@@ -56,7 +58,7 @@ export type CategoryTransactionsModalProps = {
   isVisible: boolean;
   onAddRecord: (categoryId: number, transactionType: TransactionType) => void;
   onClose: () => void;
-  onEditTransaction: (transaction: Transaction) => void;
+  onSelectTransaction: (transaction: Transaction) => void;
 };
 
 export type CategoryTransactionRowProps = {

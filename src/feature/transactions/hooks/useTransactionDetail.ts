@@ -12,6 +12,10 @@ import type {
   TransactionDetailViewModel,
   TransactionRenderAs,
 } from '@/feature/transactions/types/transaction.types';
+import {
+  getApiPersonalTransactionEditRouteParams,
+  getApiSharedTransactionEditRouteParams,
+} from '@/feature/transactions/utils/transactionRouteParams.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -29,42 +33,6 @@ const DELETABLE_RENDER_AS = new Set<TransactionRenderAs>([
   'shared_expense_payer',
   'settlement_settler',
 ]);
-
-const getPersonalEditParams = (t: ApiTransaction) => ({
-  accountId: String(t.account.id),
-  amountCents: String(t.amount_cents),
-  categoryId: String(t.category?.id ?? ''),
-  note: t.note ?? '',
-  transactionDate: t.date,
-  transactionId: String(t.id),
-  transactionType: t.type,
-});
-
-const getSharedEditParams = (t: ApiTransaction) => {
-  const splits = t.splits ?? [];
-  const paidByUserId = t.paid_by.id;
-  const sharedUserIds = splits.map((s) => s.user.id);
-  const userShares = splits.map((s) => ({
-    user_id: s.user.id,
-    amount_cents: s.owed_amount_cents,
-    percentage: t.split_method === 'percentage' ? s.allocation_value : null,
-    shares: t.split_method === 'shares' ? s.allocation_value : null,
-  }));
-
-  return {
-    accountId: String(t.account.id),
-    amountCents: String(t.amount_cents),
-    categoryId: String(t.category?.id ?? ''),
-    note: t.note ?? '',
-    transactionDate: t.date,
-    transactionId: String(t.id),
-    transactionType: t.type,
-    paidByUserId: String(paidByUserId),
-    sharedUserIds: JSON.stringify(sharedUserIds),
-    splitMethod: t.split_method ?? 'equal',
-    userShares: JSON.stringify(userShares),
-  };
-};
 
 const useTransactionDetail = (): TransactionDetailViewModel => {
   const router = useRouter();
@@ -117,14 +85,14 @@ const useTransactionDetail = (): TransactionDetailViewModel => {
     if (transaction.render_as === 'shared_expense_payer') {
       router.push({
         pathname: ROUTES.ADD_SHARED_RECORD,
-        params: getSharedEditParams(transaction),
+        params: getApiSharedTransactionEditRouteParams(transaction),
       });
       return;
     }
 
     router.push({
       pathname: ROUTES.ADD_PERSONAL_RECORD,
-      params: getPersonalEditParams(transaction),
+      params: getApiPersonalTransactionEditRouteParams(transaction),
     });
   }, [router, transaction]);
 

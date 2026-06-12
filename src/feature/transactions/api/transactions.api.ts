@@ -4,6 +4,7 @@ import type {
   Transaction,
   TransactionPayload,
 } from '@/feature/transactions/types/transaction.types';
+import type { SettlementPayload } from '@/feature/transactions/types/settlement.types';
 import { apiRequest } from '@/services/api';
 
 export const createTransaction = async (
@@ -20,6 +21,25 @@ export const createTransaction = async (
   );
 
   return result.data.transaction;
+};
+
+export const createSettlement = async (
+  token: string,
+  payload: SettlementPayload,
+) => {
+  const result = await apiRequest<{
+    success: true;
+    transaction?: ApiTransaction;
+  }>('/api/v0/transactions', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+  return {
+    status: result.response.status,
+    transaction: result.data?.transaction,
+  };
 };
 
 export const updateTransaction = async (
@@ -50,15 +70,6 @@ export const deleteTransaction = async (
       token,
     },
   );
-};
-
-export const getTransaction = async (token: string, transactionId: number) => {
-  const result = await apiRequest<{ success: true; transaction: Transaction }>(
-    `/api/v0/transactions/${transactionId}`,
-    { token },
-  );
-
-  return result.data.transaction;
 };
 
 export const getApiTransaction = async (token: string, transactionId: number) => {

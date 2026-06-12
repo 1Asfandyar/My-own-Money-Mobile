@@ -126,7 +126,6 @@ export type TransactionsStoreState = {
   error: string | null;
   isAccountContextLoading: boolean;
   isLoading: boolean;
-  selectedTransaction: Transaction | null;
   transactions: Transaction[];
 };
 
@@ -135,7 +134,6 @@ export type TransactionsStoreActions = {
   setError: (error: string | null) => void;
   setIsAccountContextLoading: (isLoading: boolean) => void;
   setIsLoading: (isLoading: boolean) => void;
-  setSelectedTransaction: (transaction: Transaction | null) => void;
   setTransactions: (transactions: Transaction[]) => void;
 };
 
@@ -228,40 +226,6 @@ export type TransactionListProps = {
 export type TransactionRowProps = {
   onPress?: (transaction: ApiTransaction) => void;
   transaction: TransactionListItem;
-};
-
-export type SharedTransactionParticipant = {
-  amountCents: number;
-  id: number;
-  isCurrentUser: boolean;
-  isPayer: boolean;
-  label: string;
-  user: import('@/feature/groups/types/group.types').GroupUser;
-};
-
-export type SharedTransactionDetailViewModel = {
-  amountLabel: string;
-  categoryColor: string;
-  categoryIconName: keyof typeof Ionicons.glyphMap;
-  categorySoftColor: string;
-  createdByLabel: string;
-  dateLabel: string;
-  error: string | null;
-  isDeleting: boolean;
-  isLoading: boolean;
-  note?: string;
-  onBack: () => void;
-  onDelete: () => void;
-  onEdit: () => void;
-  onRetry: () => void;
-  paidByLabel: string;
-  paidByUser?: import('@/feature/groups/types/group.types').GroupUser;
-  participantRows: SharedTransactionParticipant[];
-  title: string;
-};
-
-export type SharedTransactionDetailViewProps = {
-  detail: SharedTransactionDetailViewModel;
 };
 
 export type TransactionDetailViewModel = {

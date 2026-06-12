@@ -4,15 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FriendshipNotificationsModal from '@/feature/main/components/FriendshipNotificationsModal';
 import MainSideMenuModal from '@/feature/main/components/MainSideMenuModal';
-import QuickAddAccountModal from '@/feature/main/components/QuickAddAccountModal';
 import type { MainHeaderViewProps } from '@/feature/main/types/mainHeader.types';
-import AddFriendModal from '@/feature/transactions/components/AddFriendModal';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
 const MainHeaderView = ({
-  addAccountModal,
-  addFriendModal,
   currentDateLabel,
   isMenuVisible,
   notificationCount,
@@ -63,8 +59,6 @@ const MainHeaderView = ({
       secondaryItems={secondaryMenuItems}
     />
 
-    <QuickAddAccountModal {...addAccountModal} />
-    <AddFriendModal {...addFriendModal} />
     <FriendshipNotificationsModal {...notificationsModal} />
   </SafeAreaView>
 );

@@ -24,7 +24,7 @@ const CategoryTransactionsModal = ({
   isVisible,
   onAddRecord,
   onClose,
-  onEditTransaction,
+  onSelectTransaction,
 }: CategoryTransactionsModalProps) => {
   if (!categoryBreakdown) {
     return null;
@@ -43,7 +43,7 @@ const CategoryTransactionsModal = ({
       categoryName={category.name}
       currencies={currencies}
       displayCurrencyId={displayCurrency.id}
-      onPress={onEditTransaction}
+      onPress={onSelectTransaction}
       transaction={item}
     />
   );

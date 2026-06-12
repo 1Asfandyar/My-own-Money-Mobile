@@ -118,13 +118,14 @@ const FriendshipDetailView = ({ detail }: FriendshipDetailViewProps) => {
             </ThemedText>
           </View>
 
-          <ThemedButton
-            title="Settle up"
-            leftIcon="card-outline"
-            disabled={detail.settleUpDisabled}
-            onPress={detail.onSettleUp}
-            containerClassName="mt-5 w-full rounded-full py-4"
-          />
+          {detail.canSettleUp ? (
+            <ThemedButton
+              title="Settle up"
+              leftIcon="card-outline"
+              onPress={detail.onSettleUp}
+              containerClassName="mt-5 w-full rounded-full py-4"
+            />
+          ) : null}
         </View>
       ) : null}
 

@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CategoryPickerModal from '@/feature/categories/components/CategoryPickerModal';
-import AddFriendModal from '@/feature/transactions/components/AddFriendModal';
+import AddFriendModal from '@/feature/friendships/components/AddFriendModal';
 import SharedExpenseAudienceStep from '@/feature/transactions/components/SharedExpenseAudienceStep';
 import SharedExpenseSplitSheet from '@/feature/transactions/components/SharedExpenseSplitSheet';
 import SharedTransactionRecordForm from '@/feature/transactions/components/SharedTransactionRecordForm';

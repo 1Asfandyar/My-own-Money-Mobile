@@ -1,6 +1,8 @@
 import type { GroupUser } from '@/feature/groups/types/group.types';
 import type {
   FriendshipBalanceType,
+  FriendshipLedger,
+  FriendshipManagementAction,
   FriendshipUser,
 } from '@/feature/friendships/types/friendship.types';
 import { themeColors } from '@/theme/utilities';
@@ -43,3 +45,18 @@ export const friendshipUserToGroupUser = (
   profile_image_url: user.profile_image_url,
   profile_photo_url: user.profile_photo_url,
 });
+
+export const getFriendshipManagementAction = (
+  friendship: FriendshipLedger,
+  currentUserId?: number | null,
+): FriendshipManagementAction | null => {
+  if (friendship.status === 'accepted') {
+    return 'block';
+  }
+
+  if (friendship.status !== 'pending') {
+    return null;
+  }
+
+  return friendship.requested_by_id === currentUserId ? 'cancel' : 'reject';
+};

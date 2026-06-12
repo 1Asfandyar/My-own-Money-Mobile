@@ -11,13 +11,12 @@ import { listCurrencies } from '@/feature/currencies/api/currencies.api';
 import { listFriendships } from '@/feature/friendships/api/friendships.api';
 import type { Transaction } from '@/feature/transactions/types/transaction.types';
 import {
-  getSharedTransactionDetailRouteParams,
   getTransactionEditRouteParams,
   isSharedTransaction,
 } from '@/feature/transactions/utils/transactionRouteParams.utils';
-import { useTransactionsStore } from '@/feature/transactions/store/transactions.store';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
 
 const getDashboardTotals = (categories: TransactionCategoryBreakdown[]) =>
@@ -48,6 +47,12 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const accountsDataVersion = useServerDataInvalidationStore(
+    (state) => state.accounts,
+  );
+  const friendshipDataVersion = useServerDataInvalidationStore(
+    (state) => state.friendships,
+  );
   const accounts = useAccountsOverviewStore((state) => state.accounts);
   const categoryDashboard = useAccountsOverviewStore(
     (state) => state.categoryDashboard,
@@ -119,10 +124,6 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const setSelectedExpenseTab = useAccountsOverviewStore(
     (state) => state.setSelectedExpenseTab,
   );
-  const setSelectedTransaction = useTransactionsStore(
-    (state) => state.setSelectedTransaction,
-  );
-
   const activeAccounts = useMemo(
     () => accounts.filter((account) => !account.is_archived),
     [accounts],
@@ -334,7 +335,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   useEffect(() => {
     void refreshAccounts();
-  }, [refreshAccounts]);
+  }, [accountsDataVersion, refreshAccounts]);
 
   useEffect(() => {
     void refreshCategoryDashboard();
@@ -342,7 +343,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   useEffect(() => {
     void refreshFriendshipDashboard();
-  }, [refreshFriendshipDashboard]);
+  }, [friendshipDataVersion, refreshFriendshipDashboard]);
 
   useEffect(() => {
     if (activeAccounts.length === 0) {
@@ -418,15 +419,14 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     });
   }, [categoryBreakdowns, router, selectedAccount?.id, setSelectedCategoryId]);
 
-  const editDashboardCategoryTransaction = useCallback(
+  const selectDashboardCategoryTransaction = useCallback(
     (transaction: Transaction) => {
       setSelectedCategoryId(null);
-      setSelectedTransaction(transaction);
 
       if (isSharedTransaction(transaction)) {
         router.push({
-          pathname: ROUTES.SHARED_TRANSACTION_DETAIL,
-          params: getSharedTransactionDetailRouteParams(transaction),
+          pathname: ROUTES.TRANSACTION_DETAIL,
+          params: { transactionId: String(transaction.id) },
         });
         return;
       }
@@ -436,7 +436,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
         params: getTransactionEditRouteParams(transaction),
       });
     },
-    [router, setSelectedCategoryId, setSelectedTransaction],
+    [router, setSelectedCategoryId],
   );
 
   return {
@@ -450,7 +450,6 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     closeDashboardCategory,
     currencies,
     displayCurrency,
-    editDashboardCategoryTransaction,
     error,
     friendshipDashboardError,
     friendshipLedgers,
@@ -468,6 +467,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     selectedExpenseTab,
     selectAccount,
     selectDashboardCategory,
+    selectDashboardCategoryTransaction,
     selectFriendship,
     setSelectedExpenseTab,
     userFirstName,

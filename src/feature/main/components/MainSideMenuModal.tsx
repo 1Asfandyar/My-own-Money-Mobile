@@ -73,7 +73,7 @@ const MainSideMenuModal = ({
           </View>
 
           <ThemedText className="mb-3 text-xs uppercase tracking-wide text-gray-400">
-            Quick actions
+            Manage and connect
           </ThemedText>
           {primaryItems.map((item) => (
             <MainSideMenuRow key={item.label} {...item} />

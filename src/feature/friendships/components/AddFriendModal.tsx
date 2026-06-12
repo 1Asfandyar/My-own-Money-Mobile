@@ -11,9 +11,9 @@ import {
 import type { ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { addFriendModalStyles } from '@/feature/transactions/components/AddFriendModal.styles';
-import FriendSearchResultRow from '@/feature/transactions/components/FriendSearchResultRow';
-import type { AddFriendModalProps } from '@/feature/transactions/types/addTransactionRecord.types';
+import { addFriendModalStyles } from '@/feature/friendships/components/AddFriendModal.styles';
+import FriendSearchResultRow from '@/feature/friendships/components/FriendSearchResultRow';
+import type { AddFriendModalProps } from '@/feature/friendships/types/friendship.types';
 import type { GroupUser } from '@/feature/groups/types/group.types';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedInput from '@/theme/components/ThemedInput';

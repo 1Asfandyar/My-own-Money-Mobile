@@ -180,28 +180,6 @@ export type SharedTransactionRecordFormProps = {
   form: AddTransactionRecordViewModel;
 };
 
-export type AddFriendModalProps = {
-  emailQuery: string;
-  error: string;
-  existingFriendIds: number[];
-  isAdding: boolean;
-  isSearching: boolean;
-  isVisible: boolean;
-  onAddUser: (id: number) => void;
-  onChangeEmail: (query: string) => void;
-  onClose: () => void;
-  onSearch: () => void;
-  results: GroupUser[];
-};
-
-export type FriendSearchResultRowProps = {
-  isAdding: boolean;
-  isAlreadyFriend: boolean;
-  isSearching: boolean;
-  onAddUser: (id: number) => void;
-  user: GroupUser;
-};
-
 export type AddTransactionRecordFormData = {
   accounts: Account[];
   categories: Category[];
