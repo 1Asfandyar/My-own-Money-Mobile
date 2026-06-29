@@ -7,8 +7,10 @@ export type SettlementPayload = {
   title: string;
   transaction_type: 'settlement';
   amount_cents: number;
-  account_id: number;
-  settles_user_id: number;
+  paid_by_id: number;
+  paid_to_id: number;
+  paid_by_account_id?: number;
+  paid_to_account_id?: number;
   transaction_date: string;
   note?: string;
 };
@@ -23,7 +25,9 @@ export type SettlementSubmissionInput = {
   accountId: number | null;
   amount: string;
   balance: FriendshipBalance;
-  friendId: number;
+  isDebtorView: boolean;
+  paidByUserId: number;
+  paidToUserId: number;
   friendName: string;
   note?: string;
   onSubmittingChange: (isSubmitting: boolean) => void;
@@ -64,6 +68,7 @@ export type RecordPaymentViewModel = {
   friendName: string;
   friendUser: GroupUser;
   isAccountPickerVisible: boolean;
+  isDebtorView: boolean;
   isLoading: boolean;
   isSaving: boolean;
   isSubmitDisabled: boolean;

@@ -17,7 +17,9 @@ const buildInput = (
   accountId: 14,
   amount: '12.34',
   balance: { amount_cents: 2500, type: 'you_owe' },
-  friendId: 42,
+  isDebtorView: true,
+  paidByUserId: 1,
+  paidToUserId: 42,
   friendName: 'Amina Khan',
   note: 'Paid in cash',
   onSubmittingChange: () => undefined,
@@ -63,10 +65,11 @@ test('submits the exact settlement payload and invalidates caches after success'
     {
       token: 'Bearer test-token',
       payload: {
-        account_id: 14,
+        paid_by_account_id: 14,
         amount_cents: 1234,
         note: 'Paid in cash',
-        settles_user_id: 42,
+        paid_by_id: 1,
+        paid_to_id: 42,
         title: 'Settled up with Amina Khan',
         transaction_date: '2026-06-12T10:30:00.000Z',
         transaction_type: 'settlement',
@@ -75,6 +78,8 @@ test('submits the exact settlement payload and invalidates caches after success'
   ]);
   assert.equal('category_id' in requests[0].payload, false);
   assert.equal('group_id' in requests[0].payload, false);
+  assert.equal('paid_by_account_id' in requests[0].payload, true);
+  assert.equal('paid_to_account_id' in requests[0].payload, false);
 });
 
 test('prevents overpayment before making a request', async () => {
@@ -106,7 +111,7 @@ test('prevents overpayment before making a request', async () => {
       amount: '25.01',
       balance: { amount_cents: 2500, type: 'you_owe' },
     }).amount,
-    'The settlement cannot exceed the amount you owe.',
+    'The settlement cannot exceed the outstanding balance.',
   );
 });
 

@@ -71,7 +71,7 @@ const useManageCategories = (): ManageCategoriesViewModel => {
     setError('');
 
     try {
-      setCategories(await listCategories(token));
+      setCategories(await listCategories(token, { includeZeroBalance: true }));
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
         await redirectToLogin();
