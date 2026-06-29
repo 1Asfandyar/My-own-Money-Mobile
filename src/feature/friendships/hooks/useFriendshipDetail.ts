@@ -60,9 +60,9 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
     type: 'settled_up' as const,
   };
   const canSettleUp =
-    Boolean(friendship && selectedAccount?.id) &&
-    balance.type === 'you_owe' &&
-    balance.amount_cents > 0;
+    Boolean(friendship) &&
+    balance.amount_cents > 0 &&
+    (balance.type === 'you_owe' || balance.type === 'owes_you');
 
   const transactions = useMemo(
     () => (friendship?.transactions ?? []).map((t) => getTransactionListItem(t, displayCurrencies)),
@@ -123,14 +123,16 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
   );
 
   const onSettleUp = useCallback(() => {
-    if (!canSettleUp || !friendship?.friend || !selectedAccount?.id) {
+    if (!canSettleUp || !friendship?.friend) {
       return;
     }
 
     router.push({
       pathname: ROUTES.RECORD_PAYMENT,
       params: {
-        accountId: selectedAccount.id,
+        ...(balance.type === 'you_owe' && selectedAccount?.id
+          ? { accountId: selectedAccount.id }
+          : {}),
         amountCents: balance.amount_cents,
         friendName:
           friendship.friend.full_name?.trim() ||
@@ -139,7 +141,7 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
         friendshipId: friendship.id,
       },
     });
-  }, [balance.amount_cents, canSettleUp, friendship, router, selectedAccount?.id]);
+  }, [balance.amount_cents, balance.type, canSettleUp, friendship, router, selectedAccount]);
 
   return {
     balanceAmountLabel: formatCents(

@@ -71,6 +71,7 @@ const useRecordPayment = (): RecordPaymentViewModel => {
     amount_cents: 0,
     type: 'settled_up' as const,
   };
+  const isDebtorView = balance.type === 'you_owe';
   const friendName =
     friendship?.friend.full_name?.trim() ||
     friendship?.friend.email?.trim() ||
@@ -142,7 +143,7 @@ const useRecordPayment = (): RecordPaymentViewModel => {
           settlementCentsToInput(nextFriendship.balance_summary.amount_cents),
         );
       } else {
-        setError('Only an amount you owe can be settled.');
+        setError('Nothing to settle with this friend.');
       }
 
       if (nextAccounts.filter((nextAccount) => !nextAccount.is_archived).length === 0) {
@@ -216,7 +217,7 @@ const useRecordPayment = (): RecordPaymentViewModel => {
   }, []);
 
   const submit = useCallback(async () => {
-    if (!token || !friendship?.friend.id) {
+    if (!token || !friendship?.friend.id || !user?.id) {
       setError('Could not record this settlement.');
       return;
     }
@@ -224,13 +225,19 @@ const useRecordPayment = (): RecordPaymentViewModel => {
     setAmountError('');
     setError('');
 
+    const debtorIsCurrentUser = friendship.balance_summary.type === 'you_owe';
+    const paidByUserId = debtorIsCurrentUser ? user.id : friendship.friend.id;
+    const paidToUserId = debtorIsCurrentUser ? friendship.friend.id : user.id;
+
     const result = await submitSettlement({
       accountId: account?.id ?? null,
       amount,
       balance: friendship.balance_summary,
-      friendId: friendship.friend.id,
+      isDebtorView: debtorIsCurrentUser,
+      paidByUserId,
+      paidToUserId,
       friendName,
-      note: `You paid ${friendName}`,
+      note: debtorIsCurrentUser ? `You paid ${friendName}` : `${friendName} paid you`,
       onSubmittingChange: setIsSaving,
       token,
       transactionDate: new Date().toISOString(),
@@ -255,7 +262,11 @@ const useRecordPayment = (): RecordPaymentViewModel => {
     setAmountState('');
     setSelectedPaymentAccountId(null);
     closeAfterSuccess();
-    Alert.alert('Settled up', `Your payment to ${friendName} was recorded.`);
+
+    const alertMessage = debtorIsCurrentUser
+      ? `Your payment to ${friendName} was recorded.`
+      : `${friendName}'s payment to you was recorded.`;
+    Alert.alert('Settled up', alertMessage);
   }, [
     account?.id,
     amount,
@@ -264,6 +275,7 @@ const useRecordPayment = (): RecordPaymentViewModel => {
     friendship,
     submitSettlement,
     token,
+    user?.id,
   ]);
 
   return {
@@ -279,6 +291,7 @@ const useRecordPayment = (): RecordPaymentViewModel => {
     friendName,
     friendUser,
     isAccountPickerVisible,
+    isDebtorView,
     isLoading,
     isSaving,
     isSubmitDisabled:
