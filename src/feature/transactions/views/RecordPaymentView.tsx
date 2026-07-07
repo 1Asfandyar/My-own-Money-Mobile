@@ -52,18 +52,26 @@ const RecordPaymentView = ({ payment }: RecordPaymentViewProps) => (
         <View className="flex-1 justify-between pb-5">
           <View className="pt-24">
             <View className="flex-row items-center justify-center">
-              <SharedExpenseAvatar user={payment.currentUser} size={72} />
+              <SharedExpenseAvatar
+                user={payment.isDebtorView ? payment.currentUser : payment.friendUser}
+                size={72}
+              />
               <Ionicons
                 name="arrow-forward"
                 size={38}
                 color="#4B5563"
                 style={{ marginHorizontal: 28 }}
               />
-              <SharedExpenseAvatar user={payment.friendUser} size={72} />
+              <SharedExpenseAvatar
+                user={payment.isDebtorView ? payment.friendUser : payment.currentUser}
+                size={72}
+              />
             </View>
 
             <ThemedText className="mt-8 text-center text-base text-gray-800">
-              You paid {payment.friendName}
+              {payment.isDebtorView
+                ? `You paid ${payment.friendName}`
+                : `${payment.friendName} paid you`}
             </ThemedText>
 
             <ThemedInput
@@ -88,14 +96,18 @@ const RecordPaymentView = ({ payment }: RecordPaymentViewProps) => (
               <TouchableOpacity
                 activeOpacity={0.78}
                 accessibilityRole="button"
-                accessibilityLabel="Change payment account"
+                accessibilityLabel={
+                  payment.isDebtorView
+                    ? 'Change payment account'
+                    : 'Change receiving account'
+                }
                 className="flex-row items-center"
                 onPress={payment.openAccountPicker}
               >
                 <Ionicons name="wallet-outline" size={20} color="#6B7280" />
                 <View className="ml-3 flex-1">
                   <ThemedText className="text-xs text-gray-500">
-                    Account
+                    {payment.isDebtorView ? 'Paid from' : 'Received into'}
                   </ThemedText>
                   <ThemedText
                     className="text-sm text-gray-900"

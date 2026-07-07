@@ -1,4 +1,5 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import type { CategoryChartTab, ReportCategorySpending } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
@@ -92,50 +93,37 @@ const BarRow = ({ name, amountLabel, percent, transactionCount, color }: BarRowP
 // ── Donut chart ───────────────────────────────────────────────────────────────
 
 const DONUT_SIZE = 160;
+const RADIUS = DONUT_SIZE / 2;
 const HOLE_RATIO = 0.55;
+const INNER_RADIUS = RADIUS * HOLE_RATIO;
 
-interface PieSegmentProps {
-  startAngle: number;
-  sweepAngle: number;
-  color: string;
-}
+const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-const PieSegment = ({ startAngle, sweepAngle, color }: PieSegmentProps) => {
-  const halfSize = DONUT_SIZE / 2;
+const polarXY = (cx: number, cy: number, r: number, angleDeg: number) => ({
+  x: cx + r * Math.cos(toRad(angleDeg)),
+  y: cy + r * Math.sin(toRad(angleDeg)),
+});
 
-  if (sweepAngle <= 0) return null;
+const arcPath = (startDeg: number, sweepDeg: number): string => {
+  const cx = RADIUS;
+  const cy = RADIUS;
+  // Cap to avoid degenerate full-circle arc
+  const sweep = Math.min(sweepDeg, 359.9999);
+  const endDeg = startDeg + sweep;
+  const large = sweep > 180 ? 1 : 0;
 
-  if (sweepAngle > 180) {
-    return (
-      <>
-        <PieSegment startAngle={startAngle} sweepAngle={180} color={color} />
-        <PieSegment startAngle={startAngle + 180} sweepAngle={sweepAngle - 180} color={color} />
-      </>
-    );
-  }
+  const os = polarXY(cx, cy, RADIUS, startDeg);
+  const oe = polarXY(cx, cy, RADIUS, endDeg);
+  const is = polarXY(cx, cy, INNER_RADIUS, startDeg);
+  const ie = polarXY(cx, cy, INNER_RADIUS, endDeg);
 
-  return (
-    <View
-      style={[
-        styles.segmentContainer,
-        { transform: [{ rotate: `${startAngle}deg` }] },
-      ]}
-    >
-      <View
-        style={[
-          styles.segmentHalf,
-          {
-            backgroundColor: color,
-            transform: [
-              { translateX: -(halfSize / 2) },
-              { rotate: `${sweepAngle - 180}deg` },
-              { translateX: halfSize / 2 },
-            ],
-          },
-        ]}
-      />
-    </View>
-  );
+  return [
+    `M ${os.x} ${os.y}`,
+    `A ${RADIUS} ${RADIUS} 0 ${large} 1 ${oe.x} ${oe.y}`,
+    `L ${ie.x} ${ie.y}`,
+    `A ${INNER_RADIUS} ${INNER_RADIUS} 0 ${large} 0 ${is.x} ${is.y}`,
+    'Z',
+  ].join(' ');
 };
 
 interface DonutChartProps {
@@ -144,9 +132,7 @@ interface DonutChartProps {
 }
 
 const DonutChart = ({ items, currencySymbol }: DonutChartProps) => {
-  const halfSize = DONUT_SIZE / 2;
-  const holeSize = DONUT_SIZE * HOLE_RATIO;
-
+  // Start at -90° so 0% begins at 12 o'clock
   let accumulated = -90;
   const segments = items.map((item) => {
     const sweep = (item.percent_of_expenses / 100) * 360;
@@ -157,31 +143,15 @@ const DonutChart = ({ items, currencySymbol }: DonutChartProps) => {
 
   return (
     <View className="items-center">
-      <View style={{ width: DONUT_SIZE, height: DONUT_SIZE }}>
-        <View style={styles.donutBackground} />
-
+      <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
         {segments.map((seg, i) => (
-          <PieSegment
+          <Path
             key={i}
-            startAngle={seg.startAngle}
-            sweepAngle={seg.sweepAngle}
-            color={seg.color}
+            d={arcPath(seg.startAngle, seg.sweepAngle)}
+            fill={seg.color}
           />
         ))}
-
-        <View
-          style={[
-            styles.donutHole,
-            {
-              width: holeSize,
-              height: holeSize,
-              borderRadius: holeSize / 2,
-              top: halfSize - holeSize / 2,
-              left: halfSize - holeSize / 2,
-            },
-          ]}
-        />
-      </View>
+      </Svg>
 
       <View className="mt-4 w-full">
         {items.map((item, i) => (
@@ -275,32 +245,5 @@ const SpendingByCategory = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  segmentContainer: {
-    position: 'absolute',
-    width: DONUT_SIZE,
-    height: DONUT_SIZE,
-    borderRadius: DONUT_SIZE / 2,
-    overflow: 'hidden',
-  },
-  segmentHalf: {
-    position: 'absolute',
-    width: DONUT_SIZE / 2,
-    height: DONUT_SIZE,
-    left: DONUT_SIZE / 2,
-  },
-  donutBackground: {
-    position: 'absolute',
-    width: DONUT_SIZE,
-    height: DONUT_SIZE,
-    borderRadius: DONUT_SIZE / 2,
-    backgroundColor: themeColors.gray100,
-  },
-  donutHole: {
-    position: 'absolute',
-    backgroundColor: themeColors.white,
-  },
-});
 
 export default SpendingByCategory;

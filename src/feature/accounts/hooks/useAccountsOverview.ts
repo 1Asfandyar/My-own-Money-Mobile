@@ -236,10 +236,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     setCategoryDashboardError(null);
 
     try {
-      const nextDashboard = await getCategoriesSummary(
-        token,
-        selectedAccount.id,
-      );
+      const nextDashboard = await getCategoriesSummary(token);
 
       if (categoryDashboardRequestIdRef.current !== requestId) {
         return;

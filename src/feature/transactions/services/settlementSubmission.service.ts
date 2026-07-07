@@ -44,9 +44,11 @@ export const createSettlementSubmitter = (
       const result = await dependencies.createSettlement(
         input.token,
         buildSettlementPayload({
-          accountId: input.accountId,
+          accountId: input.accountId ?? undefined,
           amountCents,
-          friendId: input.friendId,
+          isDebtorView: input.isDebtorView,
+          paidByUserId: input.paidByUserId,
+          paidToUserId: input.paidToUserId,
           friendName: input.friendName,
           note: input.note,
           transactionDate: input.transactionDate,

@@ -279,8 +279,8 @@ const SettlementBody = ({ transaction }: { transaction: ApiTransaction }) => {
 
   const subheaderText =
     render_as === 'settlement_settler'
-      ? `You paid ${counterpart?.name ?? 'someone'} back`
-      : `${paid_by.name} paid you back`;
+      ? `You paid ${counterpart?.name ?? 'someone'}`
+      : `${paid_by.name} paid you`;
 
   return (
     <View className="mt-6">

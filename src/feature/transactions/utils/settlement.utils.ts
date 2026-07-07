@@ -6,9 +6,11 @@ import type {
 import type { ApiFieldErrors } from '@/types/api.types';
 
 type BuildSettlementPayloadParams = {
-  accountId: number;
+  accountId?: number;
   amountCents: number;
-  friendId: number;
+  isDebtorView: boolean;
+  paidByUserId: number;
+  paidToUserId: number;
   friendName: string;
   note?: string;
   transactionDate: string;
@@ -44,7 +46,7 @@ export const settlementAmountToCents = (value: string): number | null => {
 };
 
 export const isSettlementAllowed = (balance: FriendshipBalance) =>
-  balance.type === 'you_owe' && balance.amount_cents > 0;
+  balance.amount_cents > 0 && balance.type !== 'settled_up';
 
 export const validateSettlement = ({
   accountId,
@@ -59,13 +61,13 @@ export const validateSettlement = ({
   const amountCents = settlementAmountToCents(amount);
 
   if (!isSettlementAllowed(balance)) {
-    errors.form = 'Only an amount you owe can be settled.';
+    errors.form = 'Nothing to settle.';
   }
 
   if (amountCents === null || amountCents <= 0) {
     errors.amount = 'Enter an amount greater than zero.';
   } else if (amountCents > balance.amount_cents) {
-    errors.amount = 'The settlement cannot exceed the amount you owe.';
+    errors.amount = 'The settlement cannot exceed the outstanding balance.';
   }
 
   if (!accountId) {
@@ -78,15 +80,19 @@ export const validateSettlement = ({
 export const buildSettlementPayload = ({
   accountId,
   amountCents,
-  friendId,
+  isDebtorView,
+  paidByUserId,
+  paidToUserId,
   friendName,
   note,
   transactionDate,
 }: BuildSettlementPayloadParams): SettlementPayload => ({
-  account_id: accountId,
   amount_cents: amountCents,
   ...(note?.trim() ? { note: note.trim() } : {}),
-  settles_user_id: friendId,
+  paid_by_id: paidByUserId,
+  paid_to_id: paidToUserId,
+  ...(accountId && isDebtorView ? { paid_by_account_id: accountId } : {}),
+  ...(accountId && !isDebtorView ? { paid_to_account_id: accountId } : {}),
   title: `Settled up with ${friendName}`,
   transaction_date: transactionDate,
   transaction_type: 'settlement',
@@ -112,12 +118,14 @@ export const getSettlementRequestError = (error: unknown) => {
   }
 
   const amountError = fieldErrors.amount_cents;
-  const accountError = fieldErrors.account_id;
+  const accountError =
+    fieldErrors.paid_by_account_id || fieldErrors.paid_to_account_id;
   const message =
     fieldErrors.base ||
     amountError ||
     accountError ||
-    fieldErrors.settles_user_id ||
+    fieldErrors.paid_by_id ||
+    fieldErrors.paid_to_id ||
     fieldErrors.transaction_date ||
     fieldErrors.note ||
     (error instanceof Error
