@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import {
-  CATEGORY_COLOR_FALLBACK,
-  CATEGORY_ICON_FALLBACK,
+    CATEGORY_COLOR_FALLBACK,
+    CATEGORY_ICON_FALLBACK,
 } from '@/feature/categories/constants/categoryDashboard.constants';
 import type {
-  ApiTransaction,
-  TransactionListItem,
-  TransactionRenderAs,
+    ApiTransaction,
+    TransactionListItem,
+    TransactionRenderAs,
 } from '@/feature/transactions/types/transaction.types';
 import type { Currency } from '@/types/currency.types';
 import { formatCents, getCurrencyByCode } from '@/utils/currency';
@@ -26,6 +26,12 @@ export const formatTransactionDate = (value: string) => {
     year: 'numeric',
   });
 };
+
+export const formatAmountBySymbol = (cents: number, symbol: string) =>
+  `${symbol} ${(cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 export const RENDER_AS_COLORS: Record<TransactionRenderAs, string> = {
   personal_expense: CATEGORY_COLOR_FALLBACK.expense,
@@ -56,9 +62,10 @@ export const getTransactionListItem = (
   const iconName = RENDER_AS_ICONS[transaction.render_as];
   const dateLabel = formatTransactionDate(transaction.date);
 
-  const summaryAmountLabel = `${transaction.currency.symbol} ${(
-    transaction.summary.amount_cents / 100
-  ).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  const summaryAmountLabel = formatAmountBySymbol(
+    transaction.summary.amount_cents,
+    transaction.currency.symbol,
+  );
 
   const totalAmountLabel = formatCents(
     transaction.amount_cents,

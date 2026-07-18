@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useCallback } from 'react';
-import { FlatList, Modal, TouchableOpacity, View } from 'react-native';
 import type { ListRenderItem } from 'react-native';
+import { FlatList, Modal, TouchableOpacity, View } from 'react-native';
 
 import AccountOptionRow from '@/feature/accounts/components/AccountOptionRow';
-import { accountPickerModalStyles } from '@/feature/accounts/components/AccountPickerModal.styles';
 import type { AccountPickerModalProps } from '@/feature/accounts/types/accountsOverview.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -78,7 +77,7 @@ const AccountPickerModal = ({
             maxToRenderPerBatch={8}
             renderItem={renderItem}
             showsVerticalScrollIndicator={accounts.length > 5}
-            style={accountPickerModalStyles.accountList}
+            style={{ maxHeight: 420 }}
             windowSize={5}
           />
         </View>

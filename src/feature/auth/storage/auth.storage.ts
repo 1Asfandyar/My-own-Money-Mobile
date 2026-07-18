@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
+import { logger } from '@/services/logger';
 import { AuthUser } from '@/types/auth.types';
 
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -21,26 +22,51 @@ const isStoredAuthUser = (user: unknown): user is AuthUser => {
   );
 };
 
-export const getStoredToken = () => SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+export const getStoredToken = async () => {
+  try {
+    return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+  } catch (error) {
+    logger.error('Failed to read stored auth token', { error });
+    return null;
+  }
+};
 
 export const getStoredUser = async () => {
-  const user = await SecureStore.getItemAsync(AUTH_USER_KEY);
+  let user: string | null;
+  try {
+    user = await SecureStore.getItemAsync(AUTH_USER_KEY);
+  } catch (error) {
+    logger.error('Failed to read stored auth user', { error });
+    return null;
+  }
+
   if (!user) return null;
 
   try {
     const parsedUser = JSON.parse(user);
     return isStoredAuthUser(parsedUser) ? parsedUser : null;
-  } catch {
+  } catch (error) {
+    logger.error('Failed to parse stored auth user', { error });
     return null;
   }
 };
 
 export const saveSession = async (token: string, user: AuthUser) => {
-  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
-  await SecureStore.setItemAsync(AUTH_USER_KEY, JSON.stringify(user));
+  try {
+    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
+    await SecureStore.setItemAsync(AUTH_USER_KEY, JSON.stringify(user));
+  } catch (error) {
+    logger.error('Failed to save auth session', { error });
+    throw error;
+  }
 };
 
 export const removeSession = async () => {
-  await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-  await SecureStore.deleteItemAsync(AUTH_USER_KEY);
+  try {
+    await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync(AUTH_USER_KEY);
+  } catch (error) {
+    logger.error('Failed to remove auth session', { error });
+    throw error;
+  }
 };

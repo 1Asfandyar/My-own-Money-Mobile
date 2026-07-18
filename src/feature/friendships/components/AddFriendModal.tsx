@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useMemo } from 'react';
+import type { ListRenderItem } from 'react-native';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -8,10 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { addFriendModalStyles } from '@/feature/friendships/components/AddFriendModal.styles';
 import FriendSearchResultRow from '@/feature/friendships/components/FriendSearchResultRow';
 import type { AddFriendModalProps } from '@/feature/friendships/types/friendship.types';
 import type { GroupUser } from '@/feature/groups/types/group.types';
@@ -128,7 +127,7 @@ const AddFriendModal = ({
               renderItem={renderResult}
               showsVerticalScrollIndicator={results.length > 3}
               contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 20 }}
-              style={addFriendModalStyles.resultsList}
+              style={{ maxHeight: 288 }}
               windowSize={5}
             />
           </SafeAreaView>

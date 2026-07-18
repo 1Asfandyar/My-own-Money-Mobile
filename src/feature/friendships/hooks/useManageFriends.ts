@@ -24,13 +24,7 @@ import type { GroupUser } from '@/feature/groups/types/group.types';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
-
-const getRequestError = (error: unknown, fallback: string) =>
-  error instanceof ApiError
-    ? error.fieldErrors.base || error.message
-    : error instanceof Error
-      ? error.message
-      : fallback;
+import { getRequestError } from '@/utils/errors';
 
 const useManageFriends = (): ManageFriendsViewModel => {
   const router = useRouter();

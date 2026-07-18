@@ -20,13 +20,7 @@ import {
   getCurrencyById,
   moneyInputToCents,
 } from '@/utils/currency';
-
-const getRequestError = (error: unknown, fallback: string) =>
-  error instanceof ApiError
-    ? error.fieldErrors.base || error.message
-    : error instanceof Error
-      ? error.message
-      : fallback;
+import { getRequestError } from '@/utils/errors';
 
 const useManageAccounts = (): ManageAccountsViewModel => {
   const router = useRouter();

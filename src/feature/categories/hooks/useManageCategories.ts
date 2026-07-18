@@ -17,15 +17,9 @@ import type {
 import type { ManageCategoriesViewModel } from '@/feature/categories/types/manageCategories.types';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { getRequestError } from '@/utils/errors';
 
 const DEFAULT_ICON: keyof typeof Ionicons.glyphMap = 'cart-outline';
-
-const getRequestError = (error: unknown, fallback: string) =>
-  error instanceof ApiError
-    ? error.fieldErrors.base || error.message
-    : error instanceof Error
-      ? error.message
-      : fallback;
 
 const useManageCategories = (): ManageCategoriesViewModel => {
   const router = useRouter();
