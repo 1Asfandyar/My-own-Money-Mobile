@@ -1,7 +1,7 @@
 import { listAccounts } from '@/feature/accounts/api/accounts.api';
 import { listCategories } from '@/feature/categories/api/categories.api';
-import type { Account } from '@/types/account.types';
 import type { Category } from '@/feature/categories/types/category.types';
+import type { Account } from '@/types/account.types';
 
 export type AddTransactionRecordOptions = {
   accounts: Account[];
@@ -13,7 +13,7 @@ export const loadAddTransactionRecordOptions = async (
 ): Promise<AddTransactionRecordOptions> => {
   const [accounts, categories] = await Promise.all([
     listAccounts(token),
-    listCategories(token),
+    listCategories(token, { includeZeroBalance: true }),
   ]);
 
   return {
