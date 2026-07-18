@@ -1,6 +1,6 @@
 import type {
-  TransactionCategoryBreakdown,
-  TransactionsByCategoryDashboard,
+    TransactionCategoryBreakdown,
+    TransactionsByCategoryDashboard,
 } from '@/feature/categories/types/categoryDashboard.types';
 import type { FriendshipLedger } from '@/feature/friendships/types/friendship.types';
 import type { ExpenseOverviewTab } from '@/feature/transactions/types/expenseOverview.types';
@@ -14,10 +14,11 @@ export type AccountsOverviewHeaderProps = {
 };
 
 export type SelectedAccountBalanceCardProps = {
+  accounts: Account[];
   selectedAccount?: Account;
   displayCurrency: Currency;
   currencies: Currency[];
-  onChangeAccountPress: () => void;
+  onSelectAccount: (accountId: number) => void;
 };
 
 export type AccountsOverviewStatusProps = {

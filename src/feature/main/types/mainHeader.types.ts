@@ -26,6 +26,7 @@ export type MainHeaderViewProps = {
   onNotificationsPress: () => void;
   onOpenMenu: () => void;
   primaryMenuItems: MainSideMenuItem[];
+  screenTitle: string;
   secondaryMenuItems: MainSideMenuItem[];
 };
 

@@ -2,18 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 
 import {
-  CATEGORY_AMOUNT_TEXT_COLORS,
-  CATEGORY_COLOR_FALLBACK,
-  CATEGORY_ICON_FALLBACK,
-  CATEGORY_PROGRESS_SEGMENT_COUNT,
-  CATEGORY_SUMMARY_ICONS,
-  CATEGORY_TYPE_LABELS,
+    CATEGORY_AMOUNT_TEXT_COLORS,
+    CATEGORY_COLOR_FALLBACK,
+    CATEGORY_ICON_FALLBACK,
+    CATEGORY_PROGRESS_SEGMENT_COUNT,
+    CATEGORY_SUMMARY_ICONS,
+    CATEGORY_TYPE_LABELS,
 } from '@/feature/categories/constants/categoryDashboard.constants';
 import type {
-  CategoryDashboardItem,
-  CategoryDashboardMetric,
-  TransactionCategoryBreakdown,
-  UsePersonalCategoryDashboardParams,
+    CategoryDashboardItem,
+    CategoryDashboardMetric,
+    TransactionCategoryBreakdown,
+    UsePersonalCategoryDashboardParams,
 } from '@/feature/categories/types/categoryDashboard.types';
 import type { TransactionType } from '@/feature/transactions/types/transaction.types';
 import { themeColors } from '@/theme/utilities';
@@ -37,11 +37,14 @@ const getActiveSegmentCount = (percentage: number) => {
   );
 };
 
+// Spelling out what the percentage is a share of (rather than a bare
+// number) avoids the ambiguity of pairing an unlabeled number with the
+// progress ring next to it.
 const formatPercentage = (percentage: number) => {
   const clamped = clampPercentage(percentage);
   const fractionDigits = clamped < 10 && clamped % 1 !== 0 ? 1 : 0;
 
-  return `${clamped.toFixed(fractionDigits)}%`;
+  return `${clamped.toFixed(fractionDigits)}% of total activity`;
 };
 
 const getSoftColor = (color: string) =>

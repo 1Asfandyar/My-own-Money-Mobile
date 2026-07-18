@@ -11,8 +11,8 @@ import { listCurrencies } from '@/feature/currencies/api/currencies.api';
 import { listFriendships } from '@/feature/friendships/api/friendships.api';
 import type { Transaction } from '@/feature/transactions/types/transaction.types';
 import {
-  getTransactionEditRouteParams,
-  isSharedTransaction,
+    getTransactionEditRouteParams,
+    isSharedTransaction,
 } from '@/feature/transactions/utils/transactionRouteParams.utils';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
@@ -134,9 +134,20 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
       activeAccounts[0],
     [activeAccounts, selectedAccountId],
   );
-  const displayCurrencyId =
-    selectedAccount?.currency_id ?? user?.currency_id ?? activeAccounts[0]?.currency_id;
-  const displayCurrency = getCurrencyById(displayCurrencyId, currencies);
+  // The category dashboard API isn't scoped to a single account, so it only
+  // needs to be refetched when an account becomes available/unavailable -
+  // not every time the user swipes between accounts they already have data for.
+  const hasSelectedAccount = Boolean(selectedAccount?.id);
+  // The app currently supports a single app-wide currency, so the display
+  // currency is intentionally not derived from the selected account. This
+  // keeps swiping between accounts from changing the currency (and
+  // re-rendering everything below the balance card) even if individual
+  // accounts happen to have a different currency_id.
+  const displayCurrencyId = user?.currency_id ?? activeAccounts[0]?.currency_id;
+  const displayCurrency = useMemo(
+    () => getCurrencyById(displayCurrencyId, currencies),
+    [displayCurrencyId, currencies],
+  );
   const userFirstName = user?.full_name?.split(' ')[0];
   const categoryBreakdowns = useMemo(
     () =>
@@ -222,7 +233,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   ]);
 
   const refreshCategoryDashboard = useCallback(async () => {
-    if (!token || !selectedAccount?.id || selectedExpenseTab !== 'personal') {
+    if (!token || !hasSelectedAccount || selectedExpenseTab !== 'personal') {
       categoryDashboardRequestIdRef.current += 1;
       setCategoryDashboard(null);
       setCategoryDashboardError(null);
@@ -264,8 +275,8 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
       }
     }
   }, [
+    hasSelectedAccount,
     redirectToLogin,
-    selectedAccount?.id,
     selectedExpenseTab,
     setCategoryDashboard,
     setCategoryDashboardError,

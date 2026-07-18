@@ -17,6 +17,7 @@ const MainHeaderView = ({
   onNotificationsPress,
   onOpenMenu,
   primaryMenuItems,
+  screenTitle,
   secondaryMenuItems,
 }: MainHeaderViewProps) => (
   <SafeAreaView edges={['top']} className="bg-white">
@@ -29,6 +30,16 @@ const MainHeaderView = ({
       >
         <Ionicons name="menu" size={24} color={themeColors.gray900} />
       </Pressable>
+
+      {/* Persistent screen title so users stay oriented even after the
+          in-content "Welcome" greeting scrolls out of view. */}
+      <ThemedText
+        className="flex-1 text-center text-base text-gray-900"
+        numberOfLines={1}
+        weight="semiBold"
+      >
+        {screenTitle}
+      </ThemedText>
 
       <Pressable
         accessibilityRole="button"

@@ -1,14 +1,15 @@
 import type { Href } from 'expo-router';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Share } from 'react-native';
 
 import { ROUTES } from '@/config/routes';
 import useFriendshipNotifications from '@/feature/friendships/hooks/useFriendshipNotifications';
 import type {
-  MainHeaderViewProps,
-  MainSideMenuItem,
+    MainHeaderViewProps,
+    MainSideMenuItem,
 } from '@/feature/main/types/mainHeader.types';
+import { getMainHeaderScreenTitle } from '@/feature/main/utils/mainLayout.utils';
 
 const inviteMessage =
   'Join me on My Own Money to track expenses, groups, and shared balances together.';
@@ -22,8 +23,13 @@ const getCurrentDateLabel = () =>
 
 export const useMainHeader = (): MainHeaderViewProps => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const currentDateLabel = useMemo(() => getCurrentDateLabel(), []);
+  const screenTitle = useMemo(
+    () => getMainHeaderScreenTitle(pathname),
+    [pathname],
+  );
   const {
     acceptingFriendshipId,
     error: notificationsError,
@@ -128,6 +134,7 @@ export const useMainHeader = (): MainHeaderViewProps => {
     currentDateLabel,
     isMenuVisible,
     notificationCount,
+    screenTitle,
     notificationsModal: {
       acceptingFriendshipId,
       error: notificationsError,
