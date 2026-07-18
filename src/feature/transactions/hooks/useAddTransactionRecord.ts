@@ -2,19 +2,19 @@ import { useLocalSearchParams } from 'expo-router';
 import { useFormik } from 'formik';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { Group } from '@/feature/groups/types/group.types';
+import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
 import {
   addTransactionRecordContent,
   addTransactionRecordInitialValues,
 } from '@/feature/transactions/constants/addTransactionRecord.constants';
 import { sharedExpenseSplitMethodLabels } from '@/feature/transactions/constants/sharedExpenseSplit.constants';
-import { useAddTransactionRecordStore } from '@/feature/transactions/store/addTransactionRecord.store';
 import useAddTransactionRecordOptions from '@/feature/transactions/hooks/useAddTransactionRecordOptions';
 import useSaveAddTransactionRecord from '@/feature/transactions/hooks/useSaveAddTransactionRecord';
 import useSharedExpenseFriends from '@/feature/transactions/hooks/useSharedExpenseFriends';
 import useSharedExpenseGroups from '@/feature/transactions/hooks/useSharedExpenseGroups';
 import useSharedExpenseParticipants from '@/feature/transactions/hooks/useSharedExpenseParticipants';
-import { getGroupUsers } from '@/feature/groups/utils/groupMembers.utils';
-import type { Group } from '@/feature/groups/types/group.types';
+import { useAddTransactionRecordStore } from '@/feature/transactions/store/addTransactionRecord.store';
 import type {
   AddTransactionRecordFormValues,
   AddTransactionRecordKind,
@@ -455,12 +455,7 @@ const useAddTransactionRecord = (
   );
 
   const selectedAccountId = values.accountId ? Number(values.accountId) : null;
-  const selectedAccount = useMemo(
-    () => activeAccounts.find((account) => account.id === selectedAccountId),
-    [activeAccounts, selectedAccountId],
-  );
-  const selectedAccountCurrencyId =
-    selectedAccount?.currency_id ?? user?.currency_id ?? 1;
+  const selectedAccountCurrencyId = user?.currency_id ?? 1;
   const selectedCategoryId = values.categoryId ? Number(values.categoryId) : null;
   const selectedCategory = useMemo(
     () =>

@@ -26,7 +26,6 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
     canGoForward,
     categoryChartTab,
     currencySymbol,
-    currencyCode,
     onPreviousMonth,
     onNextMonth,
     onRetry,
@@ -111,7 +110,6 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
                 accounts={report.accounts}
                 totalBalanceCents={report.total_balance_cents}
                 currencySymbol={currencySymbol}
-                reportCurrencyCode={currencyCode}
               />
 
               <View className="mx-4 mt-5 border-t border-gray-100 pt-5">

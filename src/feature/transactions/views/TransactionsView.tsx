@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import SearchTransaction from '@/feature/transactions/components/SearchTransaction';
 import TransactionList from '@/feature/transactions/components/TransactionList';
 import TransactionsStatus from '@/feature/transactions/components/TransactionsStatus';
-import TransactionsSummary from '@/feature/transactions/components/TransactionsSummary';
 import type { TransactionsViewProps } from '@/feature/transactions/types/transaction.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -37,13 +36,7 @@ const TransactionsView = ({ transactions }: TransactionsViewProps) => {
 
       {shouldShowActivity ? (
         <>
-          <TransactionsSummary metrics={transactions.summaryMetrics} />
-
           <View className="mt-5">
-            <ThemedText className="text-base text-gray-900" weight="semiBold">
-              Recent activity
-            </ThemedText>
-
             <SearchTransaction
               accounts={transactions.activeAccounts}
               categories={transactions.categories}

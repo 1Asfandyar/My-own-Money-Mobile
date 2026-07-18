@@ -138,12 +138,8 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   // needs to be refetched when an account becomes available/unavailable -
   // not every time the user swipes between accounts they already have data for.
   const hasSelectedAccount = Boolean(selectedAccount?.id);
-  // The app currently supports a single app-wide currency, so the display
-  // currency is intentionally not derived from the selected account. This
-  // keeps swiping between accounts from changing the currency (and
-  // re-rendering everything below the balance card) even if individual
-  // accounts happen to have a different currency_id.
-  const displayCurrencyId = user?.currency_id ?? activeAccounts[0]?.currency_id;
+  // The app uses a single user-level currency across all accounts.
+  const displayCurrencyId = user?.currency_id ?? fallbackCurrencies[0].id;
   const displayCurrency = useMemo(
     () => getCurrencyById(displayCurrencyId, currencies),
     [displayCurrencyId, currencies],

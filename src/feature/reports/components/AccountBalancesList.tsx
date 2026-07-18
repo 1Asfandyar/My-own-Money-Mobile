@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import type { ReportAccount } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatAmount, getCurrencyByCode } from '@/utils/currency';
+import { formatAmount } from '@/utils/currency';
 
 interface AccountListRowProps {
   name: string;
@@ -35,27 +35,22 @@ interface AccountBalancesListProps {
   accounts: ReportAccount[];
   totalBalanceCents: number;
   currencySymbol: string;
-  reportCurrencyCode: string;
 }
 
 const AccountBalancesList = ({
   accounts,
   totalBalanceCents,
   currencySymbol,
-  reportCurrencyCode,
 }: AccountBalancesListProps) => {
   const showTotal = accounts.length > 1;
 
   return (
     <View className="mx-4 overflow-hidden rounded-2xl border border-gray-100 bg-white">
       {accounts.map((account, index) => {
-        // Use the report currency symbol for accounts matching the report's
-        // primary currency; fall back to the currency code for accounts in
-        // a different currency to avoid implying the wrong amount.
-        const isReportCurrency = account.currency_code === reportCurrencyCode;
-        const amountLabel = isReportCurrency
-          ? formatAmount(account.balance_cents, currencySymbol)
-          : `${account.currency_code} ${formatAmount(account.balance_cents, getCurrencyByCode(account.currency_code).symbol)}`;
+        const amountLabel = formatAmount(
+          account.balance_cents,
+          account.currency_symbol ?? currencySymbol,
+        );
 
         return (
           <AccountListRow

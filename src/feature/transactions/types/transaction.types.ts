@@ -4,8 +4,8 @@ import type { StyleProp, ViewStyle } from 'react-native';
 
 import type { Category } from '@/feature/categories/types/category.types';
 import type {
-  SharedExpenseSplitMethod,
-  SharedExpenseUserSharePayload,
+    SharedExpenseSplitMethod,
+    SharedExpenseUserSharePayload,
 } from '@/feature/transactions/types/sharedExpenseSplit.types';
 import type { TransactionFilters } from '@/feature/transactions/types/transactionDateFilter.types';
 import type { Account } from '@/types/account.types';
@@ -49,7 +49,7 @@ export type ApiTransaction = {
   title: string;
   note: string | null;
   date: string;
-  currency: { code: string; symbol: string };
+  currency_symbol: string | null;
   amount_cents: number;
   render_as: TransactionRenderAs;
   viewer_role: TransactionViewerRole;
@@ -92,7 +92,7 @@ export type TransactionPayload = {
   category_id: number;
   transaction_date: string;
   note: string;
-  currency_id: number;
+  currency_id?: number;
   paid_by?: number;
   shared_by?: number[];
   split_method?: SharedExpenseSplitMethod;
@@ -102,6 +102,7 @@ export type TransactionPayload = {
 
 export type Transaction = Omit<TransactionPayload, 'note'> & {
   category?: Category | null;
+  currency_symbol?: string | null;
   display?: TransactionDisplay;
   id: number;
   note?: string | null;

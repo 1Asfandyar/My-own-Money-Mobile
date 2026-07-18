@@ -27,24 +27,21 @@ import { getSoftColor, getTransactionListItem } from '@/feature/transactions/uti
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
-import type { Currency } from '@/types/currency.types';
 import {
   fallbackCurrencies,
-  formatCents,
-  getCurrencyByCode,
+  formatCentsBySymbol,
+  getCurrencyById,
 } from '@/utils/currency';
 
 const getSummaryMetric = (
   type: ApiTransaction['type'],
   amountCents: number,
-  currencies: Currency[],
-  currencyCode: string,
+  currencySymbol: string,
 ): TransactionsSummaryMetric => {
   const color = CATEGORY_COLOR_FALLBACK[type];
-  const currency = getCurrencyByCode(currencyCode, currencies);
   const signedAmount = type === 'income' ? amountCents : -amountCents;
   const sign = signedAmount >= 0 ? '+' : '-';
-  const formatted = formatCents(Math.abs(signedAmount), currency.id, currencies);
+  const formatted = formatCentsBySymbol(Math.abs(signedAmount), currencySymbol);
 
   return {
     amountLabel: `${sign}${formatted}`,
@@ -58,8 +55,7 @@ const getSummaryMetric = (
 
 const getSummaryMetrics = (
   transactions: ApiTransaction[],
-  currencies: Currency[],
-  currencyCode: string,
+  currencySymbol: string,
 ): TransactionsSummaryMetric[] => {
   const totals = transactions.reduce(
     (acc, t) => {
@@ -70,8 +66,8 @@ const getSummaryMetrics = (
   );
 
   return [
-    getSummaryMetric('income', totals.income, currencies, currencyCode),
-    getSummaryMetric('expense', totals.expense, currencies, currencyCode),
+    getSummaryMetric('income', totals.income, currencySymbol),
+    getSummaryMetric('expense', totals.expense, currencySymbol),
   ];
 };
 
@@ -110,16 +106,11 @@ export const useTransactions = (): TransactionsViewModel => {
     [accounts],
   );
 
-  const filteredAccount = useMemo(
-    () => activeAccounts.find((account) => account.id === filters.accountId),
-    [activeAccounts, filters.accountId],
-  );
-
-  const displayCurrencyCode: string =
-    (filteredAccount
-      ? currencies.find((c) => c.id === filteredAccount.currency_id)?.code
-      : currencies.find((c) => c.id === user?.currency_id)?.code)
-    ?? 'PKR';
+  const displayCurrencySymbol =
+    apiTransactions[0]?.currency_symbol ??
+    user?.currency_symbol ??
+    getCurrencyById(user?.currency_id, currencies.length > 0 ? currencies : fallbackCurrencies)
+      .symbol;
 
   const transactionItems = useMemo(
     () => apiTransactions.map((t) => getTransactionListItem(t, currencies)),
@@ -127,8 +118,8 @@ export const useTransactions = (): TransactionsViewModel => {
   );
 
   const summaryMetrics = useMemo(
-    () => getSummaryMetrics(apiTransactions, currencies, displayCurrencyCode),
-    [apiTransactions, currencies, displayCurrencyCode],
+    () => getSummaryMetrics(apiTransactions, displayCurrencySymbol),
+    [apiTransactions, displayCurrencySymbol],
   );
 
   const hasActiveSearch = searchQuery.trim().length > 0;

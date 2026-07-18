@@ -5,7 +5,7 @@ import { TouchableOpacity, View } from 'react-native';
 import type { AccountOptionRowProps } from '@/feature/accounts/types/accountsOverview.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatCents } from '@/utils/currency';
+import { formatCents, formatCentsBySymbol } from '@/utils/currency';
 
 const AccountOptionRow = ({
   account,
@@ -39,11 +39,9 @@ const AccountOptionRow = ({
         {account.name}
       </ThemedText>
       <ThemedText className="mt-1 text-sm text-gray-500">
-        {formatCents(
-          account.current_balance_cents,
-          account.currency_id,
-          currencies,
-        )}
+        {account.currency_symbol
+          ? formatCentsBySymbol(account.current_balance_cents, account.currency_symbol)
+          : formatCents(account.current_balance_cents, account.currency_id, currencies)}
       </ThemedText>
     </View>
     {isSelected ? (

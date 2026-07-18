@@ -192,10 +192,11 @@ const SharedExpenseSplitRow = ({
 };
 
 const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => {
-  const { paid_by, currency, splits } = transaction;
+  const { paid_by, splits } = transaction;
+  const currencySymbol = transaction.currency_symbol ?? '$';
   const paidByLabel = paid_by.is_you
-    ? `You paid ${formatAmount(transaction.amount_cents, currency.symbol)}`
-    : `${paid_by.name} paid ${formatAmount(transaction.amount_cents, currency.symbol)}`;
+    ? `You paid ${formatAmount(transaction.amount_cents, currencySymbol)}`
+    : `${paid_by.name} paid ${formatAmount(transaction.amount_cents, currencySymbol)}`;
 
   return (
     <View className="mt-6">
@@ -219,7 +220,7 @@ const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => 
           {splits.map((split) => (
             <SharedExpenseSplitRow
               key={split.user.id}
-              currencySymbol={currency.symbol}
+              currencySymbol={currencySymbol}
               payerId={paid_by.id}
               split={split}
             />
@@ -336,7 +337,10 @@ const TransactionDetailView = ({ detail }: TransactionDetailViewProps) => {
   const color = RENDER_AS_COLORS[transaction.render_as];
   const softColor = getSoftColor(color);
   const iconName = RENDER_AS_ICONS[transaction.render_as];
-  const totalLabel = formatAmount(transaction.amount_cents, transaction.currency.symbol);
+  const totalLabel = formatAmount(
+    transaction.amount_cents,
+    transaction.currency_symbol ?? '$',
+  );
   const dateLabel = formatDate(transaction.date);
   const isSharedExpense =
     transaction.render_as === 'shared_expense_payer' ||

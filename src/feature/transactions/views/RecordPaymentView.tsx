@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,7 +14,7 @@ import type { RecordPaymentViewProps } from '@/feature/transactions/types/settle
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedInput from '@/theme/components/ThemedInput';
 import ThemedText from '@/theme/components/ThemedText';
-import { formatCents } from '@/utils/currency';
+import { formatCents, formatCentsBySymbol } from '@/utils/currency';
 
 const RecordPaymentView = ({ payment }: RecordPaymentViewProps) => (
   <SafeAreaView
@@ -76,11 +76,7 @@ const RecordPaymentView = ({ payment }: RecordPaymentViewProps) => (
 
             <ThemedInput
               inlineLabel={
-                payment.account
-                  ? payment.currencies.find(
-                      (item) => item.id === payment.account?.currency_id,
-                    )?.symbol ?? 'Rs'
-                  : 'Rs'
+                payment.account?.currency_symbol ?? payment.currencies[0]?.symbol ?? 'Rs'
               }
               isProminent
               value={payment.amount}
@@ -118,11 +114,16 @@ const RecordPaymentView = ({ payment }: RecordPaymentViewProps) => (
                 </View>
                 {payment.account ? (
                   <ThemedText className="text-xs text-gray-500">
-                    {formatCents(
-                      payment.account.current_balance_cents,
-                      payment.account.currency_id,
-                      payment.currencies,
-                    )}
+                    {payment.account.currency_symbol
+                      ? formatCentsBySymbol(
+                          payment.account.current_balance_cents,
+                          payment.account.currency_symbol,
+                        )
+                      : formatCents(
+                          payment.account.current_balance_cents,
+                          payment.account.currency_id,
+                          payment.currencies,
+                        )}
                   </ThemedText>
                 ) : null}
                 <Ionicons

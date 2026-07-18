@@ -5,12 +5,12 @@ import { ROUTES } from '@/config/routes';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import { getFriendship } from '@/feature/friendships/api/friendships.api';
 import type {
-  FriendshipDetail,
-  FriendshipDetailViewModel,
+    FriendshipDetail,
+    FriendshipDetailViewModel,
 } from '@/feature/friendships/types/friendship.types';
 import {
-  getFriendshipBalanceColor,
-  getFriendshipBalanceLabel,
+    getFriendshipBalanceColor,
+    getFriendshipBalanceLabel,
 } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import type { ApiTransaction } from '@/feature/transactions/types/transaction.types';
 import { getTransactionListItem } from '@/feature/transactions/utils/transactionListItem.utils';
@@ -52,7 +52,7 @@ const useFriendshipDetail = (): FriendshipDetailViewModel => {
   );
   const displayCurrencies = currencies.length > 0 ? currencies : fallbackCurrencies;
   const displayCurrency = getCurrencyById(
-    selectedAccount?.currency_id ?? user?.currency_id,
+    user?.currency_id,
     displayCurrencies,
   );
   const balance = friendship?.balance_summary ?? {

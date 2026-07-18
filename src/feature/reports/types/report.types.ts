@@ -2,7 +2,7 @@ export interface ReportAccount {
   id: number;
   name: string;
   balance_cents: number;
-  currency_code: string;
+  currency_symbol: string | null;
 }
 
 export interface ReportOverview {
@@ -73,7 +73,6 @@ export interface ReportsViewModel {
   canGoForward: boolean;
   categoryChartTab: CategoryChartTab;
   currencySymbol: string;
-  currencyCode: string;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onRetry: () => void;
