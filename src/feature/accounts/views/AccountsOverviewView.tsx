@@ -34,6 +34,7 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
         <SelectedAccountBalanceCard
           accounts={dashboard.activeAccounts}
           currencies={dashboard.currencies}
+          dashboardSummary={dashboard.dashboardSummary}
           displayCurrency={dashboard.displayCurrency}
           selectedAccount={dashboard.selectedAccount}
           onSelectAccount={dashboard.selectAccount}

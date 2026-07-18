@@ -1,185 +1,195 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { TouchableOpacity, View } from 'react-native';
 
-import {
-    getStoredBalanceVisibility,
-    saveBalanceVisibility,
-} from '@/feature/accounts/storage/balanceVisibility.storage';
 import type { SelectedAccountBalanceCardProps } from '@/feature/accounts/types/accountsOverview.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatCents } from '@/utils/currency';
+import { formatAmount, formatCents } from '@/utils/currency';
 
-// Swiping further than this (in px) switches to the previous/next account.
-const SWIPE_THRESHOLD = 48;
+type OverviewTab = 'summary' | 'accounts';
 
 const SelectedAccountBalanceCard = ({
   accounts,
   currencies,
+  dashboardSummary,
   displayCurrency,
   onSelectAccount,
   selectedAccount,
 }: SelectedAccountBalanceCardProps) => {
-  // Default to hidden until the user's saved preference loads, so balances
-  // are never exposed by default in public/social settings.
-  const [isBalanceVisible, setIsBalanceVisible] = useState(false);
-  const cardOpacity = useRef(new Animated.Value(1)).current;
+  const [activeTab, setActiveTab] = useState<OverviewTab>('summary');
 
-  useEffect(() => {
-    let isMounted = true;
-
-    getStoredBalanceVisibility().then((storedIsVisible) => {
-      if (isMounted) setIsBalanceVisible(storedIsVisible);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const toggleBalanceVisibility = () => {
-    setIsBalanceVisible((isVisible) => {
-      const nextIsVisible = !isVisible;
-      saveBalanceVisibility(nextIsVisible);
-      return nextIsVisible;
-    });
-  };
-
-  const currentBalanceCents = selectedAccount?.current_balance_cents ?? 0;
-  const balanceLabel = formatCents(
-    currentBalanceCents,
-    displayCurrency.id,
-    currencies,
-  );
-  const selectedAccountIndex = accounts.findIndex(
-    (account) => account.id === selectedAccount?.id,
-  );
-
-  const switchToIndex = useCallback(
-    (nextIndex: number) => {
-      const nextAccount = accounts[nextIndex];
-
-      if (!nextAccount) return;
-
-      Animated.sequence([
-        Animated.timing(cardOpacity, {
-          duration: 90,
-          toValue: 0.4,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardOpacity, {
-          duration: 150,
-          toValue: 1,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      onSelectAccount(nextAccount.id);
-    },
-    [accounts, cardOpacity, onSelectAccount],
+  const summaryItems = useMemo(
+    () => [
+      {
+        key: 'income',
+        label: 'Total Income',
+        valueCents: dashboardSummary.total_income,
+        icon: 'arrow-up-circle-outline' as const,
+        color: '#16A34A',
+      },
+      {
+        key: 'expense',
+        label: 'Total Expense',
+        valueCents: dashboardSummary.total_expense,
+        icon: 'arrow-down-circle-outline' as const,
+        color: '#DC2626',
+      },
+      {
+        key: 'owed-to-you',
+        label: 'Owed To You',
+        valueCents: dashboardSummary.total_owed_to_you_cents,
+        icon: 'trending-up-outline' as const,
+        color: '#0EA5E9',
+      },
+      {
+        key: 'you-owe',
+        label: 'You Owe',
+        valueCents: dashboardSummary.total_you_owe_cents,
+        icon: 'trending-down-outline' as const,
+        color: '#F97316',
+      },
+    ],
+    [dashboardSummary],
   );
 
-  const panResponder = useMemo(
+  const totalAccountsBalanceCents = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          Math.abs(gestureState.dx) > 12 &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5,
-        onPanResponderRelease: (_, gestureState) => {
-          if (gestureState.dx <= -SWIPE_THRESHOLD) {
-            switchToIndex(selectedAccountIndex + 1);
-          } else if (gestureState.dx >= SWIPE_THRESHOLD) {
-            switchToIndex(selectedAccountIndex - 1);
-          }
-        },
-      }),
-    [selectedAccountIndex, switchToIndex],
+      accounts.reduce(
+        (total, account) => total + account.current_balance_cents,
+        0,
+      ),
+    [accounts],
   );
 
   return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      accessibilityActions={[
-        { name: 'increment', label: 'Next account' },
-        { name: 'decrement', label: 'Previous account' },
-      ]}
-      accessibilityHint={
-        accounts.length > 1 ? 'Swipe left or right to switch accounts' : undefined
-      }
-      accessibilityLabel={`Account balance card, showing ${selectedAccount?.name ?? 'no account'}`}
-      accessibilityRole={accounts.length > 1 ? 'adjustable' : undefined}
-      onAccessibilityAction={(event) => {
-        if (event.nativeEvent.actionName === 'increment') {
-          switchToIndex(selectedAccountIndex + 1);
-        } else if (event.nativeEvent.actionName === 'decrement') {
-          switchToIndex(selectedAccountIndex - 1);
-        }
-      }}
-      style={{ opacity: cardOpacity }}
-      className="mt-4 rounded-3xl bg-secondary px-5 py-6"
-    >
-      <View className="flex-row items-start justify-between">
-        <View className="flex-1 pr-4">
-          <ThemedText className="text-sm uppercase tracking-wide text-white/60">
-            Account
-          </ThemedText>
+    <View className="mt-4 rounded-3xl bg-secondary px-5 py-6">
+      <View className="mb-4 flex-row rounded-2xl bg-white/10 p-1">
+        <TouchableOpacity
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Show account summary"
+          onPress={() => setActiveTab('summary')}
+          className={`flex-1 rounded-xl px-3 py-2 ${
+            activeTab === 'summary' ? 'bg-white' : 'bg-transparent'
+          }`}
+        >
           <ThemedText
-            className="pb-2 text-2xl text-white"
+            className={`text-center text-sm ${
+              activeTab === 'summary' ? 'text-secondary' : 'text-white/75'
+            }`}
             weight="semiBold"
-            numberOfLines={1}
           >
-            {selectedAccount?.name ?? 'No account selected'}
+            Summary
           </ThemedText>
-          <ThemedText className="text-sm text-white/70">
-            Current balance in {displayCurrency.code}
-          </ThemedText>
-          <ThemedText
-            className="mt-1 text-3xl text-white"
-            weight="bold"
-            numberOfLines={1}
-          >
-            {isBalanceVisible ? balanceLabel : '******'}
-          </ThemedText>
-        </View>
+        </TouchableOpacity>
 
         <TouchableOpacity
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={
-            isBalanceVisible ? 'Hide account balance' : 'Show account balance'
-          }
-          accessibilityHint="Toggles whether your balance amount is visible on screen"
-          accessibilityState={{ selected: !isBalanceVisible }}
-          onPress={toggleBalanceVisibility}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+          accessibilityLabel="Show account balances"
+          onPress={() => setActiveTab('accounts')}
+          className={`flex-1 rounded-xl px-3 py-2 ${
+            activeTab === 'accounts' ? 'bg-white' : 'bg-transparent'
+          }`}
         >
-          <Ionicons
-            name={isBalanceVisible ? 'eye-outline' : 'eye-off-outline'}
-            size={21}
-            color={themeColors.white}
-          />
+          <ThemedText
+            className={`text-center text-sm ${
+              activeTab === 'accounts' ? 'text-secondary' : 'text-white/75'
+            }`}
+            weight="semiBold"
+          >
+            Accounts
+          </ThemedText>
         </TouchableOpacity>
       </View>
 
-      {accounts.length > 1 ? (
-        <View
-          accessibilityElementsHidden
-          className="mt-4 flex-row items-center justify-center"
-          importantForAccessibility="no-hide-descendants"
-        >
-          {accounts.map((account, index) => (
+      {activeTab === 'summary' ? (
+        <View className="flex-row flex-wrap justify-between">
+          {summaryItems.map((item) => (
             <View
-              key={account.id}
-              className={`mx-1 rounded-full ${
-                index === selectedAccountIndex
-                  ? 'h-2 w-5 bg-white'
-                  : 'h-2 w-2 bg-white/30'
-              }`}
-            />
+              key={item.key}
+              className="mb-3 w-[48.5%] rounded-2xl bg-white px-3 py-3"
+            >
+              <View className="mb-2 flex-row items-center">
+                <View
+                  className="mr-2 h-7 w-7 items-center justify-center rounded-full"
+                  style={{ backgroundColor: `${item.color}1A` }}
+                >
+                  <Ionicons name={item.icon} size={16} color={item.color} />
+                </View>
+                <ThemedText className="flex-1 text-xs text-gray-500" numberOfLines={2}>
+                  {item.label}
+                </ThemedText>
+              </View>
+
+              <ThemedText className="text-base text-gray-900" weight="bold" numberOfLines={1}>
+                {formatAmount(item.valueCents, displayCurrency.symbol, {
+                  useAbsoluteValue: true,
+                })}
+              </ThemedText>
+            </View>
           ))}
         </View>
       ) : null}
-    </Animated.View>
+
+      {activeTab === 'accounts' ? (
+        <View className="overflow-hidden rounded-2xl bg-white">
+          <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3">
+            <ThemedText className="flex-1 pr-3 text-xs uppercase tracking-wide text-gray-500" weight="semiBold">
+              Account Name
+            </ThemedText>
+            <ThemedText className="text-xs uppercase tracking-wide text-gray-500" weight="semiBold">
+              Balance
+            </ThemedText>
+          </View>
+
+          {accounts.map((account, index) => {
+            const isSelected = account.id === selectedAccount?.id;
+
+            return (
+              <TouchableOpacity
+                key={account.id}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Select ${account.name} account`}
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => onSelectAccount(account.id)}
+                className={`flex-row items-center justify-between px-4 py-3 ${
+                  index === accounts.length - 1 ? '' : 'border-b border-gray-100'
+                }`}
+                style={{ backgroundColor: isSelected ? `${themeColors.primary}12` : 'transparent' }}
+              >
+                <ThemedText className="flex-1 pr-3 text-sm text-gray-700" numberOfLines={1}>
+                  {account.name}
+                </ThemedText>
+                <ThemedText className="text-base text-gray-900" weight="bold" numberOfLines={1}>
+                  {formatCents(
+                    account.current_balance_cents,
+                    displayCurrency.id,
+                    currencies,
+                  )}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+
+          {accounts.length > 1 ? (
+            <View
+              className="flex-row items-center justify-between border-t border-gray-100 px-4 py-3"
+              style={{ backgroundColor: `${themeColors.primary}0D` }}
+            >
+              <ThemedText className="flex-1 pr-3 text-sm text-gray-600" weight="semiBold">
+                Total Balance
+              </ThemedText>
+              <ThemedText className="text-base text-gray-900" weight="bold">
+                {formatCents(totalAccountsBalanceCents, displayCurrency.id, currencies)}
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
   );
 };
 
