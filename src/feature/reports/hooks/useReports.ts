@@ -1,17 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ROUTES } from '@/config/routes';
 import { getReportSummary } from '@/feature/reports/api/reports.api';
 import type {
-  CategoryChartTab,
-  Report,
-  ReportsViewModel,
+    CategoryChartTab,
+    Report,
+    ReportsViewModel,
 } from '@/feature/reports/types/report.types';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import { fallbackCurrencies, getCurrencyByCode, getCurrencyById } from '@/utils/currency';
-import { ROUTES } from '@/config/routes';
 
 const getCurrentMonthKey = (): string => {
   const now = new Date();
@@ -117,6 +117,9 @@ export const useReports = (): ReportsViewModel => {
     void fetchReport(selectedMonthKey);
   }, [fetchReport, selectedMonthKey]);
 
+  const currencyCode = report?.accounts[0]?.currency_code
+    ?? getCurrencyById(user?.currency_id, fallbackCurrencies).code;
+
   const currencySymbol = (() => {
     if (report?.accounts[0]?.currency_code) {
       return getCurrencyByCode(report.accounts[0].currency_code, fallbackCurrencies).symbol;
@@ -132,6 +135,7 @@ export const useReports = (): ReportsViewModel => {
     canGoForward: shiftMonth(selectedMonthKey, 1) <= currentMonthKey,
     categoryChartTab,
     currencySymbol,
+    currencyCode,
     onPreviousMonth,
     onNextMonth,
     onRetry,

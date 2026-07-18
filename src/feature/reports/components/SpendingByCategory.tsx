@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import type { CategoryChartTab, ReportCategorySpending } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
+import { formatAmount } from '@/utils/currency';
 
 const PALETTE = [
   '#2BA88C',
@@ -17,11 +18,6 @@ const PALETTE = [
 ];
 
 const MAX_VISIBLE = 5;
-
-const formatAmount = (cents: number, symbol: string): string => {
-  const amount = cents / 100;
-  return `${symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-};
 
 type DisplayCategory = ReportCategorySpending & { color: string };
 
@@ -218,7 +214,7 @@ const SpendingByCategory = ({
   return (
     <View className="mx-4 mt-5">
       <ThemedText className="mb-4 text-base text-gray-900" weight="semiBold">
-        Where did it go?
+        Spending Breakdown
       </ThemedText>
 
       <View className="mb-4 flex-row rounded-2xl bg-gray-100 p-1">

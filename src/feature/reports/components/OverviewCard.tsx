@@ -3,11 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import type { ReportOverview } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-
-const formatAmount = (cents: number, symbol: string): string => {
-  const amount = Math.abs(cents) / 100;
-  return `${symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-};
+import { formatAmount } from '@/utils/currency';
 
 interface OverviewCardProps {
   overview: ReportOverview;
@@ -31,7 +27,7 @@ const OverviewCard = ({ overview, period, currencySymbol }: OverviewCardProps) =
             Income
           </ThemedText>
           <ThemedText className="mt-1 text-xl text-white" weight="bold" numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(overview.total_income_cents, currencySymbol)}
+            {formatAmount(overview.total_income_cents, currencySymbol, { useAbsoluteValue: true })}
           </ThemedText>
         </View>
 
@@ -40,7 +36,7 @@ const OverviewCard = ({ overview, period, currencySymbol }: OverviewCardProps) =
             Expenses
           </ThemedText>
           <ThemedText className="mt-1 text-xl text-white" weight="bold" numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(overview.total_expenses_cents, currencySymbol)}
+            {formatAmount(overview.total_expenses_cents, currencySymbol, { useAbsoluteValue: true })}
           </ThemedText>
         </View>
       </View>
@@ -59,7 +55,7 @@ const OverviewCard = ({ overview, period, currencySymbol }: OverviewCardProps) =
             adjustsFontSizeToFit
             style={{ color: isOverspent ? '#FCA5A5' : themeColors.accent }}
           >
-            {formatAmount(overview.net_cents, currencySymbol)}
+            {formatAmount(overview.net_cents, currencySymbol, { useAbsoluteValue: true })}
           </ThemedText>
         </View>
 

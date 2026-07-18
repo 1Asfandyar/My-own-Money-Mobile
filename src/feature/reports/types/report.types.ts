@@ -41,6 +41,13 @@ export interface TrendMonth {
   expenses_cents: number;
 }
 
+export interface NetWorth {
+  total_accounts_balance_cents: number;
+  total_owed_to_you_cents: number;
+  total_you_owe_cents: number;
+  net_worth_cents: number;
+}
+
 export interface Report {
   period: string;
   overview: ReportOverview;
@@ -48,6 +55,7 @@ export interface Report {
   total_balance_cents: number;
   spending_by_category: ReportCategorySpending[];
   shared_money: SharedMoney;
+  net_worth: NetWorth;
   trend: TrendMonth[];
 }
 
@@ -65,6 +73,7 @@ export interface ReportsViewModel {
   canGoForward: boolean;
   categoryChartTab: CategoryChartTab;
   currencySymbol: string;
+  currencyCode: string;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onRetry: () => void;
