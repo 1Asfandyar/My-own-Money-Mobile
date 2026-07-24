@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 const apiUrl = Constants.expoConfig?.extra?.apiUrl;
 const appName = Constants.expoConfig?.extra?.appName;
 const appShareUrl = Constants.expoConfig?.extra?.appShareUrl;
+const rollbarAccessToken = Constants.expoConfig?.extra?.rollbarAccessToken;
 
 const parseOptionalUrl = (value: unknown): string | null =>
   typeof value === 'string' && value ? value : null;
@@ -40,6 +41,7 @@ export const ENV = {
   LEGAL_COOKIE_TRACKING_NOTICE_URL: parseOptionalUrl(
     Constants.expoConfig?.extra?.legalCookieTrackingNoticeUrl,
   ),
+  ROLLBAR_ACCESS_TOKEN: typeof rollbarAccessToken === 'string' ? rollbarAccessToken : null,
 } as const;
 
 export const validateEnv = (): boolean => {

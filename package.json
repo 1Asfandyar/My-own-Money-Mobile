@@ -50,6 +50,8 @@
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
+    "rollbar": "^3.1.0",
+    "rollbar-react-native": "^1.0.1",
     "yup": "^1.7.1",
     "zustand": "^5.0.13"
   },

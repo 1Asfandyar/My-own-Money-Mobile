@@ -1,4 +1,5 @@
 import AppSplashScreen from '@/feature/splash/components/AppSplashScreen';
+import '@/services/rollbar';
 import { useAuthStore } from '@/store/auth.store';
 import { appFonts } from '@/theme/fonts';
 import { themeColors } from '@/theme/utilities';

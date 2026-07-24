@@ -48,6 +48,7 @@ export default {
     ],
 
     extra: {
+      rollbarAccessToken: process.env.ROLLBAR_ACCESS_TOKEN,
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
       appName: process.env.EXPO_PUBLIC_APP_NAME,
       appShareUrl: process.env.EXPO_PUBLIC_APP_SHARE_URL,
