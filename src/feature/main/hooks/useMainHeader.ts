@@ -1,5 +1,5 @@
 import type { Href } from 'expo-router';
-import { usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Share } from 'react-native';
 
@@ -10,7 +10,6 @@ import type {
   MainHeaderViewProps,
   MainSideMenuItem,
 } from '@/feature/main/types/mainHeader.types';
-import { getMainHeaderScreenTitle } from '@/feature/main/utils/mainLayout.utils';
 
 const inviteMessage =
   'Join me on My Own Money to track expenses, groups, and shared balances together.';
@@ -43,15 +42,10 @@ const getInviteMessage = () => {
 
 export const useMainHeader = (): MainHeaderViewProps => {
   const router = useRouter();
-  const pathname = usePathname();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const menuHeaderContent = useMemo(
     () => MENU_HEADER_VARIANTS[SELECTED_MENU_HEADER_VARIANT],
     [],
-  );
-  const screenTitle = useMemo(
-    () => getMainHeaderScreenTitle(pathname),
-    [pathname],
   );
   const {
     acceptingFriendshipId,
@@ -158,7 +152,6 @@ export const useMainHeader = (): MainHeaderViewProps => {
     menuHeaderTitle: menuHeaderContent.title,
     isMenuVisible,
     notificationCount,
-    screenTitle,
     notificationsModal: {
       acceptingFriendshipId,
       error: notificationsError,

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type {
@@ -51,7 +51,11 @@ const MainSideMenuModal = ({
         edges={['top', 'bottom', 'left']}
         className="h-full w-[86%] max-w-sm bg-white"
       >
-        <View className="flex-1 px-5 pb-5 pt-3">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-5 pb-5 pt-3"
+          showsVerticalScrollIndicator={false}
+        >
           <View className="mb-5 flex-row items-start justify-between">
             <View className="min-w-0 flex-1 pr-3">
               <ThemedText className="text-xs uppercase tracking-wide text-gray-400">
@@ -86,7 +90,7 @@ const MainSideMenuModal = ({
           {secondaryItems.map((item) => (
             <MainSideMenuRow key={item.label} {...item} />
           ))}
-        </View>
+        </ScrollView>
       </SafeAreaView>
 
       <TouchableOpacity
