@@ -10,7 +10,8 @@ export type MainSideMenuItem = {
 };
 
 export type MainSideMenuModalProps = {
-  currentDateLabel: string;
+  menuHeaderSubtitle: string;
+  menuHeaderTitle: string;
   isVisible: boolean;
   onClose: () => void;
   primaryItems: MainSideMenuItem[];
@@ -18,7 +19,8 @@ export type MainSideMenuModalProps = {
 };
 
 export type MainHeaderViewProps = {
-  currentDateLabel: string;
+  menuHeaderSubtitle: string;
+  menuHeaderTitle: string;
   isMenuVisible: boolean;
   notificationCount: number;
   notificationsModal: FriendshipNotificationsModalProps;

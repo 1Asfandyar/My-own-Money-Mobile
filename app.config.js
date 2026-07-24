@@ -50,6 +50,14 @@ export default {
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
       appName: process.env.EXPO_PUBLIC_APP_NAME,
+      appShareUrl: process.env.EXPO_PUBLIC_APP_SHARE_URL,
+      legalAppStorePolicySnippetsUrl: process.env.EXPO_PUBLIC_LEGAL_APP_STORE_POLICY_SNIPPETS_URL,
+      legalCyberLiabilityStatementUrl: process.env.EXPO_PUBLIC_LEGAL_CYBER_LIABILITY_STATEMENT_URL,
+      legalDataProcessingAddendumUrl: process.env.EXPO_PUBLIC_LEGAL_DATA_PROCESSING_ADDENDUM_URL,
+      legalPrivacyPolicyUrl: process.env.EXPO_PUBLIC_LEGAL_PRIVACY_POLICY_URL,
+      legalTermsOfServiceUrl: process.env.EXPO_PUBLIC_LEGAL_TERMS_OF_SERVICE_URL,
+      legalAccountDeletionPolicyUrl: process.env.EXPO_PUBLIC_LEGAL_ACCOUNT_DELETION_POLICY_URL,
+      legalCookieTrackingNoticeUrl: process.env.EXPO_PUBLIC_LEGAL_COOKIE_TRACKING_NOTICE_URL,
       eas: {
         projectId: "b5e9e61d-84d6-42a8-bdb8-d275463bd12a",
       },

@@ -9,7 +9,8 @@ import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
 
 const MainHeaderView = ({
-  currentDateLabel,
+  menuHeaderSubtitle,
+  menuHeaderTitle,
   isMenuVisible,
   notificationCount,
   notificationsModal,
@@ -63,7 +64,8 @@ const MainHeaderView = ({
     </View>
 
     <MainSideMenuModal
-      currentDateLabel={currentDateLabel}
+      menuHeaderSubtitle={menuHeaderSubtitle}
+      menuHeaderTitle={menuHeaderTitle}
       isVisible={isMenuVisible}
       onClose={onCloseMenu}
       primaryItems={primaryMenuItems}

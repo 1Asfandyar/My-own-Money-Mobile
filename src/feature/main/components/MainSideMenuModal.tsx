@@ -33,7 +33,8 @@ const MainSideMenuRow = ({ icon, label, onPress, subtitle }: MainSideMenuItem) =
 );
 
 const MainSideMenuModal = ({
-  currentDateLabel,
+  menuHeaderSubtitle,
+  menuHeaderTitle,
   isVisible,
   onClose,
   primaryItems,
@@ -54,10 +55,10 @@ const MainSideMenuModal = ({
           <View className="mb-5 flex-row items-start justify-between">
             <View className="min-w-0 flex-1 pr-3">
               <ThemedText className="text-xs uppercase tracking-wide text-gray-400">
-                Today
+                {menuHeaderSubtitle}
               </ThemedText>
               <ThemedText className="mt-1 text-2xl text-gray-900" weight="bold">
-                {currentDateLabel}
+                {menuHeaderTitle}
               </ThemedText>
             </View>
 
