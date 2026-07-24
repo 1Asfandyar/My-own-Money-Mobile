@@ -1,4 +1,5 @@
 import { ENV } from '@/config/env';
+import { logger } from '@/services/logger';
 import { ApiFieldErrors, ApiRequestOptions, ApiResponse } from '@/types/api.types';
 
 export class ApiError extends Error {
@@ -14,7 +15,7 @@ export class ApiError extends Error {
 
 const API_URL = ENV.API_URL.replace(/\/$/, '');
 const REQUEST_TIMEOUT_MS = 15000;
-console.log(`API URL: ${API_URL}`);
+logger.debug(`API URL: ${API_URL}`);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;

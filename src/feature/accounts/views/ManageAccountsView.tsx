@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { FlatList, RefreshControl, View } from 'react-native';
 import type { ListRenderItem } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AccountFormModal from '@/feature/accounts/components/AccountFormModal';
@@ -37,7 +37,7 @@ const ManageAccountsView = ({ manager }: ManageAccountsViewProps) => {
           addLabel="Add account"
           onAdd={manager.onOpenAddModal}
           onBack={manager.onBack}
-          subtitle="Review balances, currency, status, and account history."
+          subtitle="Review balances, status, and account history."
           title="Manage accounts"
         />
         {manager.error && manager.accounts.length > 0 ? (
@@ -95,7 +95,7 @@ const ManageAccountsView = ({ manager }: ManageAccountsViewProps) => {
       <AccountFormModal
         accountName={manager.accountName}
         balance={manager.balance}
-        currencies={manager.currencies}
+        currencyCode={manager.selectedCurrencyCode}
         error={manager.formError}
         isSaving={manager.isSaving}
         isVisible={manager.isAddModalVisible}
@@ -103,8 +103,6 @@ const ManageAccountsView = ({ manager }: ManageAccountsViewProps) => {
         onChangeBalance={manager.onChangeBalance}
         onClose={manager.onCloseAddModal}
         onSave={manager.onSaveAccount}
-        onSelectCurrency={manager.onSelectCurrency}
-        selectedCurrencyId={manager.selectedCurrencyId}
       />
     </SafeAreaView>
   );

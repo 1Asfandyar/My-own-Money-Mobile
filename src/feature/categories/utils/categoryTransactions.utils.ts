@@ -2,7 +2,7 @@ import { CATEGORY_COLOR_FALLBACK } from '@/feature/categories/constants/category
 import type { Transaction } from '@/feature/transactions/types/transaction.types';
 import { themeColors } from '@/theme/utilities';
 import type { Currency } from '@/types/currency.types';
-import { formatCents } from '@/utils/currency';
+import { formatCents, formatCentsBySymbol } from '@/utils/currency';
 
 export const formatCategoryPercentage = (percentage: number) => {
   if (!Number.isFinite(percentage)) return '0%';
@@ -26,10 +26,14 @@ export const formatSignedCents = (
   cents: number,
   currencyId: number,
   currencies: Currency[],
+  currencySymbol?: string | null,
 ) => {
   const sign = cents >= 0 ? '+' : '-';
+  const formatted = currencySymbol
+    ? formatCentsBySymbol(Math.abs(cents), currencySymbol)
+    : formatCents(Math.abs(cents), currencyId, currencies);
 
-  return `${sign}${formatCents(Math.abs(cents), currencyId, currencies)}`;
+  return `${sign}${formatted}`;
 };
 
 export const formatCategoryTransactionDate = (value?: string) => {

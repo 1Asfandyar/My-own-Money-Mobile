@@ -5,7 +5,7 @@ import type { AccountManagementCardProps } from '@/feature/accounts/types/manage
 import { formatAccountDate } from '@/feature/accounts/utils/accountDisplay.utils';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatCents, getCurrencyById } from '@/utils/currency';
+import { formatCents, formatCentsBySymbol, getCurrencyById } from '@/utils/currency';
 
 const InformationRow = ({ label, value }: { label: string; value: string }) => (
   <View className="mt-3 flex-row items-start justify-between">
@@ -26,7 +26,14 @@ const AccountManagementCard = ({
   isDeleting,
   onDelete,
 }: AccountManagementCardProps) => {
-  const currency = getCurrencyById(account.currency_id, currencies);
+  const fallbackCurrency = getCurrencyById(account.currency_id, currencies);
+  const currencySymbol = account.currency_symbol ?? fallbackCurrency.symbol;
+  const balanceLabel = account.currency_symbol
+    ? formatCentsBySymbol(account.current_balance_cents, currencySymbol)
+    : formatCents(account.current_balance_cents, fallbackCurrency.id, currencies);
+  const openingBalanceLabel = account.currency_symbol
+    ? formatCentsBySymbol(account.initial_balance_cents, currencySymbol)
+    : formatCents(account.initial_balance_cents, fallbackCurrency.id, currencies);
 
   return (
     <View className="mb-4 rounded-2xl border border-gray-200 bg-white px-5 py-5">
@@ -43,7 +50,7 @@ const AccountManagementCard = ({
             {account.name}
           </ThemedText>
           <ThemedText className="mt-0.5 text-xs text-gray-500">
-            {currency.name}
+            Default currency
           </ThemedText>
         </View>
         <View
@@ -63,13 +70,13 @@ const AccountManagementCard = ({
       <View className="mt-4 h-px bg-gray-100" />
       <InformationRow
         label="Current balance"
-        value={formatCents(account.current_balance_cents, account.currency_id, currencies)}
+        value={balanceLabel}
       />
       <InformationRow
         label="Opening balance"
-        value={formatCents(account.initial_balance_cents, account.currency_id, currencies)}
+        value={openingBalanceLabel}
       />
-      <InformationRow label="Currency" value={`${currency.code} (${currency.symbol})`} />
+      <InformationRow label="Currency" value={currencySymbol} />
       <InformationRow label="Created" value={formatAccountDate(account.created_at)} />
 
       <TouchableOpacity

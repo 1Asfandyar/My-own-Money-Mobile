@@ -1,14 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ROUTES } from '@/config/routes';
-import { listAccounts } from '@/feature/accounts/api/accounts.api';
+import { getDashboardData } from '@/feature/accounts/api/dashboard.api';
 import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import type { AccountsOverviewViewModel } from '@/feature/accounts/types/accountsOverview.types';
-import { getCategoriesSummary } from '@/feature/categories/api/categories.api';
 import type { TransactionCategoryBreakdown } from '@/feature/categories/types/categoryDashboard.types';
-import { listCurrencies } from '@/feature/currencies/api/currencies.api';
-import { listFriendships } from '@/feature/friendships/api/friendships.api';
 import type { Transaction } from '@/feature/transactions/types/transaction.types';
 import {
   getTransactionEditRouteParams,
@@ -18,6 +15,13 @@ import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useServerDataInvalidationStore } from '@/store/serverDataInvalidation.store';
 import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
+
+const emptyDashboardSummary = {
+  total_income: 0,
+  total_expense: 0,
+  total_owed_to_you_cents: 0,
+  total_you_owe_cents: 0,
+};
 
 const getDashboardTotals = (categories: TransactionCategoryBreakdown[]) =>
   categories.reduce(
@@ -41,9 +45,7 @@ const getDashboardTotals = (categories: TransactionCategoryBreakdown[]) =>
 
 export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const router = useRouter();
-  const accountsRequestIdRef = useRef(0);
-  const categoryDashboardRequestIdRef = useRef(0);
-  const friendshipDashboardRequestIdRef = useRef(0);
+  const dashboardRequestIdRef = useRef(0);
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
@@ -124,6 +126,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
   const setSelectedExpenseTab = useAccountsOverviewStore(
     (state) => state.setSelectedExpenseTab,
   );
+  const [dashboardSummary, setDashboardSummary] = useState(emptyDashboardSummary);
   const activeAccounts = useMemo(
     () => accounts.filter((account) => !account.is_archived),
     [accounts],
@@ -134,9 +137,12 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
       activeAccounts[0],
     [activeAccounts, selectedAccountId],
   );
-  const displayCurrencyId =
-    selectedAccount?.currency_id ?? user?.currency_id ?? activeAccounts[0]?.currency_id;
-  const displayCurrency = getCurrencyById(displayCurrencyId, currencies);
+  // The app uses a single user-level currency across all accounts.
+  const displayCurrencyId = user?.currency_id ?? fallbackCurrencies[0].id;
+  const displayCurrency = useMemo(
+    () => getCurrencyById(displayCurrencyId, currencies),
+    [displayCurrencyId, currencies],
+  );
   const userFirstName = user?.full_name?.split(' ')[0];
   const categoryBreakdowns = useMemo(
     () =>
@@ -164,36 +170,43 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
 
   const refreshAccounts = useCallback(async () => {
     if (!token) {
-      accountsRequestIdRef.current += 1;
+      dashboardRequestIdRef.current += 1;
+      setAccounts([]);
+      setDashboardSummary(emptyDashboardSummary);
+      setCategoryDashboard(null);
+      setCategoryDashboardError(null);
+      setFriendshipLedgers([]);
+      setFriendshipDashboardError(null);
+      setError(null);
       setIsLoading(false);
+      setIsCategoryDashboardLoading(false);
+      setIsFriendshipDashboardLoading(false);
       return;
     }
 
-    const requestId = accountsRequestIdRef.current + 1;
-    accountsRequestIdRef.current = requestId;
+    const requestId = dashboardRequestIdRef.current + 1;
+    dashboardRequestIdRef.current = requestId;
     setIsLoading(true);
+    setIsCategoryDashboardLoading(true);
+    setIsFriendshipDashboardLoading(true);
+    setCategoryDashboardError(null);
+    setFriendshipDashboardError(null);
     setError(null);
 
     try {
-      const [nextAccounts, nextCurrencies] = await Promise.all([
-        listAccounts(token),
-        listCurrencies(token).catch((error: unknown) => {
-          if (error instanceof ApiError && error.status === 401) {
-            throw error;
-          }
+      const dashboard = await getDashboardData(token);
 
-          return fallbackCurrencies;
-        }),
-      ]);
-
-      if (accountsRequestIdRef.current !== requestId) {
+      if (dashboardRequestIdRef.current !== requestId) {
         return;
       }
 
-      setAccounts(nextAccounts);
-      setCurrencies(nextCurrencies.length > 0 ? nextCurrencies : fallbackCurrencies);
+      setAccounts(dashboard.accounts);
+      setDashboardSummary(dashboard.summary ?? emptyDashboardSummary);
+      setCategoryDashboard(dashboard.categoryDashboard);
+      setFriendshipLedgers(dashboard.friendshipLedgers);
+      setCurrencies(fallbackCurrencies);
     } catch (requestError) {
-      if (accountsRequestIdRef.current !== requestId) {
+      if (dashboardRequestIdRef.current !== requestId) {
         return;
       }
 
@@ -205,142 +218,45 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : 'Could not load accounts.',
+          : 'Could not load dashboard.',
       );
     } finally {
-      if (accountsRequestIdRef.current === requestId) {
+      if (dashboardRequestIdRef.current === requestId) {
         setIsLoading(false);
-      }
-    }
-  }, [
-    redirectToLogin,
-    setAccounts,
-    setCurrencies,
-    setError,
-    setIsLoading,
-    token,
-  ]);
-
-  const refreshCategoryDashboard = useCallback(async () => {
-    if (!token || !selectedAccount?.id || selectedExpenseTab !== 'personal') {
-      categoryDashboardRequestIdRef.current += 1;
-      setCategoryDashboard(null);
-      setCategoryDashboardError(null);
-      setIsCategoryDashboardLoading(false);
-      return;
-    }
-
-    const requestId = categoryDashboardRequestIdRef.current + 1;
-    categoryDashboardRequestIdRef.current = requestId;
-    setIsCategoryDashboardLoading(true);
-    setCategoryDashboardError(null);
-
-    try {
-      const nextDashboard = await getCategoriesSummary(token);
-
-      if (categoryDashboardRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      setCategoryDashboard(nextDashboard);
-    } catch (requestError) {
-      if (categoryDashboardRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        await redirectToLogin();
-        return;
-      }
-
-      setCategoryDashboardError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'Could not load category dashboard.',
-      );
-    } finally {
-      if (categoryDashboardRequestIdRef.current === requestId) {
         setIsCategoryDashboardLoading(false);
-      }
-    }
-  }, [
-    redirectToLogin,
-    selectedAccount?.id,
-    selectedExpenseTab,
-    setCategoryDashboard,
-    setCategoryDashboardError,
-    setIsCategoryDashboardLoading,
-    token,
-  ]);
-
-  const refreshFriendshipDashboard = useCallback(async () => {
-    if (!token || selectedExpenseTab !== 'shared') {
-      friendshipDashboardRequestIdRef.current += 1;
-      setFriendshipLedgers([]);
-      setFriendshipDashboardError(null);
-      setIsFriendshipDashboardLoading(false);
-      return;
-    }
-
-    const requestId = friendshipDashboardRequestIdRef.current + 1;
-    friendshipDashboardRequestIdRef.current = requestId;
-    setIsFriendshipDashboardLoading(true);
-    setFriendshipDashboardError(null);
-
-    try {
-      const ledgers = await listFriendships(token);
-
-      if (friendshipDashboardRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      setFriendshipLedgers(ledgers);
-    } catch (requestError) {
-      if (friendshipDashboardRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        await redirectToLogin();
-        return;
-      }
-
-      setFriendshipDashboardError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'Could not load shared balances.',
-      );
-    } finally {
-      if (friendshipDashboardRequestIdRef.current === requestId) {
         setIsFriendshipDashboardLoading(false);
       }
     }
   }, [
     redirectToLogin,
-    selectedExpenseTab,
+    setAccounts,
+    setCategoryDashboard,
+    setCategoryDashboardError,
+    setCurrencies,
+    setError,
     setFriendshipDashboardError,
     setFriendshipLedgers,
+    setIsCategoryDashboardLoading,
     setIsFriendshipDashboardLoading,
+    setIsLoading,
     token,
   ]);
 
+  const refreshCategoryDashboard = useCallback(async () => {
+    await refreshAccounts();
+  }, [refreshAccounts]);
+
+  const refreshFriendshipDashboard = useCallback(async () => {
+    await refreshAccounts();
+  }, [refreshAccounts]);
+
   const refreshOverview = useCallback(() => {
     void refreshAccounts();
-    void refreshCategoryDashboard();
-    void refreshFriendshipDashboard();
-  }, [refreshAccounts, refreshCategoryDashboard, refreshFriendshipDashboard]);
+  }, [refreshAccounts]);
 
   useEffect(() => {
     void refreshAccounts();
-  }, [accountsDataVersion, refreshAccounts]);
-
-  useEffect(() => {
-    void refreshCategoryDashboard();
-  }, [refreshCategoryDashboard]);
-
-  useEffect(() => {
-    void refreshFriendshipDashboard();
-  }, [friendshipDataVersion, refreshFriendshipDashboard]);
+  }, [accountsDataVersion, friendshipDataVersion, refreshAccounts]);
 
   useEffect(() => {
     if (activeAccounts.length === 0) {
@@ -446,6 +362,7 @@ export const useAccountsOverview = (): AccountsOverviewViewModel => {
     closeAccountPicker: closeStoredAccountPicker,
     closeDashboardCategory,
     currencies,
+    dashboardSummary,
     displayCurrency,
     error,
     friendshipDashboardError,

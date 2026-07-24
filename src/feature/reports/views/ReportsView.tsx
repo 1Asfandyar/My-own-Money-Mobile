@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import AccountBalancesRow from '@/feature/reports/components/AccountBalancesRow';
+import AccountBalancesList from '@/feature/reports/components/AccountBalancesList';
 import MonthNavigator from '@/feature/reports/components/MonthNavigator';
 import MonthlyTrend from '@/feature/reports/components/MonthlyTrend';
+import NetWorthSection from '@/feature/reports/components/NetWorthSection';
 import OverviewCard from '@/feature/reports/components/OverviewCard';
 import SharedMoneySection from '@/feature/reports/components/SharedMoneySection';
 import SpendingByCategory from '@/feature/reports/components/SpendingByCategory';
@@ -93,15 +94,30 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
                   </View>
                 )}
 
+              <View className="mt-5">
+                <NetWorthSection
+                  netWorth={report.net_worth}
+                  currencySymbol={currencySymbol}
+                />
+              </View>
+
               <View className="mt-5 px-4">
-                <ThemedText className="mb-3 text-sm uppercase tracking-wide text-gray-400" weight="semiBold">
+                <ThemedText className="mb-3 text-base text-gray-900" weight="semiBold">
                   Accounts
                 </ThemedText>
               </View>
-              <AccountBalancesRow
+              <AccountBalancesList
                 accounts={report.accounts}
                 totalBalanceCents={report.total_balance_cents}
+                currencySymbol={currencySymbol}
               />
+
+              <View className="mx-4 mt-5 border-t border-gray-100 pt-5">
+                <SharedMoneySection
+                  sharedMoney={report.shared_money}
+                  currencySymbol={currencySymbol}
+                />
+              </View>
 
               {report.spending_by_category.length > 0 && (
                 <SpendingByCategory
@@ -111,13 +127,6 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
                   onTabChange={onCategoryChartTabChange}
                 />
               )}
-
-              <View className="mx-4 mt-5 border-t border-gray-100 pt-5">
-                <SharedMoneySection
-                  sharedMoney={report.shared_money}
-                  currencySymbol={currencySymbol}
-                />
-              </View>
 
               {report.trend.length > 0 && (
                 <MonthlyTrend

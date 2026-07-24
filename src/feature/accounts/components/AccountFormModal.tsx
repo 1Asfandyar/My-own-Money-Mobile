@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,7 +17,7 @@ import { themeColors } from '@/theme/utilities';
 const AccountFormModal = ({
   accountName,
   balance,
-  currencies,
+  currencyCode,
   error,
   isSaving,
   isVisible,
@@ -26,8 +25,6 @@ const AccountFormModal = ({
   onChangeBalance,
   onClose,
   onSave,
-  onSelectCurrency,
-  selectedCurrencyId,
 }: AccountFormModalProps) => (
   <Modal
     animationType="slide"
@@ -81,53 +78,12 @@ const AccountFormModal = ({
             />
 
             <ThemedInput
-              inlineLabel={
-                currencies.find((item) => item.id === selectedCurrencyId)?.code ??
-                currencies[0]?.code ??
-                ''
-              }
+              inlineLabel={currencyCode}
               keyboardType="decimal-pad"
               onChangeText={onChangeBalance}
               placeholder="Opening balance"
               value={balance}
             />
-
-            <ThemedText className="mb-2 mt-1 text-xs uppercase tracking-wide text-gray-500">
-              Currency
-            </ThemedText>
-            <ScrollView
-              horizontal
-              keyboardShouldPersistTaps="handled"
-              showsHorizontalScrollIndicator={false}
-            >
-              <View className="flex-row">
-                {currencies.map((currency) => {
-                  const isSelected = currency.id === selectedCurrencyId;
-
-                  return (
-                    <TouchableOpacity
-                      key={currency.id}
-                      activeOpacity={0.76}
-                      accessibilityLabel={`Use ${currency.name}`}
-                      accessibilityRole="button"
-                      className={`mr-2 rounded-full border px-4 py-2 ${
-                        isSelected
-                          ? 'border-primary bg-primary/10'
-                          : 'border-gray-200 bg-white'
-                      }`}
-                      onPress={() => onSelectCurrency(currency.id)}
-                    >
-                      <ThemedText
-                        className={isSelected ? 'text-primary' : 'text-gray-600'}
-                        weight="semiBold"
-                      >
-                        {currency.code}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
 
             {error ? (
               <ThemedText className="mt-3 text-sm text-red-500">

@@ -20,13 +20,7 @@ import {
   getCurrencyById,
   moneyInputToCents,
 } from '@/utils/currency';
-
-const getRequestError = (error: unknown, fallback: string) =>
-  error instanceof ApiError
-    ? error.fieldErrors.base || error.message
-    : error instanceof Error
-      ? error.message
-      : fallback;
+import { getRequestError } from '@/utils/errors';
 
 const useManageAccounts = (): ManageAccountsViewModel => {
   const router = useRouter();
@@ -53,8 +47,8 @@ const useManageAccounts = (): ManageAccountsViewModel => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [removingAccountId, setRemovingAccountId] = useState<number | null>(null);
-  const [selectedCurrencyId, setSelectedCurrencyId] = useState(
-    user?.currency_id ?? fallbackCurrencies[0].id,
+  const [selectedCurrencyCode, setSelectedCurrencyCode] = useState(
+    getCurrencyById(user?.currency_id, fallbackCurrencies).code,
   );
 
   const redirectToLogin = useCallback(async () => {
@@ -89,8 +83,8 @@ const useManageAccounts = (): ManageAccountsViewModel => {
       setCurrencies(displayCurrencies);
       setStoredAccounts(nextAccounts);
       setStoredCurrencies(displayCurrencies);
-      setSelectedCurrencyId((currentId) =>
-        getCurrencyById(user?.currency_id ?? currentId, displayCurrencies).id,
+      setSelectedCurrencyCode(() =>
+        getCurrencyById(user?.currency_id, displayCurrencies).code,
       );
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
@@ -118,9 +112,7 @@ const useManageAccounts = (): ManageAccountsViewModel => {
     setAccountName('');
     setBalance('');
     setFormError('');
-    setSelectedCurrencyId(
-      getCurrencyById(user?.currency_id, currencies).id,
-    );
+    setSelectedCurrencyCode(getCurrencyById(user?.currency_id, currencies).code);
     setIsAddModalVisible(true);
   }, [currencies, user?.currency_id]);
 
@@ -150,7 +142,6 @@ const useManageAccounts = (): ManageAccountsViewModel => {
     try {
       const openingBalanceCents = moneyInputToCents(balance);
       const account = await createAccount(token, {
-        currency_id: selectedCurrencyId,
         current_balance_cents: openingBalanceCents,
         initial_balance_cents: openingBalanceCents,
         name,
@@ -175,7 +166,6 @@ const useManageAccounts = (): ManageAccountsViewModel => {
     accounts,
     balance,
     selectedAccountId,
-    selectedCurrencyId,
     setSelectedAccountId,
     setStoredAccounts,
     token,
@@ -253,9 +243,8 @@ const useManageAccounts = (): ManageAccountsViewModel => {
     onOpenAddModal: openAddModal,
     onRefresh: () => void loadAccounts(),
     onSaveAccount: () => void saveAccount(),
-    onSelectCurrency: setSelectedCurrencyId,
     removingAccountId,
-    selectedCurrencyId,
+    selectedCurrencyCode,
   };
 };
 

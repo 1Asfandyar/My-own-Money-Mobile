@@ -4,7 +4,7 @@ import type { Currency } from '@/types/currency.types';
 export type AccountFormModalProps = {
   accountName: string;
   balance: string;
-  currencies: Currency[];
+  currencyCode: string;
   error: string;
   isSaving: boolean;
   isVisible: boolean;
@@ -12,8 +12,6 @@ export type AccountFormModalProps = {
   onChangeBalance: (value: string) => void;
   onClose: () => void;
   onSave: () => void;
-  onSelectCurrency: (currencyId: number) => void;
-  selectedCurrencyId: number;
 };
 
 export type AccountManagementCardProps = {
@@ -41,9 +39,8 @@ export type ManageAccountsViewModel = {
   onOpenAddModal: () => void;
   onRefresh: () => void;
   onSaveAccount: () => void;
-  onSelectCurrency: (currencyId: number) => void;
   removingAccountId: number | null;
-  selectedCurrencyId: number;
+  selectedCurrencyCode: string;
 };
 
 export type ManageAccountsViewProps = {

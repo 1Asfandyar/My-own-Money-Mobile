@@ -8,16 +8,16 @@ import { useAuthStore } from '@/store/auth.store';
 import { moneyInputToCents } from '@/utils/currency';
 
 import {
-  accountColors,
-  accountIcons,
-  fallbackOnboardingCurrencies,
-  toOnboardingCurrencyOptions,
-  totalOnboardingSteps,
+    accountColors,
+    accountIcons,
+    fallbackOnboardingCurrencies,
+    toOnboardingCurrencyOptions,
+    totalOnboardingSteps,
 } from '../constants/onboarding.constants';
 import type {
-  IconName,
-  OnboardingFlow,
-  OnboardingStep,
+    IconName,
+    OnboardingFlow,
+    OnboardingStep,
 } from '../types';
 
 export const useOnboardingFlow = (): OnboardingFlow => {
@@ -84,7 +84,6 @@ export const useOnboardingFlow = (): OnboardingFlow => {
   const accountDraft = accountName.trim()
     ? {
         name: accountName.trim(),
-        currency_id: selectedCurrency.id,
         current_balance_cents: moneyInputToCents(openingBalance),
         initial_balance_cents: moneyInputToCents(openingBalance),
       }

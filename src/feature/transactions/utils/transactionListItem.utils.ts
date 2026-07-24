@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import {
-  CATEGORY_COLOR_FALLBACK,
-  CATEGORY_ICON_FALLBACK,
+    CATEGORY_COLOR_FALLBACK,
+    CATEGORY_ICON_FALLBACK,
 } from '@/feature/categories/constants/categoryDashboard.constants';
 import type {
-  ApiTransaction,
-  TransactionListItem,
-  TransactionRenderAs,
+    ApiTransaction,
+    TransactionListItem,
+    TransactionRenderAs,
 } from '@/feature/transactions/types/transaction.types';
 import type { Currency } from '@/types/currency.types';
-import { formatCents, getCurrencyByCode } from '@/utils/currency';
+import { formatCentsBySymbol, getCurrencyById } from '@/utils/currency';
 
 export const getSoftColor = (color: string) =>
   /^#[0-9a-f]{6}$/i.test(color) ? `${color}1A` : '#F3F4F6';
@@ -26,6 +26,12 @@ export const formatTransactionDate = (value: string) => {
     year: 'numeric',
   });
 };
+
+export const formatAmountBySymbol = (cents: number, symbol: string) =>
+  `${symbol} ${(cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 export const RENDER_AS_COLORS: Record<TransactionRenderAs, string> = {
   personal_expense: CATEGORY_COLOR_FALLBACK.expense,
@@ -51,20 +57,18 @@ export const getTransactionListItem = (
   transaction: ApiTransaction,
   currencies: Currency[],
 ): TransactionListItem => {
-  const currency = getCurrencyByCode(transaction.currency.code, currencies);
+  const fallbackCurrency = getCurrencyById(undefined, currencies);
+  const currencySymbol = transaction.currency_symbol ?? fallbackCurrency.symbol;
   const color = RENDER_AS_COLORS[transaction.render_as];
   const iconName = RENDER_AS_ICONS[transaction.render_as];
   const dateLabel = formatTransactionDate(transaction.date);
 
-  const summaryAmountLabel = `${transaction.currency.symbol} ${(
-    transaction.summary.amount_cents / 100
-  ).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-
-  const totalAmountLabel = formatCents(
-    transaction.amount_cents,
-    currency.id,
-    currencies,
+  const summaryAmountLabel = formatAmountBySymbol(
+    transaction.summary.amount_cents,
+    currencySymbol,
   );
+
+  const totalAmountLabel = formatCentsBySymbol(transaction.amount_cents, currencySymbol);
   const secondaryLine = `${transaction.summary.paid_by_label} paid ${totalAmountLabel}`;
 
   return {

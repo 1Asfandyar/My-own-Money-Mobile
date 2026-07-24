@@ -1,24 +1,11 @@
-import type { Currency } from '@/types/currency.types';
-
-export type BalanceTrendDirection = 'up' | 'down' | 'flat';
-
-export type BalanceTrend = {
-  direction: BalanceTrendDirection;
-  differenceLabel: string;
-  percentLabel: string | null;
-  points: number[];
+export type AccountBalanceTrend = {
   summary: string;
-};
-
-export type GetBalanceTrendParams = {
-  currencies: Currency[];
-  currentBalanceCents: number;
-  displayCurrencyId: number;
-  initialBalanceCents: number;
+  direction: 'down' | 'up' | 'neutral';
+  percentLabel?: string;
 };
 
 export type AccountBalanceTrendGraphProps = {
   accentColor: string;
   isBalanceVisible: boolean;
-  trend: BalanceTrend;
+  trend: AccountBalanceTrend;
 };

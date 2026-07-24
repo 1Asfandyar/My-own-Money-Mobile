@@ -2,66 +2,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type {
-  ApiTransaction,
-  ApiTransactionSplit,
-  TransactionDetailViewProps,
-  TransactionRenderAs,
-} from '@/feature/transactions/types/transaction.types';
 import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
+import type {
+    ApiTransaction,
+    ApiTransactionSplit,
+    TransactionDetailViewProps,
+} from '@/feature/transactions/types/transaction.types';
+import {
+    formatAmountBySymbol as formatAmount,
+    formatTransactionDate as formatDate,
+    getSoftColor,
+    RENDER_AS_COLORS,
+    RENDER_AS_ICONS,
+} from '@/feature/transactions/utils/transactionListItem.utils';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import {
-  CATEGORY_COLOR_FALLBACK,
-  CATEGORY_ICON_FALLBACK,
-} from '@/feature/categories/constants/categoryDashboard.constants';
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-const getSoftColor = (color: string) =>
-  /^#[0-9a-f]{6}$/i.test(color) ? `${color}1A` : '#F3F4F6';
-
-const formatDate = (iso: string) => {
-  const date = new Date(iso);
-
-  if (Number.isNaN(date.getTime())) return 'No date';
-
-  return date.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const formatAmount = (cents: number, symbol: string) => {
-  const amount = cents / 100;
-
-  return `${symbol} ${amount.toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
-};
-
-const RENDER_AS_COLORS: Record<TransactionRenderAs, string> = {
-  personal_expense: CATEGORY_COLOR_FALLBACK.expense,
-  personal_income: CATEGORY_COLOR_FALLBACK.income,
-  transfer: CATEGORY_COLOR_FALLBACK.transfer,
-  shared_expense_payer: CATEGORY_COLOR_FALLBACK.expense,
-  shared_expense_participant: CATEGORY_COLOR_FALLBACK.expense,
-  settlement_settler: CATEGORY_COLOR_FALLBACK.settlement,
-  settlement_settlee: CATEGORY_COLOR_FALLBACK.settlement,
-};
-
-const RENDER_AS_ICONS: Record<TransactionRenderAs, keyof typeof Ionicons.glyphMap> = {
-  personal_expense: CATEGORY_ICON_FALLBACK.expense,
-  personal_income: CATEGORY_ICON_FALLBACK.income,
-  transfer: CATEGORY_ICON_FALLBACK.transfer,
-  shared_expense_payer: CATEGORY_ICON_FALLBACK.expense,
-  shared_expense_participant: CATEGORY_ICON_FALLBACK.expense,
-  settlement_settler: CATEGORY_ICON_FALLBACK.settlement,
-  settlement_settlee: CATEGORY_ICON_FALLBACK.settlement,
-};
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -236,10 +192,11 @@ const SharedExpenseSplitRow = ({
 };
 
 const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => {
-  const { paid_by, currency, splits } = transaction;
+  const { paid_by, splits } = transaction;
+  const currencySymbol = transaction.currency_symbol ?? '$';
   const paidByLabel = paid_by.is_you
-    ? `You paid ${formatAmount(transaction.amount_cents, currency.symbol)}`
-    : `${paid_by.name} paid ${formatAmount(transaction.amount_cents, currency.symbol)}`;
+    ? `You paid ${formatAmount(transaction.amount_cents, currencySymbol)}`
+    : `${paid_by.name} paid ${formatAmount(transaction.amount_cents, currencySymbol)}`;
 
   return (
     <View className="mt-6">
@@ -263,7 +220,7 @@ const SharedExpenseBody = ({ transaction }: { transaction: ApiTransaction }) => 
           {splits.map((split) => (
             <SharedExpenseSplitRow
               key={split.user.id}
-              currencySymbol={currency.symbol}
+              currencySymbol={currencySymbol}
               payerId={paid_by.id}
               split={split}
             />
@@ -380,7 +337,10 @@ const TransactionDetailView = ({ detail }: TransactionDetailViewProps) => {
   const color = RENDER_AS_COLORS[transaction.render_as];
   const softColor = getSoftColor(color);
   const iconName = RENDER_AS_ICONS[transaction.render_as];
-  const totalLabel = formatAmount(transaction.amount_cents, transaction.currency.symbol);
+  const totalLabel = formatAmount(
+    transaction.amount_cents,
+    transaction.currency_symbol ?? '$',
+  );
   const dateLabel = formatDate(transaction.date);
   const isSharedExpense =
     transaction.render_as === 'shared_expense_payer' ||

@@ -26,7 +26,7 @@ const CurrencyStep = ({
         Choose your currency
       </ThemedText>
       <ThemedText className={onboardingStyles.description}>
-        Pick the currency you use most. You can change this later from Settings.
+        Pick one currency for your whole app. You can change this later from Settings.
       </ThemedText>
 
       <View className={onboardingStyles.optionsList}>

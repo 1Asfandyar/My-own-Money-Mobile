@@ -62,6 +62,35 @@ export const formatCents = (
   })}`;
 };
 
+export const formatCentsBySymbol = (
+  cents: number,
+  currencySymbol: string,
+  maximumFractionDigits = 2,
+) => {
+  const amount = cents / 100;
+
+  return `${currencySymbol} ${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+  })}`;
+};
+
+/**
+ * Formats cents using a currency symbol with no space (e.g. "$39,350").
+ * Shared across the Reports screen to keep formatting consistent.
+ */
+export const formatAmount = (
+  cents: number,
+  symbol: string,
+  { useAbsoluteValue = false }: { useAbsoluteValue?: boolean } = {},
+): string => {
+  const amount = (useAbsoluteValue ? Math.abs(cents) : cents) / 100;
+  return `${symbol}${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 export const moneyInputToCents = (value: string) => {
   const normalized = value.replace(/,/g, '').trim();
   const amount = Number(normalized);

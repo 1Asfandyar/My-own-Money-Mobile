@@ -4,11 +4,11 @@ import { TouchableOpacity, View } from 'react-native';
 
 import type { CategoryTransactionRowProps } from '@/feature/categories/types/categoryDashboard.types';
 import {
-  formatCategoryTransactionDate,
-  formatSignedCents,
-  getCategorySoftColor,
-  getCategoryTypeColor,
-  getSignedTransactionAmount,
+    formatCategoryTransactionDate,
+    formatSignedCents,
+    getCategorySoftColor,
+    getCategoryTypeColor,
+    getSignedTransactionAmount,
 } from '@/feature/categories/utils/categoryTransactions.utils';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -76,6 +76,7 @@ const CategoryTransactionRow = ({
             signedAmount,
             transaction.currency_id ?? displayCurrencyId,
             currencies,
+            transaction.currency_symbol,
           )}
         </ThemedText>
         <Ionicons

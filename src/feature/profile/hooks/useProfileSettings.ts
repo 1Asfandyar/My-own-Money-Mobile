@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ERROR_MESSAGES } from '@/config/constants';
 import { ROUTES } from '@/config/routes';
@@ -12,17 +12,17 @@ import type { AuthUser } from '@/types/auth.types';
 import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
 
 import type {
-  PasswordFormValues,
-  PasswordFieldErrors,
-  ProfileExpandedSections,
-  ProfileFieldErrors,
-  ProfileFormValues,
-  ProfilePasswordVisibility,
-  ProfileSettingsViewModel,
+    PasswordFieldErrors,
+    PasswordFormValues,
+    ProfileExpandedSections,
+    ProfileFieldErrors,
+    ProfileFormValues,
+    ProfilePasswordVisibility,
+    ProfileSettingsViewModel,
 } from '../types/profile.types';
 import {
-  getPrimaryAccountCurrencyId,
-  resolveProfileCurrencyId,
+    getPrimaryAccountCurrencyId,
+    resolveProfileCurrencyId,
 } from '../utils/profileCurrency.utils';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -171,6 +171,7 @@ export const useProfileSettings = (): ProfileSettingsViewModel => {
   const [profileValues, setProfileValues] = useState<ProfileFormValues>(
     getInitialProfileValues(user),
   );
+  const lastHydratedUserSnapshotRef = useRef<string>('');
 
   const redirectToLogin = useCallback(async () => {
     await clearSession();
@@ -178,6 +179,19 @@ export const useProfileSettings = (): ProfileSettingsViewModel => {
   }, [clearSession, router]);
 
   useEffect(() => {
+    const userSnapshot = [
+      user?.id ?? 'guest',
+      user?.updated_at ?? '',
+      user?.currency_id ?? '',
+      user?.currency_code ?? '',
+    ].join('|');
+
+    if (lastHydratedUserSnapshotRef.current === userSnapshot) {
+      return;
+    }
+
+    lastHydratedUserSnapshotRef.current = userSnapshot;
+
     setProfileValues({
       ...getInitialProfileValues(user),
       currency_id: resolveProfileCurrencyId(user, currencies, accountCurrencyId),

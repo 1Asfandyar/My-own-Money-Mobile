@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity, View } from 'react-native';
 
 import type {
-  ExpenseOverviewTabConfig,
-  ExpenseOverviewTabsProps,
+    ExpenseOverviewTabConfig,
+    ExpenseOverviewTabsProps,
 } from '@/feature/transactions/types/expenseOverview.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -45,13 +45,13 @@ const ExpenseOverviewTabs = ({
             <Ionicons
               name={tab.iconName}
               size={tab.value === 'shared' ? 19 : 18}
-              color={isSelected ? themeColors.primary : themeColors.gray500}
+              color={isSelected ? themeColors.primary : themeColors.gray600}
             />
             <ThemedText
               className={`ml-2 text-sm ${
-                isSelected ? 'text-gray-900' : 'text-gray-500'
+                isSelected ? 'text-primary' : 'text-gray-600'
               }`}
-              weight="semiBold"
+              weight={isSelected ? 'bold' : 'semiBold'}
             >
               {tab.label}
             </ThemedText>

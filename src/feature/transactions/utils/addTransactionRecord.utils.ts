@@ -4,20 +4,20 @@ import type { FormikErrors } from 'formik';
 import type { Category } from '@/feature/categories/types/category.types';
 import type { GroupUser } from '@/feature/groups/types/group.types';
 import type {
-  AddTransactionRecordDropdownOption,
-  AddTransactionRecordFieldErrors,
-  AddTransactionRecordFormValues,
-  AddTransactionRecordKind,
+    AddTransactionRecordDropdownOption,
+    AddTransactionRecordFieldErrors,
+    AddTransactionRecordFormValues,
+    AddTransactionRecordKind,
 } from '@/feature/transactions/types/addTransactionRecord.types';
 import type { SharedExpenseSplitMethod } from '@/feature/transactions/types/sharedExpenseSplit.types';
 import type { TransactionPayload } from '@/feature/transactions/types/transaction.types';
 import {
-  buildSharedExpenseUserShares,
-  validateSharedExpenseSplitValues,
+    buildSharedExpenseUserShares,
+    validateSharedExpenseSplitValues,
 } from '@/feature/transactions/utils/sharedExpenseSplit.utils';
-import type { AuthUser } from '@/types/auth.types';
 import type { Account } from '@/types/account.types';
-import { formatCents, moneyInputToCents } from '@/utils/currency';
+import type { AuthUser } from '@/types/auth.types';
+import { formatCents, formatCentsBySymbol, moneyInputToCents } from '@/utils/currency';
 
 const CATEGORY_ICON_FALLBACK: keyof typeof Ionicons.glyphMap = 'pricetag-outline';
 
@@ -81,10 +81,9 @@ export const getAddTransactionAccountOptions = (
     id: account.id,
     label: account.name,
     iconName: 'wallet-outline',
-    supportingLabel: formatCents(
-      account.current_balance_cents,
-      account.currency_id,
-    ),
+    supportingLabel: account.currency_symbol
+      ? formatCentsBySymbol(account.current_balance_cents, account.currency_symbol)
+      : formatCents(account.current_balance_cents),
   }));
 
 export const getAddTransactionCategoryOptions = (
@@ -190,7 +189,7 @@ export const buildAddTransactionPayload = ({
     category_id: Number(formValues.categoryId),
     transaction_date: new Date().toISOString(),
     note: formValues.note.trim(),
-    currency_id: selectedAccount.currency_id ?? userCurrencyId ?? 1,
+    currency_id: userCurrencyId ?? 1,
   };
 
   if (isSharedRecord && paidByUserId) {

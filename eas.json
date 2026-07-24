@@ -1,0 +1,10 @@
+{
+  "cli": {
+    "version": ">=20.5.1"
+  },
+  "build": {
+    "development": {},
+    "preview": {},
+    "production": {}
+  }
+}

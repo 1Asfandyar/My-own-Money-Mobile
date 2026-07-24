@@ -5,6 +5,7 @@ export type AuthUser = {
   avatar_url?: string | null;
   currency?: Currency | null;
   currency_code?: string | null;
+  currency_symbol?: string | null;
   id: number;
   full_name: string;
   mobile_number?: string | null;

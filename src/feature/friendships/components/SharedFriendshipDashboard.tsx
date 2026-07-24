@@ -1,22 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
 import type {
-  FriendshipLedger,
-  SharedFriendshipDashboardProps,
-  SharedFriendshipRowProps,
+    FriendshipLedger,
+    SharedFriendshipDashboardProps,
+    SharedFriendshipRowProps,
 } from '@/feature/friendships/types/friendship.types';
 import {
-  friendshipUserToGroupUser,
-  getFriendshipBalanceColor,
-  getFriendshipUserLabel,
+    friendshipUserToGroupUser,
+    getFriendshipBalanceColor,
+    getFriendshipUserLabel,
 } from '@/feature/friendships/utils/friendshipDisplay.utils';
+import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
@@ -84,13 +84,25 @@ const SharedFriendshipRow = ({
       </View>
 
       <View className="ml-3 items-end">
-        <ThemedText className="text-xs text-gray-500">
-          {balance.type === 'you_owe'
-            ? 'you owe'
-            : balance.type === 'owes_you'
-              ? 'owes you'
-              : 'settled'}
-        </ThemedText>
+        <View className="flex-row items-center">
+          {balance.type !== 'settled_up' ? (
+            <Ionicons
+              // Matches the income (up) / expense (down) arrow convention
+              // used in the Personal tab for faster visual scanning.
+              name={balance.type === 'owes_you' ? 'arrow-up' : 'arrow-down'}
+              size={12}
+              color={color}
+              style={{ marginRight: 3 }}
+            />
+          ) : null}
+          <ThemedText className="text-xs text-gray-500">
+            {balance.type === 'you_owe'
+              ? 'you owe'
+              : balance.type === 'owes_you'
+                ? 'owes you'
+                : 'settled'}
+          </ThemedText>
+        </View>
         <ThemedText
           adjustsFontSizeToFit
           className="mt-1 text-base"

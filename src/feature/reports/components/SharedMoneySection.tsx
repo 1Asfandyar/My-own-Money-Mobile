@@ -3,11 +3,7 @@ import { View } from 'react-native';
 import type { SharedMoney, SharedMoneyBreakdownItem } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-
-const formatAmount = (cents: number, symbol: string): string => {
-  const amount = Math.abs(cents) / 100;
-  return `${symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-};
+import { formatAmount } from '@/utils/currency';
 
 const getInitials = (name: string): string =>
   name
@@ -51,7 +47,7 @@ const BreakdownRow = ({ item, currencySymbol }: BreakdownRowProps) => {
           weight="bold"
           style={{ color: owesYou ? themeColors.primary : '#EF4444' }}
         >
-          {formatAmount(item.amount_cents, currencySymbol)}
+          {formatAmount(item.amount_cents, currencySymbol, { useAbsoluteValue: true })}
         </ThemedText>
       </View>
     </View>
@@ -68,9 +64,9 @@ const SharedMoneySection = ({ sharedMoney, currencySymbol }: SharedMoneySectionP
 
   const summaryText =
     net_cents > 0
-      ? `You're owed ${formatAmount(net_cents, currencySymbol)}`
+      ? `You're owed ${formatAmount(net_cents, currencySymbol, { useAbsoluteValue: true })}`
       : net_cents < 0
-        ? `You owe ${formatAmount(net_cents, currencySymbol)}`
+        ? `You owe ${formatAmount(net_cents, currencySymbol, { useAbsoluteValue: true })}`
         : 'All settled up';
 
   const summaryColor =

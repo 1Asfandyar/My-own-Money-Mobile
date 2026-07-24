@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Share } from 'react-native';
 
+import { ENV } from '@/config/env';
 import { ROUTES } from '@/config/routes';
 import useFriendshipNotifications from '@/feature/friendships/hooks/useFriendshipNotifications';
 import type {
@@ -13,17 +14,39 @@ import type {
 const inviteMessage =
   'Join me on My Own Money to track expenses, groups, and shared balances together.';
 
-const getCurrentDateLabel = () =>
-  new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'long',
-    weekday: 'long',
-  }).format(new Date());
+const MENU_HEADER_VARIANTS = {
+  appIdentity: {
+    subtitle: 'Personal finance workspace',
+    title: ENV.APP_NAME,
+  },
+  quickActions: {
+    subtitle: 'Quick actions',
+    title: 'Manage and connect',
+  },
+  support: {
+    subtitle: 'Need help?',
+    title: 'Support and information',
+  },
+} as const;
+
+const SELECTED_MENU_HEADER_VARIANT: keyof typeof MENU_HEADER_VARIANTS =
+  'appIdentity';
+
+const getInviteMessage = () => {
+  if (ENV.APP_SHARE_URL) {
+    return `${inviteMessage}\n\nGet the app: ${ENV.APP_SHARE_URL}`;
+  }
+
+  return inviteMessage;
+};
 
 export const useMainHeader = (): MainHeaderViewProps => {
   const router = useRouter();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const currentDateLabel = useMemo(() => getCurrentDateLabel(), []);
+  const menuHeaderContent = useMemo(
+    () => MENU_HEADER_VARIANTS[SELECTED_MENU_HEADER_VARIANT],
+    [],
+  );
   const {
     acceptingFriendshipId,
     error: notificationsError,
@@ -44,7 +67,7 @@ export const useMainHeader = (): MainHeaderViewProps => {
 
   const shareInvite = useCallback(async () => {
     setIsMenuVisible(false);
-    await Share.share({ message: inviteMessage });
+    await Share.share({ message: getInviteMessage() });
   }, []);
 
   const navigateFromMenu = useCallback(
@@ -125,7 +148,8 @@ export const useMainHeader = (): MainHeaderViewProps => {
   );
 
   return {
-    currentDateLabel,
+    menuHeaderSubtitle: menuHeaderContent.subtitle,
+    menuHeaderTitle: menuHeaderContent.title,
     isMenuVisible,
     notificationCount,
     notificationsModal: {

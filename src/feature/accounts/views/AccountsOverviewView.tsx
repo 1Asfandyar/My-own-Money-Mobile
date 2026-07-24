@@ -1,6 +1,5 @@
 import { ScrollView, View } from 'react-native';
 
-import AccountPickerModal from '@/feature/accounts/components/AccountPickerModal';
 import AccountsOverviewHeader from '@/feature/accounts/components/AccountsOverviewHeader';
 import AccountsOverviewStatus from '@/feature/accounts/components/AccountsOverviewStatus';
 import SelectedAccountBalanceCard from '@/feature/accounts/components/SelectedAccountBalanceCard';
@@ -19,7 +18,9 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
       <ScrollView
         className="flex-1 bg-white"
         contentContainerStyle={{
-          paddingBottom: 176,
+          // Extra bottom padding keeps the last list item clear of the
+          // floating add-transaction button so content is never occluded.
+          paddingBottom: 220,
           paddingHorizontal: 16,
           paddingTop: 16,
         }}
@@ -31,10 +32,12 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
         />
 
         <SelectedAccountBalanceCard
+          accounts={dashboard.activeAccounts}
           currencies={dashboard.currencies}
+          dashboardSummary={dashboard.dashboardSummary}
           displayCurrency={dashboard.displayCurrency}
           selectedAccount={dashboard.selectedAccount}
-          onChangeAccountPress={dashboard.openAccountPicker}
+          onSelectAccount={dashboard.selectAccount}
         />
 
         <AccountsOverviewStatus
@@ -78,15 +81,6 @@ const AccountsOverviewView = ({ dashboard }: AccountsOverviewViewProps) => {
       </ScrollView>
 
       <AddTransactionFab selectedAccountId={dashboard.selectedAccount?.id} />
-
-      <AccountPickerModal
-        accounts={dashboard.activeAccounts}
-        currencies={dashboard.currencies}
-        isVisible={dashboard.isAccountPickerVisible}
-        selectedAccount={dashboard.selectedAccount}
-        onClose={dashboard.closeAccountPicker}
-        onSelectAccount={dashboard.selectAccount}
-      />
 
       <CategoryTransactionsModal
         categoryBreakdown={dashboard.selectedCategoryBreakdown}
