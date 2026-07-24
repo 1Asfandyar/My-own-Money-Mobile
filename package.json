@@ -1,5 +1,5 @@
 {
-  "name": "my-own-money",
+  "name": "my-own-money-manager",
   "main": "expo-router/entry",
   "version": "0.0.1",
   "scripts": {

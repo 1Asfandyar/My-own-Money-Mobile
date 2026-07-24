@@ -52,7 +52,7 @@ You will need this in Step 3.
 
 1. On the project overview page, click the **Android icon** to add an Android app
 2. Fill in the form:
-   - **Android package name**: `com.myownmoney.app`
+  - **Android package name**: `app.myownmoneymanager`
    - **App nickname**: anything (e.g. `MoM`)
    - **Debug signing certificate SHA-1**: paste the fingerprint from Step 1
 3. Click **Register app**

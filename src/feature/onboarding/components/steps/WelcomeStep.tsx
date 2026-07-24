@@ -19,7 +19,7 @@ const WelcomeStep = () => {
 
       <View className={onboardingStyles.welcomeCopy}>
         <ThemedText className={onboardingStyles.centeredTitle} weight="bold">
-          Welcome to MyOwnMoney
+          Welcome to My Own Money Manager
         </ThemedText>
         <ThemedText className={onboardingStyles.centeredDescription}>
           Money management made simple.

@@ -1,4 +1,4 @@
-# My Own Money
+# My Own Money Manager
 
 A personal finance mobile app built with React Native and Expo.
 
@@ -17,7 +17,7 @@ A personal finance mobile app built with React Native and Expo.
 
    ```bash
    git clone <repo-url>
-   cd my-own-money
+   cd my-own-money-manager
    ```
 
 2. Install dependencies

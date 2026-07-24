@@ -2,14 +2,14 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "My Own Money",
-    slug: "mom-money-manager",
-    version: "1.0.0",
+    name: "My Own Money Manager",
+    slug: "myownmoneymanager",
+    version: "0.0.1",
     orientation: "portrait",
 
     icon: "./src/assets/icons/myownmoney_light.png",
 
-    scheme: "MyOwnMoney",
+    scheme: "myownmoneymanager",
     userInterfaceStyle: "light",
 
     newArchEnabled: true,
@@ -29,7 +29,7 @@ export default {
     },
 
     android: {
-      package: "com.myownmoney.app",
+      package: "app.myownmoneymanager",
       adaptiveIcon: {
         foregroundImage: "./src/assets/icons/myownmoney_light.png",
         backgroundColor: "#1E5A52",

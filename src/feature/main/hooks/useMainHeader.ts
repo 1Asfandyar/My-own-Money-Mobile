@@ -12,7 +12,7 @@ import type {
 } from '@/feature/main/types/mainHeader.types';
 
 const inviteMessage =
-  'Join me on My Own Money to track expenses, groups, and shared balances together.';
+  'Join me on My Own Money Manager to track expenses, groups, and shared balances together.';
 
 const MENU_HEADER_VARIANTS = {
   appIdentity: {
