@@ -1,0 +1,115 @@
+name: Android Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to build"
+        required: true
+        default: "master"
+      android_version_code:
+        description: "Android versionCode (must increase for Play uploads)"
+        required: true
+        default: "2"
+      android_version_name:
+        description: "Android versionName override"
+        required: false
+        default: "0.0.1-internal"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate Android native project
+        env:
+          ANDROID_VERSION_CODE: ${{ inputs.android_version_code }}
+        run: yarn prepare:android:release
+
+      - name: Decode upload keystore from secret
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.p12
+          chmod 600 android/app/upload-keystore.p12
+
+      - name: Configure signing properties
+        run: |
+          {
+            echo "MYAPP_UPLOAD_STORE_FILE=upload-keystore.p12"
+            echo "MYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}"
+            echo "MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}"
+            echo "MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}"
+          } >> android/gradle.properties
+
+      - name: Apply release signing override
+        run: |
+          cat <<'EOF' >> android/app/build.gradle
+
+          // CI signing override injected by GitHub Actions.
+          afterEvaluate {
+              android {
+                  signingConfigs {
+                      release {
+                          if (
+                              project.hasProperty("MYAPP_UPLOAD_STORE_FILE") &&
+                              project.hasProperty("MYAPP_UPLOAD_STORE_PASSWORD") &&
+                              project.hasProperty("MYAPP_UPLOAD_KEY_ALIAS") &&
+                              project.hasProperty("MYAPP_UPLOAD_KEY_PASSWORD")
+                          ) {
+                              storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                              storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                              keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                              keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+                          }
+                      }
+                  }
+                  buildTypes {
+                      release {
+                          signingConfig signingConfigs.release
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Override versionName for internal build
+        if: ${{ inputs.android_version_name != '' }}
+        run: |
+          VERSION_NAME="${{ inputs.android_version_name }}"
+          sed -i "0,/versionName \\\".*\\\"/s//versionName \\\"${VERSION_NAME}\\\"/" android/app/build.gradle
+
+      - name: Build signed AAB and APK
+        working-directory: android
+        run: ./gradlew --no-daemon clean bundleRelease assembleRelease
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-${{ github.run_number }}-vc${{ inputs.android_version_code }}
+          if-no-files-found: error
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/mapping/release/mapping.txt
