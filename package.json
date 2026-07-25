@@ -1,7 +1,7 @@
 {
   "name": "my-own-money-manager",
   "main": "expo-router/entry",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -14,8 +14,13 @@
     "fix": "eslint src .ts,.tsx --fix",
     "format": "prettier --write .",
     "test": "tsx --test $(find src -name '*.test.ts' -print)",
-    "eas": "eas",
-    "prebuild": "expo prebuild"
+    "prebuild:android": "expo prebuild --platform android",
+    "prepare:android:release": "expo prebuild --platform android --non-interactive",
+    "keystore:android:generate:pkcs12": "mkdir -p android/app && keytool -genkeypair -v -storetype PKCS12 -keystore android/app/upload-keystore.p12 -alias upload -keyalg RSA -keysize 2048 -validity 10000",
+    "build:android:release:aab": "expo prebuild --platform android --non-interactive && cd android && ./gradlew bundleRelease",
+    "build:android:release:aab:vc": "ANDROID_VERSION_CODE=${ANDROID_VERSION_CODE:-2} expo prebuild --platform android --non-interactive && cd android && ./gradlew bundleRelease",
+    "build:android:release:apk": "expo prebuild --platform android --non-interactive && cd android && ./gradlew assembleRelease",
+    "clean:android": "cd android && ./gradlew clean"
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",

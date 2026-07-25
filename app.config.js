@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+const androidVersionCode = Number.parseInt(process.env.ANDROID_VERSION_CODE ?? '2', 10);
+
 export default {
   expo: {
     name: "My Own Money Manager",
@@ -30,6 +32,7 @@ export default {
 
     android: {
       package: "app.myownmoneymanager",
+      versionCode: Number.isNaN(androidVersionCode) ? 2 : androidVersionCode,
       adaptiveIcon: {
         foregroundImage: "./src/assets/icons/myownmoney_light.png",
         backgroundColor: "#1E5A52",
