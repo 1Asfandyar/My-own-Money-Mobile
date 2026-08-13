@@ -2,17 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
 
+import AmountWithCurrency from '@/components/AmountWithCurrency';
+import { useLoggedInUser } from '@/feature/auth/hooks/useLoggedInUser';
 import EditGroupModal from '@/feature/groups/components/EditGroupModal';
 import MembersModal from '@/feature/groups/components/MembersModal';
-import type { GroupDetailViewProps } from '@/feature/groups/types/groupDetail.types';
 import type { GroupBalanceType, MemberBalanceEntry, MemberBalances } from '@/feature/groups/types/group.types';
+import type { GroupDetailViewProps } from '@/feature/groups/types/groupDetail.types';
 import { getUserInitial } from '@/feature/groups/utils/groupMembers.utils';
-import { useAccountsOverviewStore } from '@/feature/accounts/store/accountsOverview.store';
 import TransactionList from '@/feature/transactions/components/TransactionList';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { fallbackCurrencies, formatCents } from '@/utils/currency';
+import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
 
 const DEBT_COLOR = '#DC2626';
 
@@ -42,12 +43,12 @@ const getEntryColor = (entry: MemberBalanceEntry) => {
 };
 
 type BalanceSectionProps = {
-  currencies: Parameters<typeof formatCents>[2];
-  currencyId: number | undefined;
   memberBalances: MemberBalances;
 };
 
-const BalanceSection = ({ currencies, currencyId, memberBalances }: BalanceSectionProps) => {
+const BalanceSection = ({ memberBalances }: BalanceSectionProps) => {
+  const { user } = useLoggedInUser();
+  const displayCurrency = getCurrencyById(user?.currency_id, fallbackCurrencies);
   const { overall, per_member } = memberBalances;
   const overallColor = getBalanceColor(overall.type);
   const overallLabel = getBalanceLabel(overall.type);
@@ -61,9 +62,14 @@ const BalanceSection = ({ currencies, currencyId, memberBalances }: BalanceSecti
             {overallLabel}
           </ThemedText>
           {overall.type !== 'settled_up' && (
-            <ThemedText className="text-sm" style={{ color: overallColor }} weight="semiBold">
-              {formatCents(overall.amount_cents, currencyId, currencies)}
-            </ThemedText>
+            <AmountWithCurrency
+              amountCents={overall.amount_cents}
+              currencySymbol={displayCurrency.symbol}
+              useAbsoluteValue={true}
+              customColor={overallColor}
+              weight="semiBold"
+              className="text-sm"
+            />
           )}
         </View>
       </View>
@@ -84,9 +90,14 @@ const BalanceSection = ({ currencies, currencyId, memberBalances }: BalanceSecti
                 >
                   {getEntryDescription(entry)}
                 </ThemedText>
-                <ThemedText className="ml-4 text-sm" style={{ color }} weight="semiBold">
-                  {formatCents(entry.amount_cents, currencyId, currencies)}
-                </ThemedText>
+                <AmountWithCurrency
+                  amountCents={entry.amount_cents}
+                  currencySymbol={displayCurrency.symbol}
+                  useAbsoluteValue={true}
+                  customColor={color}
+                  weight="semiBold"
+                  className="ml-4 text-sm"
+                />
               </View>
             );
           })}
@@ -102,8 +113,6 @@ const AVATAR_MAX = 3;
 
 const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
   const [isMembersModalVisible, setIsMembersModalVisible] = useState(false);
-  const storeCurrencies = useAccountsOverviewStore((state) => state.currencies);
-  const currencies = storeCurrencies.length > 0 ? storeCurrencies : fallbackCurrencies;
   const groupName = detail.group?.name?.trim() || 'Group';
   const previewMembers = detail.members.slice(0, AVATAR_MAX);
   const extraCount = detail.members.length - AVATAR_MAX;
@@ -215,8 +224,6 @@ const GroupDetailView = ({ detail }: GroupDetailViewProps) => {
 
           {detail.memberBalances && (
             <BalanceSection
-              currencies={currencies}
-              currencyId={detail.displayCurrencyId}
               memberBalances={detail.memberBalances}
             />
           )}

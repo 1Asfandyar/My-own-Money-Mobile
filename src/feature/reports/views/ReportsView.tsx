@@ -97,7 +97,6 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
               <View className="mt-5">
                 <NetWorthSection
                   netWorth={report.net_worth}
-                  currencySymbol={currencySymbol}
                 />
               </View>
 
@@ -115,7 +114,6 @@ const ReportsView = ({ vm }: ReportsViewProps) => {
               <View className="mx-4 mt-5 border-t border-gray-100 pt-5">
                 <SharedMoneySection
                   sharedMoney={report.shared_money}
-                  currencySymbol={currencySymbol}
                 />
               </View>
 

@@ -17,10 +17,12 @@ import {
     getFriendshipUserLabel,
 } from '@/feature/friendships/utils/friendshipDisplay.utils';
 import SharedExpenseAvatar from '@/feature/transactions/components/SharedExpenseAvatar';
+import AmountWithCurrency from '@/components/AmountWithCurrency';
+import { useLoggedInUser } from '@/feature/auth/hooks/useLoggedInUser';
 import ThemedButton from '@/theme/components/ThemedButton';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatCents } from '@/utils/currency';
+import { fallbackCurrencies, getCurrencyById } from '@/utils/currency';
 
 const getSortedLedgers = (ledgers: FriendshipLedger[]) =>
   [...ledgers].sort((first, second) => {
@@ -45,18 +47,12 @@ const getSortedLedgers = (ledgers: FriendshipLedger[]) =>
   });
 
 const SharedFriendshipRow = ({
-  currencies,
-  displayCurrency,
+  currencySymbol,
   ledger,
   onPress,
-}: SharedFriendshipRowProps) => {
+}: Omit<SharedFriendshipRowProps, 'currencies' | 'displayCurrency'> & { currencySymbol: string }) => {
   const balance = ledger.balance_summary;
   const color = getFriendshipBalanceColor(balance.type);
-  const amountLabel = formatCents(
-    Math.abs(balance.amount_cents),
-    displayCurrency.id,
-    currencies,
-  );
 
   return (
     <TouchableOpacity
@@ -103,15 +99,17 @@ const SharedFriendshipRow = ({
                 : 'settled'}
           </ThemedText>
         </View>
-        <ThemedText
+        <AmountWithCurrency
+          amountCents={Math.abs(balance.amount_cents)}
+          currencySymbol={currencySymbol}
+          useAbsoluteValue={false}
+          customColor={color}
+          weight="bold"
           adjustsFontSizeToFit
           className="mt-1 text-base"
           numberOfLines={1}
-          style={{ color, maxWidth: 98 }}
-          weight="bold"
-        >
-          {amountLabel}
-        </ThemedText>
+          style={{ maxWidth: 98 }}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -126,6 +124,10 @@ const SharedFriendshipDashboard = ({
   onSelectFriendship,
   onRetry,
 }: SharedFriendshipDashboardProps) => {
+  const { user } = useLoggedInUser();
+  const userDisplayCurrency = getCurrencyById(user?.currency_id, fallbackCurrencies);
+  const currencySymbol = userDisplayCurrency.symbol;
+
   if (isLoading) {
     return (
       <View className="items-center py-7">
@@ -185,8 +187,7 @@ const SharedFriendshipDashboard = ({
       {getSortedLedgers(ledgers).map((ledger) => (
         <SharedFriendshipRow
           key={ledger.id}
-          currencies={currencies}
-          displayCurrency={displayCurrency}
+          currencySymbol={currencySymbol}
           ledger={ledger}
           onPress={onSelectFriendship}
         />

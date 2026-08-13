@@ -1,9 +1,11 @@
 import { View } from 'react-native';
 
+import AmountWithCurrency from '@/components/AmountWithCurrency';
+import { useLoggedInUser } from '@/feature/auth/hooks/useLoggedInUser';
 import type { NetWorth } from '@/feature/reports/types/report.types';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatAmount } from '@/utils/currency';
+import { fallbackCurrencies, formatAmount, getCurrencyById } from '@/utils/currency';
 
 interface NetWorthRowProps {
   label: string;
@@ -35,11 +37,12 @@ const NetWorthRow = ({ label, valueLabel, isLast, isTotal, valueColor }: NetWort
 
 interface NetWorthSectionProps {
   netWorth: NetWorth;
-  currencySymbol: string;
 }
 
-const NetWorthSection = ({ netWorth, currencySymbol }: NetWorthSectionProps) => {
-  const isNegative = netWorth.net_worth_cents < 0;
+const NetWorthSection = ({ netWorth }: NetWorthSectionProps) => {
+  const { user } = useLoggedInUser();
+  const displayCurrency = getCurrencyById(user?.currency_id, fallbackCurrencies);
+  const currencySymbol = displayCurrency.symbol;
 
   return (
     <View className="mx-4">
@@ -65,13 +68,22 @@ const NetWorthSection = ({ netWorth, currencySymbol }: NetWorthSectionProps) => 
           isLast={false}
           valueColor="#EF4444"
         />
-        <NetWorthRow
-          label="Net Worth"
-          valueLabel={formatAmount(netWorth.net_worth_cents, currencySymbol, { useAbsoluteValue: true })}
-          isLast
-          isTotal
-          valueColor={isNegative ? '#EF4444' : themeColors.primary}
-        />
+        <View
+          className="flex-row items-center justify-between px-4 py-3"
+          style={{ backgroundColor: `${themeColors.primary}0D` }}
+        >
+          <ThemedText className="flex-1 pr-3 text-sm text-gray-500" numberOfLines={1}>
+            Net Worth
+          </ThemedText>
+          <AmountWithCurrency
+            amountCents={netWorth.net_worth_cents}
+            currencySymbol={currencySymbol}
+            weight="bold"
+            className="text-lg"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          />
+        </View>
       </View>
     </View>
   );

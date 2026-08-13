@@ -1,9 +1,11 @@
 import { View } from 'react-native';
 
 import type { SharedMoney, SharedMoneyBreakdownItem } from '@/feature/reports/types/report.types';
+import AmountWithCurrency from '@/components/AmountWithCurrency';
+import { useLoggedInUser } from '@/feature/auth/hooks/useLoggedInUser';
 import ThemedText from '@/theme/components/ThemedText';
 import { themeColors } from '@/theme/utilities';
-import { formatAmount } from '@/utils/currency';
+import { formatAmount, fallbackCurrencies, getCurrencyById } from '@/utils/currency';
 
 const getInitials = (name: string): string =>
   name
@@ -42,13 +44,13 @@ const BreakdownRow = ({ item, currencySymbol }: BreakdownRowProps) => {
         >
           {owesYou ? 'owes you' : 'you owe'}
         </ThemedText>
-        <ThemedText
+        <AmountWithCurrency
+          amountCents={item.amount_cents}
+          currencySymbol={currencySymbol}
+          useAbsoluteValue={true}
+          customColor={owesYou ? themeColors.primary : '#EF4444'}
           className="text-sm"
-          weight="bold"
-          style={{ color: owesYou ? themeColors.primary : '#EF4444' }}
-        >
-          {formatAmount(item.amount_cents, currencySymbol, { useAbsoluteValue: true })}
-        </ThemedText>
+        />
       </View>
     </View>
   );
@@ -56,10 +58,12 @@ const BreakdownRow = ({ item, currencySymbol }: BreakdownRowProps) => {
 
 interface SharedMoneySectionProps {
   sharedMoney: SharedMoney;
-  currencySymbol: string;
 }
 
-const SharedMoneySection = ({ sharedMoney, currencySymbol }: SharedMoneySectionProps) => {
+const SharedMoneySection = ({ sharedMoney }: SharedMoneySectionProps) => {
+  const { user } = useLoggedInUser();
+  const displayCurrency = getCurrencyById(user?.currency_id, fallbackCurrencies);
+  const currencySymbol = displayCurrency.symbol;
   const { net_cents, breakdown } = sharedMoney;
 
   const summaryText =
